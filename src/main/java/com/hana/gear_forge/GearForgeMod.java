@@ -1,5 +1,6 @@
 package com.hana.gear_forge;
 
+import com.hana.gear_forge.command.GearForgeCommands;
 import com.hana.gear_forge.component.ModDataComponents;
 import com.hana.gear_forge.config.ModConfigs;
 import com.hana.gear_forge.item.ModCreativeTabs;
@@ -8,6 +9,8 @@ import com.hana.gear_forge.recipe.ModRecipeSerializers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 @Mod(GearForgeMod.MODID)
 public class GearForgeMod {
@@ -21,4 +24,5 @@ public class GearForgeMod {
         ModCreativeTabs.CREATIVE_TABS.register(modEventBus);
         ModRecipeSerializers.RECIPE_SERIALIZERS.register(modEventBus);
     }
+
 }

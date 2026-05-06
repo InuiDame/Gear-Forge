@@ -27,6 +27,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ArmorItem;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -40,7 +41,9 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @EventBusSubscriber(modid = GearForgeMod.MODID)
 public class GearEventHandlers {
@@ -297,130 +300,163 @@ public class GearEventHandlers {
         ItemStack stack = event.getItemStack();
         List<ModDataComponents.AffixEntry> affixes = stack.get(ModDataComponents.AFFIXES.get());
         int upgradeLevel = stack.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
+        boolean offhand = Boolean.TRUE.equals(stack.get(ModDataComponents.OFFHAND_MODE.get()));
+        boolean isArmor = stack.getItem() instanceof ArmorItem;
 
-        EquipmentSlotGroup weaponSlot = Boolean.TRUE.equals(stack.get(ModDataComponents.OFFHAND_MODE.get()))
-                ? EquipmentSlotGroup.OFFHAND : EquipmentSlotGroup.MAINHAND;
+        // 武器类（非护甲）：攻击属性挂载到主手或副手；防御/移速等其他属性挂载到 ANY
+        // 护甲类：所有属性统一挂载到 ANY（穿戴效果）
+        EquipmentSlotGroup weaponSlot = offhand ? EquipmentSlotGroup.OFFHAND : EquipmentSlotGroup.MAINHAND;
+        EquipmentSlotGroup attackSlot = isArmor ? EquipmentSlotGroup.ANY : weaponSlot;   // 攻击、攻速
+        EquipmentSlotGroup otherSlot = EquipmentSlotGroup.ANY;                          // 防御、移速等
 
+        // 词条属性
         if (affixes != null && !affixes.isEmpty()) {
             double attackPower = GearHelper.getAffixTotalValue(affixes, "attack_power");
             if (attackPower > 0) {
                 event.addModifier(Attributes.ATTACK_DAMAGE,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_attack_power"),
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_attack_power"),
                                 attackPower, AttributeModifier.Operation.ADD_VALUE),
-                        weaponSlot);
+                        attackSlot);
             }
 
             double attackSpeed = GearHelper.getAffixTotalValue(affixes, "attack_speed");
             if (attackSpeed > 0) {
                 event.addModifier(Attributes.ATTACK_SPEED,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_attack_speed"),
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_attack_speed"),
                                 attackSpeed, AttributeModifier.Operation.ADD_VALUE),
-                        weaponSlot);
+                        attackSlot);
             }
 
             double defensePower = GearHelper.getAffixTotalValue(affixes, "defense_power");
             if (defensePower > 0) {
                 event.addModifier(Attributes.ARMOR,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_defense_power"),
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_defense_power"),
                                 defensePower, AttributeModifier.Operation.ADD_VALUE),
-                        EquipmentSlotGroup.ANY);
+                        otherSlot);
             }
 
             double moveSpeed = GearHelper.getAffixTotalValue(affixes, "movement_speed");
             if (moveSpeed > 0) {
                 event.addModifier(Attributes.MOVEMENT_SPEED,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_movement_speed"),
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_movement_speed"),
                                 moveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
-                        EquipmentSlotGroup.ANY);
+                        otherSlot);
             }
         }
 
+        // 升级属性
         if (upgradeLevel > 0) {
             double upgradeAttack = GearHelper.getUpgradedStatBonus("attack_damage", upgradeLevel);
             if (upgradeAttack > 0) {
                 event.addModifier(Attributes.ATTACK_DAMAGE,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "upgrade_attack_damage"),
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "upgrade_attack_damage"),
                                 upgradeAttack, AttributeModifier.Operation.ADD_VALUE),
-                        weaponSlot);
+                        attackSlot);   // 盔甲上的攻击升级也作为穿戴效果
             }
             double upgradeDefense = GearHelper.getUpgradedStatBonus("defense", upgradeLevel);
             if (upgradeDefense > 0) {
                 event.addModifier(Attributes.ARMOR,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "upgrade_defense"),
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "upgrade_defense"),
                                 upgradeDefense, AttributeModifier.Operation.ADD_VALUE),
-                        EquipmentSlotGroup.ANY);
+                        otherSlot);
             }
             double upgradeToughness = GearHelper.getUpgradedStatBonus("toughness", upgradeLevel);
             if (upgradeToughness > 0) {
                 event.addModifier(Attributes.ARMOR_TOUGHNESS,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "upgrade_toughness"),
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "upgrade_toughness"),
                                 upgradeToughness, AttributeModifier.Operation.ADD_VALUE),
-                        EquipmentSlotGroup.ANY);
+                        otherSlot);
             }
         }
 
+        // 宝石属性（已有逻辑不动，但这里也加上统一槽位）
         List<ModDataComponents.GemsEntry> gems = stack.get(ModDataComponents.GEMS.get());
         if (gems != null && !gems.isEmpty()) {
             for (ModDataComponents.GemsEntry gem : gems) {
                 double gemMoveSpeed = GearHelper.getGemStatBonus(gem.id(), "movement_speed", gem.tier());
                 if (gemMoveSpeed > 0) {
                     event.addModifier(Attributes.MOVEMENT_SPEED,
-                            new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "gem_movement_speed"),
+                            new AttributeModifier(
+                                    ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "gem_movement_speed"),
                                     gemMoveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
-                            EquipmentSlotGroup.ANY);
+                            otherSlot);
                 }
             }
         }
 
+        // 转生保留奖励
         List<ModDataComponents.StoredBonus> storedBonuses = stack.get(ModDataComponents.STORED_BONUSES.get());
         if (storedBonuses != null && !storedBonuses.isEmpty()) {
             double storedAttackPower = GearHelper.getStoredBonusValue(storedBonuses, "attack_power");
             if (storedAttackPower > 0) {
                 event.addModifier(Attributes.ATTACK_DAMAGE,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_attack_power"),
-                                storedAttackPower, AttributeModifier.Operation.ADD_VALUE), weaponSlot);
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_attack_power"),
+                                storedAttackPower, AttributeModifier.Operation.ADD_VALUE),
+                        attackSlot);
             }
             double storedAttackSpeed = GearHelper.getStoredBonusValue(storedBonuses, "attack_speed");
             if (storedAttackSpeed > 0) {
                 event.addModifier(Attributes.ATTACK_SPEED,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_attack_speed"),
-                                storedAttackSpeed, AttributeModifier.Operation.ADD_VALUE), weaponSlot);
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_attack_speed"),
+                                storedAttackSpeed, AttributeModifier.Operation.ADD_VALUE),
+                        attackSlot);
             }
             double storedDefensePower = GearHelper.getStoredBonusValue(storedBonuses, "defense_power");
             if (storedDefensePower > 0) {
                 event.addModifier(Attributes.ARMOR,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_defense_power"),
-                                storedDefensePower, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.ANY);
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_defense_power"),
+                                storedDefensePower, AttributeModifier.Operation.ADD_VALUE),
+                        otherSlot);
             }
             double storedMoveSpeed = GearHelper.getStoredBonusValue(storedBonuses, "movement_speed");
             if (storedMoveSpeed > 0) {
                 event.addModifier(Attributes.MOVEMENT_SPEED,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_movement_speed"),
-                                storedMoveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), EquipmentSlotGroup.ANY);
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_movement_speed"),
+                                storedMoveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                        otherSlot);
             }
             double storedUpgradeAttack = GearHelper.getStoredBonusValue(storedBonuses, "upgrade_attack_damage");
             if (storedUpgradeAttack > 0) {
                 event.addModifier(Attributes.ATTACK_DAMAGE,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_upgrade_attack"),
-                                storedUpgradeAttack, AttributeModifier.Operation.ADD_VALUE), weaponSlot);
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_upgrade_attack"),
+                                storedUpgradeAttack, AttributeModifier.Operation.ADD_VALUE),
+                        attackSlot);
             }
             double storedUpgradeDefense = GearHelper.getStoredBonusValue(storedBonuses, "upgrade_defense");
             if (storedUpgradeDefense > 0) {
                 event.addModifier(Attributes.ARMOR,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_upgrade_defense"),
-                                storedUpgradeDefense, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.ANY);
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_upgrade_defense"),
+                                storedUpgradeDefense, AttributeModifier.Operation.ADD_VALUE),
+                        otherSlot);
             }
             double storedUpgradeToughness = GearHelper.getStoredBonusValue(storedBonuses, "upgrade_toughness");
             if (storedUpgradeToughness > 0) {
                 event.addModifier(Attributes.ARMOR_TOUGHNESS,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_upgrade_toughness"),
-                                storedUpgradeToughness, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.ANY);
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_upgrade_toughness"),
+                                storedUpgradeToughness, AttributeModifier.Operation.ADD_VALUE),
+                        otherSlot);
             }
             double storedGemMoveSpeed = GearHelper.getStoredBonusValue(storedBonuses, "movement_speed");
             if (storedGemMoveSpeed > 0) {
                 event.addModifier(Attributes.MOVEMENT_SPEED,
-                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_gem_movement"),
-                                storedGemMoveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), EquipmentSlotGroup.ANY);
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_gem_movement"),
+                                storedGemMoveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                        otherSlot);
             }
         }
     }
@@ -671,9 +707,35 @@ public class GearEventHandlers {
             if (affixes != null && !affixes.isEmpty()) {
                 tooltip.add(Component.translatable("tooltip.gear_forge.affixes_header")
                         .withStyle(ChatFormatting.GRAY));
+
+                // 合并同名（同显示名）的词条数值
+                Map<String, Double> mergedAffixes = new LinkedHashMap<>();
                 for (ModDataComponents.AffixEntry entry : affixes) {
                     String displayName = getAffixDisplayName(entry.id());
                     String formattedValue = formatAffixValue(entry.id(), entry.value());
+                    // 由于 formattedValue 可能带百分号，我们需要还原原始数值进行累加
+                    double val = entry.value();
+                    if (formattedValue.endsWith("%")) {
+                        // 百分比格式的数值已经被乘以100，累加时用原始值
+                        val = entry.value();
+                    }
+                    mergedAffixes.merge(displayName, val, Double::sum);
+                }
+
+                // 输出合并后的行（保留百分比格式需要根据id判断，简单起见统一用数值和名称，格式由formatAffixValue对单个条目处理）
+                // 这里直接显示总和，格式需要重新生成，将每个显示名对应的总和重新格式化。
+                for (var entry : mergedAffixes.entrySet()) {
+                    String displayName = entry.getKey();
+                    double totalValue = entry.getValue();
+                    // 查找第一个匹配的id以获取格式类型（假设同名的id类型相同，简单取第一个）
+                    String firstId = null;
+                    for (ModDataComponents.AffixEntry affix : affixes) {
+                        if (getAffixDisplayName(affix.id()).equals(displayName)) {
+                            firstId = affix.id();
+                            break;
+                        }
+                    }
+                    String formattedValue = formatAffixValue(firstId != null ? firstId : displayName, totalValue);
                     tooltip.add(Component.literal(" ").append(Component.literal(displayName + ": " + formattedValue))
                             .withStyle(ChatFormatting.DARK_AQUA));
                 }

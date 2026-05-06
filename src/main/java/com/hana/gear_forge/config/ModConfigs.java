@@ -18,11 +18,13 @@ public class ModConfigs {
     private static AffixConfig affixConfig;
     private static UpgradeConfig upgradeConfig;
     private static GemConfig gemConfig;
+    private static MobGearConfig mobGearConfig;
 
     public static void init() {
         loadAffixConfig();
         loadUpgradeConfig();
         loadGemConfig();
+        loadMobGearConfig();
     }
 
     public static void reload() {
@@ -62,6 +64,11 @@ public class ModConfigs {
         gemConfig = loadJsonConfig("gems.json", type, GemConfig.createDefault());
     }
 
+    private static void loadMobGearConfig() {
+        Type type = new TypeToken<MobGearConfig>() {}.getType();
+        mobGearConfig = loadJsonConfig("mob_gear.json", type, MobGearConfig.createDefault());
+    }
+
     public static AffixConfig getAffixConfig() {
         return affixConfig;
     }
@@ -73,4 +80,7 @@ public class ModConfigs {
     public static GemConfig getGemConfig() {
         return gemConfig;
     }
+
+    public static MobGearConfig getMobGearConfig() { return mobGearConfig; }
+
 }
