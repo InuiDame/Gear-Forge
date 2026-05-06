@@ -1,0 +1,216 @@
+{
+  "maxAffixCount": 5,
+  "minAffixCount": 1,
+  "affixPool": [
+    {
+      "id": "attack_power",
+      "name": "攻击力",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        15.0
+      ],
+      "weight": 20,
+      "description": "增加基础攻击伤害"
+    },
+    {
+      "id": "defense_power",
+      "name": "防御力",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        10.0
+      ],
+      "weight": 20,
+      "description": "增加基础防御值"
+    },
+    {
+      "id": "crit_chance",
+      "name": "暴击率",
+      "type": "percentage",
+      "valueRange": [
+        0.01,
+        0.15
+      ],
+      "weight": 10,
+      "description": "增加暴击概率"
+    },
+    {
+      "id": "crit_damage",
+      "name": "暴击伤害",
+      "type": "percentage",
+      "valueRange": [
+        0.05,
+        0.5
+      ],
+      "weight": 10,
+      "description": "增加暴击伤害倍率"
+    },
+    {
+      "id": "attack_speed",
+      "name": "攻击速度",
+      "type": "stat_boost",
+      "valueRange": [
+        0.05,
+        0.2
+      ],
+      "weight": 8,
+      "description": "增加攻击速度"
+    },
+    {
+      "id": "life_steal",
+      "name": "生命偷取",
+      "type": "percentage",
+      "valueRange": [
+        0.01,
+        0.08
+      ],
+      "weight": 5,
+      "description": "攻击时恢复生命"
+    },
+    {
+      "id": "movement_speed",
+      "name": "移动速度",
+      "type": "percentage",
+      "valueRange": [
+        0.02,
+        0.1
+      ],
+      "weight": 7,
+      "description": "增加移动速度"
+    },
+    {
+      "id": "fire_damage",
+      "name": "火焰伤害",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        5.0
+      ],
+      "weight": 8,
+      "description": "额外造成火焰伤害"
+    },
+    {
+      "id": "frost_damage",
+      "name": "寒冰伤害",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        5.0
+      ],
+      "weight": 8,
+      "description": "额外造成寒冰伤害并减速敌人"
+    },
+    {
+      "id": "looting_bonus",
+      "name": "掠夺率",
+      "type": "percentage",
+      "valueRange": [
+        0.05,
+        0.25
+      ],
+      "weight": 5,
+      "description": "增加掉落物数量"
+    },
+    {
+      "id": "xp_bonus",
+      "name": "经验加成",
+      "type": "percentage",
+      "valueRange": [
+        0.1,
+        0.5
+      ],
+      "weight": 5,
+      "description": "增加经验掉落"
+    },
+    {
+      "id": "bow_charge_speed",
+      "name": "弓蓄力加速",
+      "type": "percentage",
+      "valueRange": [
+        0.05,
+        0.3
+      ],
+      "weight": 5,
+      "description": "增加弓箭蓄力速度"
+    },
+    {
+      "id": "projectile_damage",
+      "name": "弹射物伤害",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        8.0
+      ],
+      "weight": 5,
+      "description": "增加弹射物伤害"
+    },
+    {
+      "id": "auto_repair",
+      "name": "自动修复",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        5.0
+      ],
+      "weight": 3,
+      "description": "每秒自动修复耐久度"
+    },
+    {
+      "id": "durability_reduction",
+      "name": "耐久保护",
+      "type": "percentage",
+      "valueRange": [
+        0.05,
+        0.3
+      ],
+      "weight": 5,
+      "description": "减少耐久度消耗"
+    },
+    {
+      "id": "shield_block_reduction",
+      "name": "盾牌格挡",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        5.0
+      ],
+      "weight": 5,
+      "description": "增加盾牌格挡减伤"
+    },
+    {
+      "id": "enchantment_boost",
+      "name": "附魔增幅",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        3.0
+      ],
+      "weight": 4,
+      "description": "增加装备附魔等级"
+    }
+  ],
+  "rarityAffixCount": {
+    "legendary": [
+      4,
+      5
+    ],
+    "uncommon": [
+      1,
+      2
+    ],
+    "epic": [
+      3,
+      4
+    ],
+    "rare": [
+      2,
+      3
+    ],
+    "common": [
+      1,
+      1
+    ]
+  },
+  "affixRerollCostDiamonds": 3
+}

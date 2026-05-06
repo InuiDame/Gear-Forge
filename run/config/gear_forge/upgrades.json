@@ -1,0 +1,44 @@
+{
+  "maxLevel": 15,
+  "baseSuccessRate": 1.0,
+  "levelSuccessDecay": 0.05,
+  "levelFailureDecay": 0.1,
+  "maxConsumeMaterialPerLevel": 5,
+  "consumeMaterial": "minecraft:diamond",
+  "consumeAmountBase": 1,
+  "consumeAmountIncrement": 1,
+  "allowDowngrade": true,
+  "downgradeLevels": 1,
+  "allowDestroy": false,
+  "destroyChance": 0.0,
+  "statBoostPerLevel": {
+    "toughness": 0.1,
+    "defense": 0.3,
+    "attack_damage": 0.5
+  },
+  "specialBonusLevels": [
+    5,
+    10,
+    15
+  ],
+  "specialBonusStats": {
+    "5": {
+      "toughness": 0.5,
+      "defense": 1.0,
+      "attack_damage": 2.0
+    },
+    "10": {
+      "toughness": 1.5,
+      "defense": 3.0,
+      "attack_damage": 5.0
+    },
+    "15": {
+      "toughness": 3.0,
+      "defense": 5.0,
+      "attack_damage": 10.0
+    }
+  },
+  "reincarnationEnabled": true,
+  "reincarnationCostMaterial": "minecraft:netherite_block",
+  "reincarnationCostMaterialCount": 8
+}
