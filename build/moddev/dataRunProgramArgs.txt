@@ -24,6 +24,6 @@ C:\\Users\\Admin\\.gradle\\caches\\neoformruntime\\assets
 gear_forge
 --all
 --output
-H:\\下载\\gear_forge-source\\src\\generated\\resources
+"H:\\下载\\Gear Forge\\src\\generated\\resources"
 --existing
-H:\\下载\\gear_forge-source\\src\\main\\resources
+"H:\\下载\\Gear Forge\\src\\main\\resources"

@@ -1,20 +1,31 @@
 package com.hana.gear_forge.item;
 
 import com.hana.gear_forge.GearForgeMod;
+import com.hana.gear_forge.datagen.ModEnchantments;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.List;
 
 public class ModCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, GearForgeMod.MODID);
 
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> GEAR_FORGE_TAB =
-            CREATIVE_TABS.register("gear_forge_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup." + GearForgeMod.MODID))
+    // 第一页：核心材料与工具
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> GEAR_FORGE_CORE_TAB =
+            CREATIVE_TABS.register("gear_forge_core", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup." + GearForgeMod.MODID + ".core"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> ModItems.FORGE_HAMMER.get().getDefaultInstance())
                     .displayItems((params, output) -> {
@@ -31,4 +42,38 @@ public class ModCreativeTabs {
                         output.accept(ModItems.GEM_REMOVER.get());
                         output.accept(ModItems.REINCARNATION_STONE.get());
                     }).build());
+
+    // 第二页：附魔书专栏
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> GEAR_FORGE_ENCHANTMENT_TAB =
+            CREATIVE_TABS.register("gear_forge_enchantment", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup." + GearForgeMod.MODID + ".enchantment"))
+                    // 让附魔页紧跟在核心页后面
+                    .withTabsBefore(GEAR_FORGE_CORE_TAB.getKey())
+                    .icon(() -> new ItemStack(Items.ENCHANTED_BOOK))
+                    .displayItems((params, output) -> {
+                        List<ResourceKey<Enchantment>> enchantKeys = List.of(
+                                ModEnchantments.LIGHTNING_ARROW,
+                                ModEnchantments.FROST_ARROW,
+                                ModEnchantments.EXPLOSIVE_ARROW,
+                                ModEnchantments.ARMOR_PIERCING_ARROW
+                        );
+
+                        params.holders().lookup(Registries.ENCHANTMENT).ifPresent(enchantRegistry -> {
+                            for (ResourceKey<Enchantment> key : enchantKeys) {
+                                enchantRegistry.get(key).ifPresent(holder -> {
+                                    for (int level = 1; level <= 5; level++) {
+                                        output.accept(createEnchantedBook(holder, level));
+                                    }
+                                });
+                            }
+                        });
+                    }).build());
+
+    private static ItemStack createEnchantedBook(Holder<Enchantment> enchantment, int level) {
+        ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK);
+        ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        mutable.set(enchantment, level);
+        stack.set(DataComponents.STORED_ENCHANTMENTS, mutable.toImmutable());
+        return stack;
+    }
 }

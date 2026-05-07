@@ -10,3 +10,14 @@
 /gear_forge test spawnmob skeleton 2 5 5 5
 /gamemode survival
 /gamemode creative
+/give @p gear_forge:lightning_arrow_book
+/gamemode survival
+/gamemode creative
+/gamemode survival
+/gamemode creative
+/gamemode survival
+/gamemode creative
+/gamemode survival
+/gamemode creative
+/gamemode survival
+/gamemode creative

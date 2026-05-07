@@ -20,6 +20,7 @@ public class ModConfigs {
     private static GemConfig gemConfig;
     private static MobGearConfig mobGearConfig;
 
+
     public static void init() {
         loadAffixConfig();
         loadUpgradeConfig();
@@ -82,5 +83,6 @@ public class ModConfigs {
     }
 
     public static MobGearConfig getMobGearConfig() { return mobGearConfig; }
+
 
 }

@@ -20,9 +20,10 @@ public class GearForgeMod {
         ModConfigs.init();
 
         ModDataComponents.DATA_COMPONENTS.register(modEventBus);
-        ModItems.ITEMS.register(modEventBus);
         ModCreativeTabs.CREATIVE_TABS.register(modEventBus);
         ModRecipeSerializers.RECIPE_SERIALIZERS.register(modEventBus);
+        ModItems.ITEMS.register(modEventBus);
+
     }
 
 }

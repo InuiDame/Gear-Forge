@@ -1,5 +1,7 @@
 {
-  "itemGroup.gear_forge": "Gear Forge",
+  "itemGroup.gear_forge": "Hana's Gear Forge",
+  "itemGroup.gear_forge.core": "Hana's Gear Forge: Core",
+  "itemGroup.gear_forge.enchantment": "Hana's Gear Forge: Enchantments",
 
   "item.gear_forge.reroll_stone": "Reroll Stone",
   "item.gear_forge.forge_hammer": "Forge Hammer",
@@ -13,6 +15,15 @@
   "item.gear_forge.transfer_orb": "Transfer Orb",
   "item.gear_forge.gem_remover": "Gem Remover",
   "item.gear_forge.reincarnation_stone": "Reincarnation Stone",
+
+  "enchantment.gear_forge.lightning_arrow": "Lightning Arrow",
+  "enchantment.gear_forge.lightning_arrow.desc": "Summons lightning on hit, +10% lightning dmg/lvl",
+  "enchantment.gear_forge.frost_arrow": "Frost Arrow",
+  "enchantment.gear_forge.frost_arrow.desc": "Slows and damages target, longer slow duration per lvl",
+  "enchantment.gear_forge.explosive_arrow": "Explosive Arrow",
+  "enchantment.gear_forge.explosive_arrow.desc": "Explodes on impact (No block damage)",
+  "enchantment.gear_forge.armor_piercing_arrow": "Armor Piercing Arrow",
+  "enchantment.gear_forge.armor_piercing_arrow.desc": "Pierces armor, +5% penetration per lvl",
 
   "message.gear_forge.no_gear": "Please hold the gear item in your other hand!",
   "message.gear_forge.need_diamonds": "Need %s diamonds!",
@@ -64,5 +75,14 @@
 
   "tooltip.gear_forge.gem_remover": "Place in the smithing table's material slot to remove the most recently socketed gem from the equipment",
 
-  "tooltip.gear_forge.reincarnation_stone": "When your gear reaches +15, place this in the material slot and 8 Netherite Blocks in the template slot to Reincarnate. The gear will inherit all upgrades, affixes, and gem bonuses. (Gear must have full gem sockets to reincarnate; if you cannot fill all sockets, reincarnate without any gems first.)"
+  "tooltip.gear_forge.reincarnation_stone": "When your gear reaches +15, place this in the material slot and 8 Netherite Blocks in the template slot to Reincarnate. The gear will inherit all upgrades, affixes, and gem bonuses. (Gear must have full gem sockets to reincarnate; if you cannot fill all sockets, reincarnate without any gems first.)",
+
+  "item.gear_forge.gear_dye": "Gear Dye",
+  "item.gear_forge.glint_dye": "Enchantment Glint Dye",
+  "tooltip.gear_forge.dye_color": "Stored Color: %s",
+  "tooltip.gear_forge.glint_color": "Glint Color: %s",
+  "tooltip.gear_forge.dye_usage_1": "§7Craft with Dye: Acquire dye color",
+  "tooltip.gear_forge.dye_usage_2": "§7Craft with Gear: Apply color to equipment",
+  "tooltip.gear_forge.glint_usage_1": "§7Craft with Dye: Acquire glint color",
+  "tooltip.gear_forge.glint_usage_2": "§7Craft with Enchanted Gear: Change enchantment glint color"
 }

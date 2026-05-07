@@ -7,8 +7,10 @@ import com.hana.gear_forge.config.GemConfig;
 import com.hana.gear_forge.config.GemConfig.GemDefinition;
 import com.hana.gear_forge.config.GemConfig.GemEffect;
 import com.hana.gear_forge.config.ModConfigs;
+import com.hana.gear_forge.item.ModItems;
 import com.hana.gear_forge.util.GearHelper;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -28,6 +30,7 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -307,7 +310,7 @@ public class GearEventHandlers {
         // 护甲类：所有属性统一挂载到 ANY（穿戴效果）
         EquipmentSlotGroup weaponSlot = offhand ? EquipmentSlotGroup.OFFHAND : EquipmentSlotGroup.MAINHAND;
         EquipmentSlotGroup attackSlot = isArmor ? EquipmentSlotGroup.ANY : weaponSlot;   // 攻击、攻速
-        EquipmentSlotGroup otherSlot = EquipmentSlotGroup.ANY;                          // 防御、移速等
+        EquipmentSlotGroup otherSlot = isArmor ? EquipmentSlotGroup.ANY : weaponSlot;                          // 防御、移速等
 
         // 词条属性
         if (affixes != null && !affixes.isEmpty()) {
@@ -377,9 +380,11 @@ public class GearEventHandlers {
         }
 
         // 宝石属性（已有逻辑不动，但这里也加上统一槽位）
+        double totalAllStats = 0;
         List<ModDataComponents.GemsEntry> gems = stack.get(ModDataComponents.GEMS.get());
         if (gems != null && !gems.isEmpty()) {
             for (ModDataComponents.GemsEntry gem : gems) {
+                totalAllStats += GearHelper.getGemStatBonus(gem.id(), "all_stats", gem.tier());
                 double gemMoveSpeed = GearHelper.getGemStatBonus(gem.id(), "movement_speed", gem.tier());
                 if (gemMoveSpeed > 0) {
                     event.addModifier(Attributes.MOVEMENT_SPEED,
@@ -394,6 +399,7 @@ public class GearEventHandlers {
         // 转生保留奖励
         List<ModDataComponents.StoredBonus> storedBonuses = stack.get(ModDataComponents.STORED_BONUSES.get());
         if (storedBonuses != null && !storedBonuses.isEmpty()) {
+            totalAllStats += GearHelper.getStoredBonusValue(storedBonuses, "all_stats");
             double storedAttackPower = GearHelper.getStoredBonusValue(storedBonuses, "attack_power");
             if (storedAttackPower > 0) {
                 event.addModifier(Attributes.ATTACK_DAMAGE,
@@ -458,6 +464,31 @@ public class GearEventHandlers {
                                 storedGemMoveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
                         otherSlot);
             }
+        }
+        // --- 应用 all_stats 的多重加成 ---
+        if (totalAllStats > 0) {
+            // 1. 增加护甲值 (Armor)
+            event.addModifier(Attributes.ARMOR,
+                    new AttributeModifier(
+                            ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "all_stats_armor"),
+                            totalAllStats, AttributeModifier.Operation.ADD_VALUE),
+                    otherSlot);
+
+            // 2. 增加幸运值 (Luck)
+            event.addModifier(Attributes.LUCK,
+                    new AttributeModifier(
+                            ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "all_stats_luck"),
+                            totalAllStats, AttributeModifier.Operation.ADD_VALUE),
+                    otherSlot);
+
+            // 3. 增加生命值 (Max Health)
+            // 注意：生命值加成通常只在护甲上生效比较平衡，如果你希望武器也加血，保持 otherSlot 即可
+            event.addModifier(Attributes.MAX_HEALTH,
+                    new AttributeModifier(
+                            ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "all_stats_health"),
+                            totalAllStats * 2, // 比如 1点全属性 = 2点生命值(1颗心)
+                            AttributeModifier.Operation.ADD_VALUE),
+                    otherSlot);
         }
     }
 
@@ -755,6 +786,7 @@ public class GearEventHandlers {
                     }
                 }
             }
+
         }
 
         private static String getAffixDisplayName(String id) {

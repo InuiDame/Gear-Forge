@@ -97,4 +97,5 @@ public class ModDataComponents {
                     builder -> builder
                             .persistent(StoredBonus.CODEC.listOf())
                             .networkSynchronized(ByteBufCodecs.fromCodec(StoredBonus.CODEC.listOf())));
+
 }

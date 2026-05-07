@@ -1,6 +1,6 @@
-﻿{
-  "parent": "item/generated",
+{
+  "parent": "minecraft:item/generated",
   "textures": {
-    "layer0":"gear_forge:item/ruby"
+    "layer0": "gear_forge:item/ruby"
   }
 }
