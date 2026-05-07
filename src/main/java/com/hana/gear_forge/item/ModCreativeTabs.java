@@ -69,6 +69,17 @@ public class ModCreativeTabs {
                         });
                     }).build());
 
+    // 第三页：饰品
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> GEAR_FORGE_CURIOS_TAB =
+            CREATIVE_TABS.register("gear_forge_curios", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup." + GearForgeMod.MODID + ".curios"))
+                    .withTabsBefore(GEAR_FORGE_CORE_TAB.getKey())
+                    .icon(() -> ModItems.LUCKY_DIAMOND.get().getDefaultInstance())
+                    .displayItems((params, output) -> {
+                        output.accept(ModItems.LUCKY_DIAMOND.get());
+                        output.accept(ModItems.CURSED_ANVIL.get());
+                    }).build());
+
     private static ItemStack createEnchantedBook(Holder<Enchantment> enchantment, int level) {
         ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK);
         ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);

@@ -1,5 +1,7 @@
 package com.hana.gear_forge.item;
 
+import com.hana.gear_forge.Curios.CursedAnvilItem;
+import com.hana.gear_forge.Curios.LuckyDiamondItem;
 import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.item.custom.*;
 import net.minecraft.core.component.DataComponents;
@@ -54,6 +56,13 @@ public class ModItems {
     public static final DeferredItem<Item> REINCARNATION_STONE = registerItem("reincarnation_stone",
             () -> new ReincarnationStoneItem(new Item.Properties().fireResistant().stacksTo(64)));
 
+    public static final DeferredItem<Item> LUCKY_DIAMOND = registerItem(
+            "lucky_diamond",
+            LuckyDiamondItem::new);
+
+    public static final DeferredItem<Item> CURSED_ANVIL = registerItem(
+            "cursed_anvil",
+            CursedAnvilItem::new);
 
     private static DeferredItem<Item> registerItem(String name, Supplier<Item> itemSupplier) {
         return ITEMS.register(name, itemSupplier);

@@ -2,6 +2,7 @@
   "itemGroup.gear_forge": "Hana's Gear Forge",
   "itemGroup.gear_forge.core": "Hana's Gear Forge: Core",
   "itemGroup.gear_forge.enchantment": "Hana's Gear Forge: Enchantments",
+  "itemGroup.gear_forge.curios": "Hana's Gear Forge: Curios",
 
   "item.gear_forge.reroll_stone": "Reroll Stone",
   "item.gear_forge.forge_hammer": "Forge Hammer",
@@ -77,12 +78,9 @@
 
   "tooltip.gear_forge.reincarnation_stone": "When your gear reaches +15, place this in the material slot and 8 Netherite Blocks in the template slot to Reincarnate. The gear will inherit all upgrades, affixes, and gem bonuses. (Gear must have full gem sockets to reincarnate; if you cannot fill all sockets, reincarnate without any gems first.)",
 
-  "item.gear_forge.gear_dye": "Gear Dye",
-  "item.gear_forge.glint_dye": "Enchantment Glint Dye",
-  "tooltip.gear_forge.dye_color": "Stored Color: %s",
-  "tooltip.gear_forge.glint_color": "Glint Color: %s",
-  "tooltip.gear_forge.dye_usage_1": "§7Craft with Dye: Acquire dye color",
-  "tooltip.gear_forge.dye_usage_2": "§7Craft with Gear: Apply color to equipment",
-  "tooltip.gear_forge.glint_usage_1": "§7Craft with Dye: Acquire glint color",
-  "tooltip.gear_forge.glint_usage_2": "§7Craft with Enchanted Gear: Change enchantment glint color"
+  "curios.identifier.hhthing": "Little Thing",
+  "curios.modifiers.hhthing": " ",
+  "item.gear_forge.lucky_diamond": "Lucky Diamond",
+  "item.gear_forge.cursed_anvil": "Cursed Anvil",
+  "tooltip.gear_forge.curse_anvil": "When equipped: Neutral Hostile | EXP Gain +15% | Enchantment Level Requirement -5"
 }

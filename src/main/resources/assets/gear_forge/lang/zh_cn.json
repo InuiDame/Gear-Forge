@@ -2,6 +2,7 @@
   "itemGroup.gear_forge": "hana的装备锻造工坊",
   "itemGroup.gear_forge.core": "hana的装备锻造工坊·核心",
   "itemGroup.gear_forge.enchantment": "hana的装备锻造工坊·附魔书",
+  "itemGroup.gear_forge.curios": "hana的装备锻造工坊·饰品",
 
   "item.gear_forge.reroll_stone": "词条重铸石",
   "item.gear_forge.forge_hammer": "锻造锤",
@@ -78,15 +79,9 @@
   "tooltip.gear_forge.reincarnation_stone": "当装备强化到+15时，将此道具放到锻造台材料栏中，同时在锻造模板栏位放上8个下界合金块，可将装备进行转生。装备将继承一切强化、重铸、宝石属性（如果宝石没有打满则无法转生，若无法打满宝石，请在无宝石状况下进行转生）。",
 
 
-  "item.gear_forge.gear_dye": "装备染色剂",
-  "item.gear_forge.glint_dye": "附魔光效染色剂",
-  "tooltip.gear_forge.dye_color": "存储颜色: %s",
-  "tooltip.gear_forge.glint_color": "附魔光效颜色: %s",
-  "tooltip.gear_forge.dye_usage_1": "§7与染料合成：获取染料颜色",
-  "tooltip.gear_forge.dye_usage_2": "§7与装备合成：将颜色应用到装备",
-  "tooltip.gear_forge.glint_usage_1": "§7与染料合成：获取光效颜色",
-  "tooltip.gear_forge.glint_usage_2": "§7与附魔装备合成：修改附魔光效颜色"
-
-
-
+  "curios.identifier.hhthing": "小玩意",
+  "curios.modifiers.hhthing": " ",
+  "item.gear_forge.lucky_diamond": "幸运钻石",
+  "item.gear_forge.cursed_anvil": "魔性铁砧",
+  "tooltip.gear_forge.curse_anvil": "装备时：中立敌对|经验获取+15%|附魔等级需求-5"
 }

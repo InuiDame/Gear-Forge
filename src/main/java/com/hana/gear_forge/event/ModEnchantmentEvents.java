@@ -153,7 +153,15 @@ public class ModEnchantmentEvents {
     @SubscribeEvent
     public static void onTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
-        var registry = event.getEntity().level().registryAccess().registry(Registries.ENCHANTMENT);
+        // 1. 安全检查：如果实体为空，直接返回
+        if (event.getEntity() == null) {
+            return;
+        }
+
+        // 2. 此时可以安全调用 level()
+        var level = event.getEntity().level();
+        var registry = level.registryAccess().registry(Registries.ENCHANTMENT);
+
         if (registry.isEmpty()) return;
 
         addDesc(stack, registry.get(), ModEnchantments.LIGHTNING_ARROW, "enchantment.gear_forge.lightning_arrow.desc", event.getToolTip());

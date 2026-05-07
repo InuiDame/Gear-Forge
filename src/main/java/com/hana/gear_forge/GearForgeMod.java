@@ -3,6 +3,8 @@ package com.hana.gear_forge;
 import com.hana.gear_forge.command.GearForgeCommands;
 import com.hana.gear_forge.component.ModDataComponents;
 import com.hana.gear_forge.config.ModConfigs;
+import com.hana.gear_forge.event.CuriosEventHandler;
+import com.hana.gear_forge.event.GearEventHandlers;
 import com.hana.gear_forge.item.ModCreativeTabs;
 import com.hana.gear_forge.item.ModItems;
 import com.hana.gear_forge.recipe.ModRecipeSerializers;
@@ -23,6 +25,7 @@ public class GearForgeMod {
         ModCreativeTabs.CREATIVE_TABS.register(modEventBus);
         ModRecipeSerializers.RECIPE_SERIALIZERS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
+
 
     }
 
