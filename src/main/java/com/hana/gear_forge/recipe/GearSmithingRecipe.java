@@ -57,9 +57,14 @@ public class GearSmithingRecipe implements SmithingRecipe {
             List<ModDataComponents.GemsEntry> currentGems = base.getOrDefault(ModDataComponents.GEMS.get(), List.of());
             int maxSockets = GearHelper.getMaxSockets(base);
             if (currentGems.size() >= maxSockets) return false;
+            //System.out.println("Gem item detected: " + addition.getItem().getDescriptionId());
             String gemItemId = getGemItemId(addition);
+            //System.out.println("gemItemId: " + gemItemId);
             if (gemItemId == null) return false;
             String socketType = GearHelper.getSocketTypeForItem(base);
+            //System.out.println("socketType: " + socketType);
+            boolean compatible = isGemCompatible(gemItemId, socketType);
+            //System.out.println("compatible: " + compatible);
             return isGemCompatible(gemItemId, socketType);
         }
 
@@ -307,9 +312,11 @@ public class GearSmithingRecipe implements SmithingRecipe {
         GemConfig config = ModConfigs.getGemConfig();
         for (GemDefinition gem : config.getGems()) {
             if (gem.getItemId().equals(gemItemId) && gem.getCompatibleSockets().contains(socketType)) {
-                return true;
+                //System.out.println("Found gem: " + gem.getId() + ", compatibleSockets: " + gem.getCompatibleSockets());
+                return gem.getCompatibleSockets().contains(socketType);
             }
         }
+        //System.out.println("Gem not found for itemId: " + gemItemId);
         return false;
     }
 

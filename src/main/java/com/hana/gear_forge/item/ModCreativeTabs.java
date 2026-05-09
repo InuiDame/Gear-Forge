@@ -1,7 +1,7 @@
 package com.hana.gear_forge.item;
 
 import com.hana.gear_forge.GearForgeMod;
-import com.hana.gear_forge.datagen.ModEnchantments;
+import com.hana.gear_forge.Provider.ModEnchantments;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;

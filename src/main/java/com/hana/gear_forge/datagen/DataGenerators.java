@@ -1,6 +1,8 @@
 package com.hana.gear_forge.datagen;
 
 import com.hana.gear_forge.GearForgeMod;
+import com.hana.gear_forge.Provider.ModItemModelProvider;
+import com.hana.gear_forge.Provider.ModRecipeProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;

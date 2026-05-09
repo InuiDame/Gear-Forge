@@ -12,9 +12,9 @@
   "allowDestroy": false,
   "destroyChance": 0.0,
   "statBoostPerLevel": {
-    "toughness": 0.1,
+    "attack_damage": 0.5,
     "defense": 0.3,
-    "attack_damage": 0.5
+    "toughness": 0.1
   },
   "specialBonusLevels": [
     5,
@@ -23,19 +23,19 @@
   ],
   "specialBonusStats": {
     "5": {
-      "toughness": 0.5,
+      "attack_damage": 2.0,
       "defense": 1.0,
-      "attack_damage": 2.0
+      "toughness": 0.5
     },
     "10": {
-      "toughness": 1.5,
+      "attack_damage": 5.0,
       "defense": 3.0,
-      "attack_damage": 5.0
+      "toughness": 1.5
     },
     "15": {
-      "toughness": 3.0,
+      "attack_damage": 10.0,
       "defense": 5.0,
-      "attack_damage": 10.0
+      "toughness": 3.0
     }
   },
   "reincarnationEnabled": true,

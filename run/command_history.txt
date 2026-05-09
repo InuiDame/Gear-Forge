@@ -25,3 +25,12 @@
 /gamemode creative
 /gamemode survival
 /gamemode creative
+/loot give @a loot minecraft:chests/abandoned_mineshaft
+/clear
+/loot give @a loot minecraft:chests/abandoned_mineshaft
+/loot give @a loot minecraft:entities/zombie
+/loot give @a loot minecraft:chests/simple_dungeon
+/cleat
+/clear
+/loot give @a loot minecraft:chests/simple_dungeon
+/clear

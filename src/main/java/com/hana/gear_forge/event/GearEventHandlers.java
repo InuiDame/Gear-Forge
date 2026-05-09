@@ -7,11 +7,9 @@ import com.hana.gear_forge.config.GemConfig;
 import com.hana.gear_forge.config.GemConfig.GemDefinition;
 import com.hana.gear_forge.config.GemConfig.GemEffect;
 import com.hana.gear_forge.config.ModConfigs;
-import com.hana.gear_forge.datagen.CuriosProvider;
-import com.hana.gear_forge.item.ModItems;
+import com.hana.gear_forge.loot.AddItemModifier;
 import com.hana.gear_forge.util.GearHelper;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -31,11 +29,9 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.component.DyedItemColor;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.event.ItemAttributeModifierEvent;
 import net.neoforged.neoforge.event.entity.living.ArmorHurtEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
@@ -844,5 +840,6 @@ public class GearEventHandlers {
             if (id.startsWith("upgrade_")) return "[转生]强化:" + id.substring(8);
             return "[转生]" + id;
         }
+
     }
 }

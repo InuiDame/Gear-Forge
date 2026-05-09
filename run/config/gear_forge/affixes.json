@@ -191,25 +191,25 @@
     }
   ],
   "rarityAffixCount": {
-    "legendary": [
-      4,
-      5
-    ],
-    "uncommon": [
+    "common": [
       1,
-      2
-    ],
-    "epic": [
-      3,
-      4
+      1
     ],
     "rare": [
       2,
       3
     ],
-    "common": [
+    "epic": [
+      3,
+      4
+    ],
+    "uncommon": [
       1,
-      1
+      2
+    ],
+    "legendary": [
+      4,
+      5
     ]
   },
   "affixRerollCostDiamonds": 3

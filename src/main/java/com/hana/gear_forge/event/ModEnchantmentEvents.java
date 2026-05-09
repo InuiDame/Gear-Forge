@@ -1,7 +1,7 @@
 package com.hana.gear_forge.event;
 
 import com.hana.gear_forge.GearForgeMod;
-import com.hana.gear_forge.datagen.ModEnchantments;
+import com.hana.gear_forge.Provider.ModEnchantments;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;

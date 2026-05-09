@@ -90,7 +90,7 @@ public class GemConfig {
                                         new GemEffect("frost_damage", 2.0, "额外造成2点寒冰伤害")
                                 ),
                                 List.of("weapon", "armor", "tool"), "uncommon"),
-                        new GemDefinition("emerald", "绿宝石", 1, "gear_forge:emerald_gem",
+                        new GemDefinition("emerald_gem", "绿宝石", 1, "gear_forge:emerald_gem",
                                 List.of(
                                         new GemEffect("movement_speed", 0.05, "增加5%移动速度"),
                                         new GemEffect("looting", 1.0, "增加1级掠夺"),
@@ -122,7 +122,7 @@ public class GemConfig {
                                 List.of(
                                         new GemEffect("shield_block_recovery", 3.0, "减少格挡后受到的伤害+3")
                                 ),
-                                List.of("weapon"), "uncommon")
+                                List.of("weapon", "armor", "tool"), "uncommon")
                 ),
                 5
         );

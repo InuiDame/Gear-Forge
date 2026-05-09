@@ -24,7 +24,9 @@
         }
       ],
       "compatibleSockets": [
-        "weapon"
+        "weapon",
+        "armor",
+        "tool"
       ],
       "rarity": "uncommon"
     },
@@ -46,12 +48,14 @@
         }
       ],
       "compatibleSockets": [
-        "armor"
+        "weapon",
+        "armor",
+        "tool"
       ],
       "rarity": "uncommon"
     },
     {
-      "id": "emerald",
+      "id": "emerald_gem",
       "name": "绿宝石",
       "tier": 1,
       "itemId": "gear_forge:emerald_gem",
@@ -73,6 +77,7 @@
         }
       ],
       "compatibleSockets": [
+        "weapon",
         "armor",
         "tool"
       ],
@@ -92,7 +97,8 @@
       ],
       "compatibleSockets": [
         "weapon",
-        "armor"
+        "armor",
+        "tool"
       ],
       "rarity": "rare"
     },
@@ -133,7 +139,9 @@
         }
       ],
       "compatibleSockets": [
-        "weapon"
+        "weapon",
+        "armor",
+        "tool"
       ],
       "rarity": "uncommon"
     },
@@ -169,7 +177,9 @@
         }
       ],
       "compatibleSockets": [
-        "weapon"
+        "weapon",
+        "armor",
+        "tool"
       ],
       "rarity": "uncommon"
     }
