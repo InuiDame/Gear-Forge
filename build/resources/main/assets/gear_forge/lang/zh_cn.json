@@ -51,6 +51,7 @@
   "tooltip.gear_forge.reincarnation_count": "✦ 转生次数: %s",
   "tooltip.gear_forge.affixes_header": "--- 词条 ---",
   "tooltip.gear_forge.gems_header": "--- 宝石 ---",
+  "tooltip.gear_forge.stored_bonuses_header": "--- 转生继承 ---",
   "tooltip.gear_forge.offhand_mode": "⚡ 副手模式",
 
   "tooltip.gear_forge.gem.attack_damage": "增加 %s 点攻击力",

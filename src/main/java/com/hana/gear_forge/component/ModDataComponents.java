@@ -60,7 +60,7 @@ public class ModDataComponents {
             DATA_COMPONENTS.registerComponentType("affixes",
                     builder -> builder
                             .persistent(AffixEntry.CODEC.listOf())
-                            .networkSynchronized(ByteBufCodecs.fromCodec(AffixEntry.CODEC.listOf())));
+                            .networkSynchronized(AffixEntry.STREAM_CODEC.apply(ByteBufCodecs.list())));
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> UPGRADE_LEVEL =
             DATA_COMPONENTS.registerComponentType("upgrade_level",
@@ -72,7 +72,7 @@ public class ModDataComponents {
             DATA_COMPONENTS.registerComponentType("gems",
                     builder -> builder
                             .persistent(GemsEntry.CODEC.listOf())
-                            .networkSynchronized(ByteBufCodecs.fromCodec(GemsEntry.CODEC.listOf())));
+                            .networkSynchronized(GemsEntry.STREAM_CODEC.apply(ByteBufCodecs.list())));
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> GEM_TIER =
             DATA_COMPONENTS.registerComponentType("gem_tier",
@@ -96,7 +96,7 @@ public class ModDataComponents {
             DATA_COMPONENTS.registerComponentType("stored_bonuses",
                     builder -> builder
                             .persistent(StoredBonus.CODEC.listOf())
-                            .networkSynchronized(ByteBufCodecs.fromCodec(StoredBonus.CODEC.listOf())));
+                            .networkSynchronized(StoredBonus.STREAM_CODEC.apply(ByteBufCodecs.list())));
 
 
 }

@@ -1,0 +1,18 @@
+[
+  {
+    "problemId": {
+      "id": "missing-target",
+      "displayName": "Missing Target",
+      "group": {
+        "id": "access-transformer",
+        "displayName": "Access Transformers"
+      }
+    },
+    "severity": "ERROR",
+    "location": {
+      "file": "H:\\下载\\Gear Forge\\src\\main\\resources\\META-INF\\accesstransformer.cfg",
+      "line": 2
+    },
+    "contextualLabel": "The target net.minecraft.world.entity.LivingEntity FIELD f_20953_ does not exist."
+  }
+]

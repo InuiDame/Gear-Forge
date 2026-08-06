@@ -76,7 +76,16 @@ public class AffixConfig {
                         new AffixDefinition("auto_repair", "自动修复", "stat_boost", List.of(1.0, 5.0), 3, "每秒自动修复耐久度"),
                         new AffixDefinition("durability_reduction", "耐久保护", "percentage", List.of(0.05, 0.3), 5, "减少耐久度消耗"),
                         new AffixDefinition("shield_block_reduction", "盾牌格挡", "stat_boost", List.of(1.0, 5.0), 5, "增加盾牌格挡减伤"),
-                        new AffixDefinition("enchantment_boost", "附魔增幅", "stat_boost", List.of(1.0, 3.0), 4, "增加装备附魔等级")
+                        new AffixDefinition("enchantment_boost", "附魔增幅", "stat_boost", List.of(1.0, 3.0), 4, "增加装备附魔等级"),
+                        new AffixDefinition("max_health", "最大生命", "stat_boost", List.of(2.0, 10.0), 10, "增加最大生命值"),
+                        new AffixDefinition("health_regen", "生命回复", "stat_boost", List.of(0.5, 3.0), 6, "每秒恢复生命值"),
+                        new AffixDefinition("lightning_damage", "雷电伤害", "stat_boost", List.of(1.0, 6.0), 7, "额外造成雷电伤害"),
+                        new AffixDefinition("armor_penetration", "护甲穿透", "stat_boost", List.of(1.0, 6.0), 5, "无视部分护甲值"),
+                        new AffixDefinition("damage_reduction", "减伤", "percentage", List.of(0.02, 0.12), 6, "减少受到的伤害"),
+                        new AffixDefinition("thorns", "荆棘反伤", "percentage", List.of(0.05, 0.2), 5, "反弹受到的伤害"),
+                        new AffixDefinition("dodge_chance", "闪避率", "percentage", List.of(0.02, 0.1), 4, "有概率完全闪避攻击"),
+                        new AffixDefinition("knockback_boost", "击退增强", "percentage", List.of(0.1, 0.5), 5, "增加击退距离"),
+                        new AffixDefinition("luck", "幸运值", "stat_boost", List.of(1.0, 5.0), 5, "增加幸运值")
                 ),
                 Map.of(
                         "common", List.of(1, 1),

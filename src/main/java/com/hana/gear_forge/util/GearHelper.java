@@ -79,10 +79,9 @@ public class GearHelper {
     }
 
     private static boolean isAffixOfType(String affixId, String statType) {
-        AffixConfig config = ModConfigs.getAffixConfig();
-        return config.getAffixPool().stream()
-                .filter(a -> a.getId().equals(affixId))
-                .anyMatch(a -> a.getType().equals(statType) || a.getId().equals(statType));
+        var def = ModConfigs.getAffixDefinition(affixId);
+        if (def == null) return false;
+        return def.getType().equals(statType) || def.getId().equals(statType);
     }
 
     public static boolean hasEnoughItems(Player player, Item item, int count) {
@@ -124,14 +123,11 @@ public class GearHelper {
 
     public static double getGemStatBonus(String gemId, String statType, int tier) {
         if (tier <= 0) tier = 1;
-        GemConfig config = ModConfigs.getGemConfig();
-        for (GemDefinition gem : config.getGems()) {
-            if (gem.getId().equals(gemId) && gem.getEffects() != null) {
-                for (GemEffect effect : gem.getEffects()) {
-                    if (effect.getType().equals(statType)) {
-                        return effect.getValue() * tier;
-                    }
-                }
+        var gem = ModConfigs.getGemDefinition(gemId);
+        if (gem == null || gem.getEffects() == null) return 0;
+        for (GemConfig.GemEffect effect : gem.getEffects()) {
+            if (effect.getType().equals(statType)) {
+                return effect.getValue() * tier;
             }
         }
         return 0;
@@ -139,16 +135,13 @@ public class GearHelper {
 
     public static boolean hasUniqueGemEffect(String effectId, List<ModDataComponents.GemsEntry> gems) {
         if (gems == null) return false;
-        GemConfig config = ModConfigs.getGemConfig();
         for (ModDataComponents.GemsEntry entry : gems) {
-            for (GemDefinition gem : config.getGems()) {
-                if (gem.getId().equals(entry.id()) && gem.getEffects() != null) {
-                    for (GemEffect effect : gem.getEffects()) {
-                        if (effect.getType().equals("unique")
-                                && (effect.getDescription().contains(effectId) || gem.getId().contains(effectId))) {
-                            return true;
-                        }
-                    }
+            var gem = ModConfigs.getGemDefinition(entry.id());
+            if (gem == null || gem.getEffects() == null) continue;
+            for (GemConfig.GemEffect effect : gem.getEffects()) {
+                if (effect.getType().equals("unique")
+                        && (effect.getDescription().contains(effectId) || gem.getId().contains(effectId))) {
+                    return true;
                 }
             }
         }
@@ -212,15 +205,12 @@ public class GearHelper {
     public static double getTotalGemEffectValue(List<ModDataComponents.GemsEntry> gems, String effectType) {
         if (gems == null) return 0;
         double total = 0;
-        GemConfig config = ModConfigs.getGemConfig();
         for (ModDataComponents.GemsEntry entry : gems) {
-            for (GemDefinition gem : config.getGems()) {
-                if (gem.getId().equals(entry.id()) && gem.getEffects() != null) {
-                    for (GemEffect effect : gem.getEffects()) {
-                        if (effect.getType().equals(effectType)) {
-                            total += effect.getValue() * entry.tier();
-                        }
-                    }
+            var gem = ModConfigs.getGemDefinition(entry.id());
+            if (gem == null || gem.getEffects() == null) continue;
+            for (GemConfig.GemEffect effect : gem.getEffects()) {
+                if (effect.getType().equals(effectType)) {
+                    total += effect.getValue() * entry.tier();
                 }
             }
         }
@@ -273,7 +263,7 @@ public class GearHelper {
                 for (GemDefinition def : gemConfig.getGems()) {
                     if (def.getId().equals(gem.id()) && def.getEffects() != null) {
                         for (GemEffect effect : def.getEffects()) {
-                            bonusMap.merge(effect.getType(), effect.getValue() * gem.tier(), Double::sum);
+                            bonusMap.merge("gem_" + effect.getType(), effect.getValue() * gem.tier(), Double::sum);
                         }
                     }
                 }
@@ -288,9 +278,14 @@ public class GearHelper {
 
     public static double getStoredBonusValue(List<StoredBonus> bonuses, String id) {
         if (bonuses == null) return 0;
-        return bonuses.stream()
+        double value = bonuses.stream()
                 .filter(b -> b.id().equals(id))
                 .mapToDouble(StoredBonus::value)
                 .sum();
+        double gemValue = bonuses.stream()
+                .filter(b -> b.id().equals("gem_" + id))
+                .mapToDouble(StoredBonus::value)
+                .sum();
+        return value + gemValue;
     }
 }

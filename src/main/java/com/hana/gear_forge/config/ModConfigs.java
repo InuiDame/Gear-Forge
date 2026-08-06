@@ -11,6 +11,7 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 public class ModConfigs {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -20,12 +21,15 @@ public class ModConfigs {
     private static GemConfig gemConfig;
     private static MobGearConfig mobGearConfig;
 
+    private static Map<String, AffixConfig.AffixDefinition> affixIndex;
+    private static Map<String, GemConfig.GemDefinition> gemIndex;
 
     public static void init() {
         loadAffixConfig();
         loadUpgradeConfig();
         loadGemConfig();
         loadMobGearConfig();
+        buildIndices();
     }
 
     public static void reload() {
@@ -68,6 +72,32 @@ public class ModConfigs {
     private static void loadMobGearConfig() {
         Type type = new TypeToken<MobGearConfig>() {}.getType();
         mobGearConfig = loadJsonConfig("mob_gear.json", type, MobGearConfig.createDefault());
+    }
+
+    private static void buildIndices() {
+        affixIndex = new java.util.HashMap<>();
+        if (affixConfig != null && affixConfig.getAffixPool() != null) {
+            for (var def : affixConfig.getAffixPool()) {
+                affixIndex.put(def.getId(), def);
+            }
+        }
+        gemIndex = new java.util.HashMap<>();
+        if (gemConfig != null && gemConfig.getGems() != null) {
+            for (var def : gemConfig.getGems()) {
+                gemIndex.put(def.getId(), def);
+                if (def.getItemId() != null) {
+                    gemIndex.put(def.getItemId(), def);
+                }
+            }
+        }
+    }
+
+    public static AffixConfig.AffixDefinition getAffixDefinition(String id) {
+        return affixIndex != null ? affixIndex.get(id) : null;
+    }
+
+    public static GemConfig.GemDefinition getGemDefinition(String id) {
+        return gemIndex != null ? gemIndex.get(id) : null;
     }
 
     public static AffixConfig getAffixConfig() {

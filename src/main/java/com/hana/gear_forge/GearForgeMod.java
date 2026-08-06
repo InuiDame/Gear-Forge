@@ -9,10 +9,13 @@ import com.hana.gear_forge.recipe.ModRecipeSerializers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import org.slf4j.Logger;
+import com.mojang.logging.LogUtils;
 
 @Mod(GearForgeMod.MODID)
 public class GearForgeMod {
     public static final String MODID = "gear_forge";
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public GearForgeMod(IEventBus modEventBus, ModContainer modContainer) {
         ModConfigs.init();

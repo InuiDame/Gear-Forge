@@ -105,6 +105,7 @@
   "minecraft:adventure/kill_all_mobs": {
     "criteria": {
       "minecraft:skeleton": "2026-05-07 05:05:40 +0800",
+      "minecraft:spider": "2026-08-06 21:00:51 +0800",
       "minecraft:zombie": "2026-05-07 04:57:41 +0800",
       "minecraft:creeper": "2026-05-07 07:53:43 +0800"
     },
@@ -641,6 +642,18 @@
   "minecraft:recipes/misc/gold_nugget_from_blasting": {
     "criteria": {
       "has_golden_horse_armor": "2026-05-09 15:42:59 +0800"
+    },
+    "done": true
+  },
+  "minecraft:nether/netherite_armor": {
+    "criteria": {
+      "netherite_armor": "2026-08-06 21:12:21 +0800"
+    },
+    "done": true
+  },
+  "minecraft:adventure/shoot_arrow": {
+    "criteria": {
+      "shot_arrow": "2026-08-06 21:42:42 +0800"
     },
     "done": true
   },

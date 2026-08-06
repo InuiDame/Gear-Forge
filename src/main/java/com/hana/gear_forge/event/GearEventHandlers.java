@@ -49,7 +49,9 @@ import java.util.Map;
 @EventBusSubscriber(modid = GearForgeMod.MODID)
 public class GearEventHandlers {
 
-    private static final DecimalFormat DF = new DecimalFormat("#.##");
+    private static String fmt(double value) {
+        return new DecimalFormat("#.##").format(value);
+    }
 
     @SubscribeEvent
     public static void onLivingDamage(LivingDamageEvent.Pre event) {
@@ -90,6 +92,17 @@ public class GearEventHandlers {
 
             double enchantBoost = GearHelper.getAffixTotalValue(affixes, "enchantment_boost");
             damage += enchantBoost;
+
+            double lightningDamage = GearHelper.getAffixTotalValue(affixes, "lightning_damage");
+            damage += lightningDamage;
+
+            double armorPen = GearHelper.getAffixTotalValue(affixes, "armor_penetration");
+            if (armorPen > 0 && target instanceof LivingEntity livingTarget) {
+                double currentArmor = livingTarget.getAttributeValue(Attributes.ARMOR);
+                double reducedArmor = Math.max(0, currentArmor - armorPen);
+                double armorReduction = (currentArmor - reducedArmor) / Math.max(currentArmor, 1.0);
+                damage *= (1.0f + (float) armorReduction * 0.5f);
+            }
         }
 
         double upgradeDamage = GearHelper.getUpgradedStatBonus("attack_damage", upgradeLevel);
@@ -128,6 +141,7 @@ public class GearEventHandlers {
             damage += (float) GearHelper.getStoredBonusValue(stored, "upgrade_attack_damage");
             damage += (float) GearHelper.getStoredBonusValue(stored, "attack_damage");
             damage += (float) GearHelper.getStoredBonusValue(stored, "all_stats");
+            damage += (float) GearHelper.getStoredBonusValue(stored, "lightning_damage");
 
             double storedCritChance = GearHelper.getStoredBonusValue(stored, "crit_chance");
             double storedCritDamage = GearHelper.getStoredBonusValue(stored, "crit_damage");
@@ -142,6 +156,13 @@ public class GearEventHandlers {
             double storedFrost = GearHelper.getStoredBonusValue(stored, "frost_damage");
             if (storedFrost > 0) {
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, Math.min((int) storedFrost - 1, 3)));
+            }
+            double storedLightning = GearHelper.getStoredBonusValue(stored, "lightning_damage");
+            if (storedLightning > 0 && target.getRandom().nextDouble() < 0.25) {
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
+                if (target.level().isThundering()) {
+                    damage *= 1.15f;
+                }
             }
         }
 
@@ -161,6 +182,21 @@ public class GearEventHandlers {
             double frostValue = GearHelper.getAffixTotalValue(affixes, "frost_damage");
             if (frostValue > 0) {
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, Math.min((int) frostValue - 1, 3)));
+            }
+
+            double lightningValue = GearHelper.getAffixTotalValue(affixes, "lightning_damage");
+            if (lightningValue > 0 && target.getRandom().nextDouble() < 0.25) {
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
+                if (target.level().isThundering()) {
+                    damage *= 1.15f;
+                }
+            }
+        }
+
+        if (stored != null) {
+            double storedLifeSteal = GearHelper.getStoredBonusValue(stored, "life_steal");
+            if (storedLifeSteal > 0 && livingAttacker instanceof Player player) {
+                player.heal(damage * (float) storedLifeSteal);
             }
         }
     }
@@ -212,6 +248,29 @@ public class GearEventHandlers {
             damage += (float) GearHelper.getStoredBonusValue(stored, "enchantment_boost");
         }
 
+        double totalArmorBowCharge = 0;
+        for (ItemStack armor : attacker.getArmorSlots()) {
+            if (armor.isEmpty()) continue;
+
+            List<ModDataComponents.AffixEntry> armorAffixes = armor.get(ModDataComponents.AFFIXES.get());
+            if (armorAffixes != null) {
+                totalArmorBowCharge += GearHelper.getAffixTotalValueDirect(armorAffixes, "bow_charge_speed");
+            }
+
+            List<ModDataComponents.GemsEntry> armorGems = armor.get(ModDataComponents.GEMS.get());
+            if (armorGems != null) {
+                totalArmorBowCharge += GearHelper.getTotalGemEffectValue(armorGems, "bow_charge_speed");
+            }
+
+            List<ModDataComponents.StoredBonus> armorStored = armor.get(ModDataComponents.STORED_BONUSES.get());
+            if (armorStored != null) {
+                totalArmorBowCharge += GearHelper.getStoredBonusValue(armorStored, "bow_charge_speed");
+            }
+        }
+        if (totalArmorBowCharge > 0) {
+            damage *= (1.0f + (float) totalArmorBowCharge);
+        }
+
         event.setNewDamage(damage);
     }
 
@@ -258,6 +317,38 @@ public class GearEventHandlers {
                     amount -= (float) GearHelper.getStoredBonusValue(stored, "defense");
                     amount -= (float) GearHelper.getStoredBonusValue(stored, "all_stats");
                 }
+
+                if (affixes != null) {
+                    double damageReduction = GearHelper.getAffixTotalValueDirect(affixes, "damage_reduction");
+                    if (damageReduction > 0) {
+                        amount *= (1.0f - (float) damageReduction);
+                    }
+
+                    double dodgeChance = GearHelper.getAffixTotalValueDirect(affixes, "dodge_chance");
+                    if (dodgeChance > 0 && entity.getRandom().nextDouble() < dodgeChance) {
+                        amount = 0;
+                    }
+                }
+            }
+        }
+
+        // Thorns: reflect damage to attacker
+        Entity attacker = event.getSource().getEntity();
+        if (attacker instanceof LivingEntity livingAttacker) {
+            double totalThorns = 0;
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR || slot == EquipmentSlot.BODY) {
+                    ItemStack armor = entity.getItemBySlot(slot);
+                    if (armor.isEmpty()) continue;
+                    List<ModDataComponents.AffixEntry> affixes = armor.get(ModDataComponents.AFFIXES.get());
+                    if (affixes != null) {
+                        totalThorns += GearHelper.getAffixTotalValueDirect(affixes, "thorns");
+                    }
+                }
+            }
+            if (totalThorns > 0 && amount > 0) {
+                float reflectDamage = amount * (float) totalThorns;
+                livingAttacker.hurt(entity.damageSources().thorns(entity), reflectDamage);
             }
         }
 
@@ -345,6 +436,33 @@ public class GearEventHandlers {
                         new AttributeModifier(
                                 ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_movement_speed"),
                                 moveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                        otherSlot);
+            }
+
+            double maxHealth = GearHelper.getAffixTotalValue(affixes, "max_health");
+            if (maxHealth > 0) {
+                event.addModifier(Attributes.MAX_HEALTH,
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_max_health"),
+                                maxHealth * 2.0, AttributeModifier.Operation.ADD_VALUE),
+                        otherSlot);
+            }
+
+            double knockback = GearHelper.getAffixTotalValue(affixes, "knockback_boost");
+            if (knockback > 0) {
+                event.addModifier(Attributes.ATTACK_KNOCKBACK,
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_knockback"),
+                                knockback, AttributeModifier.Operation.ADD_VALUE),
+                        attackSlot);
+            }
+
+            double luck = GearHelper.getAffixTotalValue(affixes, "luck");
+            if (luck > 0) {
+                event.addModifier(Attributes.LUCK,
+                        new AttributeModifier(
+                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_luck"),
+                                luck, AttributeModifier.Operation.ADD_VALUE),
                         otherSlot);
             }
         }
@@ -454,7 +572,7 @@ public class GearEventHandlers {
                                 storedUpgradeToughness, AttributeModifier.Operation.ADD_VALUE),
                         otherSlot);
             }
-            double storedGemMoveSpeed = GearHelper.getStoredBonusValue(storedBonuses, "movement_speed");
+            double storedGemMoveSpeed = GearHelper.getStoredBonusValue(storedBonuses, "gem_movement_speed");
             if (storedGemMoveSpeed > 0) {
                 event.addModifier(Attributes.MOVEMENT_SPEED,
                         new AttributeModifier(
@@ -571,6 +689,8 @@ public class GearEventHandlers {
 
         if (player.tickCount % 20 != 0) return;
 
+        applyHealthRegen(player);
+
         applyDurabilityBoostRepair(player.getMainHandItem());
         applyDurabilityBoostRepair(player.getOffhandItem());
         for (ItemStack armor : player.getInventory().armor) {
@@ -610,6 +730,43 @@ public class GearEventHandlers {
                 int repair = Math.max(1, (int) (stack.getMaxDamage() * storedDurabilityBoost * 0.002));
                 stack.setDamageValue(Math.max(0, stack.getDamageValue() - repair));
             }
+        }
+    }
+
+    private static void applyHealthRegen(Player player) {
+        double totalRegen = 0;
+        for (ItemStack armor : player.getInventory().armor) {
+            List<ModDataComponents.AffixEntry> affixes = armor.get(ModDataComponents.AFFIXES.get());
+            if (affixes != null) {
+                totalRegen += GearHelper.getAffixTotalValueDirect(affixes, "health_regen");
+            }
+
+            List<ModDataComponents.StoredBonus> armorStored = armor.get(ModDataComponents.STORED_BONUSES.get());
+            if (armorStored != null) {
+                totalRegen += GearHelper.getStoredBonusValue(armorStored, "health_regen");
+            }
+        }
+
+        List<ModDataComponents.AffixEntry> mainHandAffixes = player.getMainHandItem().get(ModDataComponents.AFFIXES.get());
+        if (mainHandAffixes != null) {
+            totalRegen += GearHelper.getAffixTotalValueDirect(mainHandAffixes, "health_regen");
+        }
+        List<ModDataComponents.AffixEntry> offHandAffixes = player.getOffhandItem().get(ModDataComponents.AFFIXES.get());
+        if (offHandAffixes != null) {
+            totalRegen += GearHelper.getAffixTotalValueDirect(offHandAffixes, "health_regen");
+        }
+
+        List<ModDataComponents.StoredBonus> mainHandStored = player.getMainHandItem().get(ModDataComponents.STORED_BONUSES.get());
+        if (mainHandStored != null) {
+            totalRegen += GearHelper.getStoredBonusValue(mainHandStored, "health_regen");
+        }
+        List<ModDataComponents.StoredBonus> offHandStored = player.getOffhandItem().get(ModDataComponents.STORED_BONUSES.get());
+        if (offHandStored != null) {
+            totalRegen += GearHelper.getStoredBonusValue(offHandStored, "health_regen");
+        }
+
+        if (totalRegen > 0 && player.getHealth() < player.getMaxHealth()) {
+            player.heal((float) totalRegen);
         }
     }
 
@@ -701,10 +858,12 @@ public class GearEventHandlers {
             List<ModDataComponents.AffixEntry> affixes = stack.get(ModDataComponents.AFFIXES.get());
             Integer upgradeLevel = stack.get(ModDataComponents.UPGRADE_LEVEL.get());
             List<ModDataComponents.GemsEntry> gems = stack.get(ModDataComponents.GEMS.get());
+            List<ModDataComponents.StoredBonus> storedBonuses = stack.get(ModDataComponents.STORED_BONUSES.get());
 
             boolean hasGearData = (affixes != null && !affixes.isEmpty())
                     || (upgradeLevel != null && upgradeLevel > 0)
-                    || (gems != null && !gems.isEmpty());
+                    || (gems != null && !gems.isEmpty())
+                    || (storedBonuses != null && !storedBonuses.isEmpty());
 
             if (!hasGearData) return;
 
@@ -785,6 +944,31 @@ public class GearEventHandlers {
                 }
             }
 
+            if (storedBonuses != null && !storedBonuses.isEmpty()) {
+                tooltip.add(Component.translatable("tooltip.gear_forge.stored_bonuses_header")
+                        .withStyle(ChatFormatting.GRAY));
+                Map<String, Double> mergedStored = new LinkedHashMap<>();
+                for (ModDataComponents.StoredBonus sb : storedBonuses) {
+                    String displayName = getStoredBonusDisplayName(sb.id());
+                    mergedStored.merge(displayName, sb.value(), Double::sum);
+                }
+                for (var entry : mergedStored.entrySet()) {
+                    String displayName = entry.getKey();
+                    double totalValue = entry.getValue();
+                    String rawId = storedBonuses.stream()
+                            .filter(sb -> getStoredBonusDisplayName(sb.id()).equals(displayName))
+                            .findFirst().map(ModDataComponents.StoredBonus::id).orElse(displayName);
+                    String formattedValue;
+                    if (isStoredBonusPercentage(rawId)) {
+                        formattedValue = fmt(totalValue * 100) + "%";
+                    } else {
+                        formattedValue = fmt(totalValue);
+                    }
+                    tooltip.add(Component.literal(" ").append(Component.literal(displayName + ": " + formattedValue))
+                            .withStyle(ChatFormatting.GOLD));
+                }
+            }
+
         }
 
         private static String getAffixDisplayName(String id) {
@@ -802,25 +986,25 @@ public class GearEventHandlers {
                     .filter(a -> a.getId().equals(id))
                     .findFirst().orElse(null);
             if (def != null && "percentage".equals(def.getType())) {
-                return DF.format(value * 100) + "%";
+                return fmt(value * 100) + "%";
             }
-            return DF.format(value);
+            return fmt(value);
         }
 
         private static MutableComponent formatGemEffectText(String type, double value) {
-            String formattedValue = DF.format(value);
+            String formattedValue = fmt(value);
             return switch (type) {
                 case "attack_damage"        -> Component.translatable("tooltip.gear_forge.gem.attack_damage", formattedValue);
                 case "fire_damage"          -> Component.translatable("tooltip.gear_forge.gem.fire_damage", formattedValue);
                 case "frost_damage"         -> Component.translatable("tooltip.gear_forge.gem.frost_damage", formattedValue);
                 case "defense"              -> Component.translatable("tooltip.gear_forge.gem.defense", formattedValue);
                 case "toughness"            -> Component.translatable("tooltip.gear_forge.gem.toughness", formattedValue);
-                case "movement_speed"       -> Component.translatable("tooltip.gear_forge.gem.movement_speed", DF.format(value * 100));
+                case "movement_speed"       -> Component.translatable("tooltip.gear_forge.gem.movement_speed", fmt(value * 100));
                 case "looting"              -> Component.translatable("tooltip.gear_forge.gem.looting", (int) value);
                 case "all_stats"            -> Component.translatable("tooltip.gear_forge.gem.all_stats", formattedValue);
-                case "bow_charge_speed"     -> Component.translatable("tooltip.gear_forge.gem.bow_charge_speed", DF.format(value * 100));
+                case "bow_charge_speed"     -> Component.translatable("tooltip.gear_forge.gem.bow_charge_speed", fmt(value * 100));
                 case "projectile_damage"    -> Component.translatable("tooltip.gear_forge.gem.projectile_damage", formattedValue);
-                case "durability_boost"     -> Component.translatable("tooltip.gear_forge.gem.durability_boost", DF.format(value * 100));
+                case "durability_boost"     -> Component.translatable("tooltip.gear_forge.gem.durability_boost", fmt(value * 100));
                 case "shield_block_recovery"-> Component.translatable("tooltip.gear_forge.gem.shield_block_recovery", formattedValue);
                 default                     -> Component.translatable("tooltip.gear_forge.gem." + type, formattedValue);
             };
@@ -837,9 +1021,45 @@ public class GearEventHandlers {
         private static String getStoredBonusDisplayName(String id) {
             String name = getAffixDisplayName(id);
             if (!name.equals(id)) return "[转生]" + name;
-            if (id.startsWith("upgrade_")) return "[转生]强化:" + id.substring(8);
+
+            if (id.startsWith("gem_")) {
+                String base = id.substring(4);
+                String baseName = getAffixDisplayName(base);
+                if (!baseName.equals(base)) return "[转生]宝石:" + baseName;
+                return "[转生]宝石:" + base;
+            }
+
+            if (id.startsWith("upgrade_")) {
+                String base = id.substring(8);
+                String baseName = getAffixDisplayName(base);
+                if (!baseName.equals(base)) return "[转生]强化:" + baseName;
+                String statName = STAT_NAME_MAP.get(base);
+                if (statName != null) return "[转生]强化:" + statName;
+                return "[转生]强化:" + base;
+            }
+
             return "[转生]" + id;
         }
 
+        private static final Map<String, String> STAT_NAME_MAP = Map.ofEntries(
+                Map.entry("attack_damage", "攻击力"),
+                Map.entry("defense", "防御力"),
+                Map.entry("toughness", "韧性"),
+                Map.entry("knockback_resistance", "击退抗性"),
+                Map.entry("movement_speed", "移动速度"),
+                Map.entry("attack_speed", "攻击速度"),
+                Map.entry("armor", "护甲值"),
+                Map.entry("armor_toughness", "护甲韧性"),
+                Map.entry("max_health", "最大生命"),
+                Map.entry("luck", "幸运值")
+        );
+
+        private static boolean isStoredBonusPercentage(String id) {
+            String lookup = id;
+            if (lookup.startsWith("gem_")) lookup = lookup.substring(4);
+            if (lookup.startsWith("upgrade_")) lookup = lookup.substring(8);
+            var def = ModConfigs.getAffixDefinition(lookup);
+            return def != null && "percentage".equals(def.getType());
+        }
     }
 }

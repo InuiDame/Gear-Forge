@@ -51,6 +51,7 @@
   "tooltip.gear_forge.reincarnation_count": "✦ Reincarnation: %s",
   "tooltip.gear_forge.affixes_header": "--- Affixes ---",
   "tooltip.gear_forge.gems_header": "--- Gems ---",
+  "tooltip.gear_forge.stored_bonuses_header": "--- Reincarnation Inherited ---",
   "tooltip.gear_forge.offhand_mode": "⚡ Offhand Mode",
 
   "tooltip.gear_forge.gem.attack_damage": "Increases Attack Damage by %s",
