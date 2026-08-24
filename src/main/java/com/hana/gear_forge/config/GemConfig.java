@@ -3,6 +3,7 @@ package com.hana.gear_forge.config;
 import java.util.List;
 
 public class GemConfig {
+    private int configVersion = 1;
     private int maxSocketsPerGear;
     private List<String> socketTypes;
     private List<GemDefinition> gems;
@@ -11,13 +12,15 @@ public class GemConfig {
     public GemConfig() {
     }
 
-    public GemConfig(int maxSocketsPerGear, List<String> socketTypes, List<GemDefinition> gems, int maxTier) {
+    public GemConfig(int configVersion, int maxSocketsPerGear, List<String> socketTypes, List<GemDefinition> gems, int maxTier) {
+        this.configVersion = configVersion;
         this.maxSocketsPerGear = maxSocketsPerGear;
         this.socketTypes = socketTypes;
         this.gems = gems;
         this.maxTier = maxTier;
     }
 
+    public int getConfigVersion() { return configVersion; }
     public int getMaxSocketsPerGear() { return maxSocketsPerGear; }
     public List<String> getSocketTypes() { return socketTypes; }
     public List<GemDefinition> getGems() { return gems; }
@@ -76,6 +79,7 @@ public class GemConfig {
 
     public static GemConfig createDefault() {
         return new GemConfig(
+                1,
                 3, List.of("weapon", "armor", "tool"),
                 List.of(
                         new GemDefinition("ruby", "红宝石", 1, "gear_forge:ruby",

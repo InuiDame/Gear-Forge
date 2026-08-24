@@ -1,6 +1,7 @@
 package com.hana.gear_forge.config;
 
 public class MobGearConfig {
+    private int configVersion = 1;
     private double easyChance;
     private double normalChance;
     private double hardChance;
@@ -10,8 +11,9 @@ public class MobGearConfig {
     public MobGearConfig() {
     }
 
-    public MobGearConfig(double easyChance, double normalChance, double hardChance,
+    public MobGearConfig(int configVersion, double easyChance, double normalChance, double hardChance,
                          int maxUpgradeLevel, int maxAffixes) {
+        this.configVersion = configVersion;
         this.easyChance = easyChance;
         this.normalChance = normalChance;
         this.hardChance = hardChance;
@@ -19,6 +21,7 @@ public class MobGearConfig {
         this.maxAffixes = maxAffixes;
     }
 
+    public int getConfigVersion() { return configVersion; }
     public double getEasyChance() { return easyChance; }
     public double getNormalChance() { return normalChance; }
     public double getHardChance() { return hardChance; }
@@ -27,11 +30,9 @@ public class MobGearConfig {
 
     public static MobGearConfig createDefault() {
         return new MobGearConfig(
-                0.001,   // 简单
-                0.005,   // 普通
-                0.01,    // 困难
-                10,      // 最高强化+10
-                2        // 最多2条词条
+                1,
+                0.001, 0.005, 0.01,
+                10, 2
         );
     }
 }

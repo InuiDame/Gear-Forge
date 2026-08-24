@@ -25,6 +25,12 @@
   "enchantment.gear_forge.explosive_arrow.desc": "Explodes on impact (No block damage)",
   "enchantment.gear_forge.armor_piercing_arrow": "Armor Piercing Arrow",
   "enchantment.gear_forge.armor_piercing_arrow.desc": "Pierces armor, +5% penetration per lvl",
+  "enchantment.gear_forge.mining_crit": "Mining Crit",
+  "enchantment.gear_forge.mining_crit.desc": "Chance to get double drops when mining",
+  "enchantment.gear_forge.ore_hunter": "Ore Hunter",
+  "enchantment.gear_forge.ore_hunter.desc": "Chance to get ore from stone",
+  "enchantment.gear_forge.harvest_bounty": "Harvest Bounty",
+  "enchantment.gear_forge.harvest_bounty.desc": "Chance for extra crop yields",
 
   "message.gear_forge.no_gear": "Please hold the gear item in your other hand!",
   "message.gear_forge.need_diamonds": "Need %s diamonds!",

@@ -97,6 +97,11 @@ public class GearSmithingRecipe implements SmithingRecipe {
             if (!config.isReincarnationEnabled()) return false;
             int currentLevel = base.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
             if (currentLevel < config.getMaxLevel()) return false;
+            int maxReincarnation = config.getMaxReincarnationCount();
+            if (maxReincarnation >= 0) {
+                int currentCount = base.getOrDefault(ModDataComponents.REINCARNATION_COUNT.get(), 0);
+                if (currentCount >= maxReincarnation) return false;
+            }
             if (template.isEmpty()) return false;
             String costMaterialId = config.getReincarnationCostMaterial();
             int requiredCount = config.getReincarnationCostMaterialCount();

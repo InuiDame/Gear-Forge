@@ -25,6 +25,12 @@
   "enchantment.gear_forge.explosive_arrow.desc": "在着陆点引发爆炸（不破坏方块）",
   "enchantment.gear_forge.armor_piercing_arrow": "破甲箭",
   "enchantment.gear_forge.armor_piercing_arrow.desc": "无视目标护甲，每级增加5%穿透力",
+  "enchantment.gear_forge.mining_crit": "挖矿暴击",
+  "enchantment.gear_forge.mining_crit.desc": "挖矿时概率触发暴击，瞬间破坏并额外掉落",
+  "enchantment.gear_forge.ore_hunter": "矿石猎手",
+  "enchantment.gear_forge.ore_hunter.desc": "挖掘石头时概率获得矿物",
+  "enchantment.gear_forge.harvest_bounty": "丰收暴击",
+  "enchantment.gear_forge.harvest_bounty.desc": "收获农作物时概率获得额外产出",
 
   "message.gear_forge.no_gear": "请将需要操作的装备放在另一只手上！",
   "message.gear_forge.need_diamonds": "需要 %s 个钻石！",

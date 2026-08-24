@@ -55,13 +55,18 @@ public class ModCreativeTabs {
                                 ModEnchantments.LIGHTNING_ARROW,
                                 ModEnchantments.FROST_ARROW,
                                 ModEnchantments.EXPLOSIVE_ARROW,
-                                ModEnchantments.ARMOR_PIERCING_ARROW
+                                ModEnchantments.ARMOR_PIERCING_ARROW,
+                                ModEnchantments.MINING_CRIT,
+                                ModEnchantments.ORE_HUNTER,
+                                ModEnchantments.HARVEST_BOUNTY,
+                                ModEnchantments.CHARITY_BUNDLE
                         );
 
                         params.holders().lookup(Registries.ENCHANTMENT).ifPresent(enchantRegistry -> {
                             for (ResourceKey<Enchantment> key : enchantKeys) {
                                 enchantRegistry.get(key).ifPresent(holder -> {
-                                    for (int level = 1; level <= 5; level++) {
+                                    int maxLevel = holder.value().getMaxLevel();
+                                    for (int level = 1; level <= maxLevel; level++) {
                                         output.accept(createEnchantedBook(holder, level));
                                     }
                                 });

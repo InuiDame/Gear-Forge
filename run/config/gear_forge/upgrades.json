@@ -40,5 +40,7 @@
   },
   "reincarnationEnabled": true,
   "reincarnationCostMaterial": "minecraft:netherite_block",
-  "reincarnationCostMaterialCount": 8
+  "reincarnationCostMaterialCount": 8,
+  "configVersion": 1,
+  "maxReincarnationCount": -1
 }

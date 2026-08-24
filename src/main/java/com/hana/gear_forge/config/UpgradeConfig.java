@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 public class UpgradeConfig {
+    private int configVersion = 1;
     private int maxLevel;
     private double baseSuccessRate;
     private double levelSuccessDecay;
@@ -23,11 +24,12 @@ public class UpgradeConfig {
     private boolean reincarnationEnabled;
     private String reincarnationCostMaterial;
     private int reincarnationCostMaterialCount;
+    private int maxReincarnationCount;
 
     public UpgradeConfig() {
     }
 
-    public UpgradeConfig(int maxLevel, double baseSuccessRate, double levelSuccessDecay,
+    public UpgradeConfig(int configVersion, int maxLevel, double baseSuccessRate, double levelSuccessDecay,
                          double levelFailureDecay, int maxConsumeMaterialPerLevel,
                          String consumeMaterial, int consumeAmountBase, int consumeAmountIncrement,
                          boolean allowDowngrade, int downgradeLevels, boolean allowDestroy,
@@ -35,7 +37,8 @@ public class UpgradeConfig {
                          List<Integer> specialBonusLevels,
                          Map<Integer, Map<String, Double>> specialBonusStats,
                          boolean reincarnationEnabled, String reincarnationCostMaterial,
-                         int reincarnationCostMaterialCount) {
+                         int reincarnationCostMaterialCount, int maxReincarnationCount) {
+        this.configVersion = configVersion;
         this.maxLevel = maxLevel;
         this.baseSuccessRate = baseSuccessRate;
         this.levelSuccessDecay = levelSuccessDecay;
@@ -54,8 +57,10 @@ public class UpgradeConfig {
         this.reincarnationEnabled = reincarnationEnabled;
         this.reincarnationCostMaterial = reincarnationCostMaterial;
         this.reincarnationCostMaterialCount = reincarnationCostMaterialCount;
+        this.maxReincarnationCount = maxReincarnationCount;
     }
 
+    public int getConfigVersion() { return configVersion; }
     public int getMaxLevel() { return maxLevel; }
     public double getBaseSuccessRate() { return baseSuccessRate; }
     public double getLevelSuccessDecay() { return levelSuccessDecay; }
@@ -74,6 +79,7 @@ public class UpgradeConfig {
     public boolean isReincarnationEnabled() { return reincarnationEnabled; }
     public String getReincarnationCostMaterial() { return reincarnationCostMaterial; }
     public int getReincarnationCostMaterialCount() { return reincarnationCostMaterialCount; }
+    public int getMaxReincarnationCount() { return maxReincarnationCount; }
 
     public int getConsumeAmount(int level) {
         return consumeAmountBase + consumeAmountIncrement * Math.max(0, level - 1);
@@ -97,13 +103,15 @@ public class UpgradeConfig {
         defaultSpecialStats.put(15, Map.of("attack_damage", 10.0, "defense", 5.0, "toughness", 3.0));
 
         return new UpgradeConfig(
+                1,
                 15, 1.0, 0.05, 0.1,
                 5, "minecraft:diamond", 1, 1,
                 true, 1, false, 0.0,
                 Map.of("attack_damage", 0.5, "defense", 0.3, "toughness", 0.1),
                 List.of(5, 10, 15),
                 defaultSpecialStats,
-                true, "minecraft:netherite_block", 8
+                true, "minecraft:netherite_block", 8,
+                -1
         );
     }
 }

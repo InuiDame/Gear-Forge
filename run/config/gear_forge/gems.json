@@ -184,5 +184,6 @@
       "rarity": "uncommon"
     }
   ],
-  "maxTier": 5
+  "maxTier": 5,
+  "configVersion": 1
 }

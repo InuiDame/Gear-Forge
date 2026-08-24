@@ -1,0 +1,342 @@
+{
+  "maxAffixCount": 5,
+  "minAffixCount": 1,
+  "affixPool": [
+    {
+      "id": "attack_power",
+      "name": "攻击力",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        15.0
+      ],
+      "weight": 20,
+      "description": "增加基础攻击伤害",
+      "enabled": true
+    },
+    {
+      "id": "defense_power",
+      "name": "防御力",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        10.0
+      ],
+      "weight": 20,
+      "description": "增加基础防御值",
+      "enabled": true
+    },
+    {
+      "id": "crit_chance",
+      "name": "暴击率",
+      "type": "percentage",
+      "valueRange": [
+        0.01,
+        0.15
+      ],
+      "weight": 10,
+      "description": "增加暴击概率",
+      "enabled": true
+    },
+    {
+      "id": "crit_damage",
+      "name": "暴击伤害",
+      "type": "percentage",
+      "valueRange": [
+        0.05,
+        0.5
+      ],
+      "weight": 10,
+      "description": "增加暴击伤害倍率",
+      "enabled": true
+    },
+    {
+      "id": "attack_speed",
+      "name": "攻击速度",
+      "type": "stat_boost",
+      "valueRange": [
+        0.05,
+        0.2
+      ],
+      "weight": 8,
+      "description": "增加攻击速度",
+      "enabled": true
+    },
+    {
+      "id": "life_steal",
+      "name": "生命偷取",
+      "type": "percentage",
+      "valueRange": [
+        0.01,
+        0.08
+      ],
+      "weight": 5,
+      "description": "攻击时恢复生命",
+      "enabled": true
+    },
+    {
+      "id": "movement_speed",
+      "name": "移动速度",
+      "type": "percentage",
+      "valueRange": [
+        0.02,
+        0.1
+      ],
+      "weight": 7,
+      "description": "增加移动速度",
+      "enabled": true
+    },
+    {
+      "id": "fire_damage",
+      "name": "火焰伤害",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        5.0
+      ],
+      "weight": 8,
+      "description": "额外造成火焰伤害",
+      "enabled": true
+    },
+    {
+      "id": "frost_damage",
+      "name": "寒冰伤害",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        5.0
+      ],
+      "weight": 8,
+      "description": "额外造成寒冰伤害并减速敌人",
+      "enabled": true
+    },
+    {
+      "id": "looting_bonus",
+      "name": "掠夺率",
+      "type": "percentage",
+      "valueRange": [
+        0.05,
+        0.25
+      ],
+      "weight": 5,
+      "description": "增加掉落物数量",
+      "enabled": true
+    },
+    {
+      "id": "xp_bonus",
+      "name": "经验加成",
+      "type": "percentage",
+      "valueRange": [
+        0.1,
+        0.5
+      ],
+      "weight": 5,
+      "description": "增加经验掉落",
+      "enabled": true
+    },
+    {
+      "id": "bow_charge_speed",
+      "name": "弓蓄力加速",
+      "type": "percentage",
+      "valueRange": [
+        0.05,
+        0.3
+      ],
+      "weight": 5,
+      "description": "增加弓箭蓄力速度",
+      "enabled": true
+    },
+    {
+      "id": "projectile_damage",
+      "name": "弹射物伤害",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        8.0
+      ],
+      "weight": 5,
+      "description": "增加弹射物伤害",
+      "enabled": true
+    },
+    {
+      "id": "auto_repair",
+      "name": "自动修复",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        5.0
+      ],
+      "weight": 3,
+      "description": "每秒自动修复耐久度",
+      "enabled": true
+    },
+    {
+      "id": "durability_reduction",
+      "name": "耐久保护",
+      "type": "percentage",
+      "valueRange": [
+        0.05,
+        0.3
+      ],
+      "weight": 5,
+      "description": "减少耐久度消耗",
+      "enabled": true
+    },
+    {
+      "id": "shield_block_reduction",
+      "name": "盾牌格挡",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        5.0
+      ],
+      "weight": 5,
+      "description": "增加盾牌格挡减伤",
+      "enabled": true
+    },
+    {
+      "id": "enchantment_boost",
+      "name": "附魔增幅",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        3.0
+      ],
+      "weight": 4,
+      "description": "增加装备附魔等级",
+      "enabled": true
+    },
+    {
+      "id": "max_health",
+      "name": "最大生命",
+      "type": "stat_boost",
+      "valueRange": [
+        2.0,
+        10.0
+      ],
+      "weight": 10,
+      "description": "增加最大生命值",
+      "enabled": true
+    },
+    {
+      "id": "health_regen",
+      "name": "生命回复",
+      "type": "stat_boost",
+      "valueRange": [
+        0.5,
+        3.0
+      ],
+      "weight": 6,
+      "description": "每秒恢复生命值",
+      "enabled": true
+    },
+    {
+      "id": "lightning_damage",
+      "name": "雷电伤害",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        6.0
+      ],
+      "weight": 7,
+      "description": "额外造成雷电伤害",
+      "enabled": true
+    },
+    {
+      "id": "armor_penetration",
+      "name": "护甲穿透",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        6.0
+      ],
+      "weight": 5,
+      "description": "无视部分护甲值",
+      "enabled": true
+    },
+    {
+      "id": "damage_reduction",
+      "name": "减伤",
+      "type": "percentage",
+      "valueRange": [
+        0.02,
+        0.12
+      ],
+      "weight": 6,
+      "description": "减少受到的伤害",
+      "enabled": true
+    },
+    {
+      "id": "thorns",
+      "name": "荆棘反伤",
+      "type": "percentage",
+      "valueRange": [
+        0.05,
+        0.2
+      ],
+      "weight": 5,
+      "description": "反弹受到的伤害",
+      "enabled": true
+    },
+    {
+      "id": "dodge_chance",
+      "name": "闪避率",
+      "type": "percentage",
+      "valueRange": [
+        0.02,
+        0.1
+      ],
+      "weight": 4,
+      "description": "有概率完全闪避攻击",
+      "enabled": true
+    },
+    {
+      "id": "knockback_boost",
+      "name": "击退增强",
+      "type": "percentage",
+      "valueRange": [
+        0.1,
+        0.5
+      ],
+      "weight": 5,
+      "description": "增加击退距离",
+      "enabled": true
+    },
+    {
+      "id": "luck",
+      "name": "幸运值",
+      "type": "stat_boost",
+      "valueRange": [
+        1.0,
+        5.0
+      ],
+      "weight": 5,
+      "description": "增加幸运值",
+      "enabled": true
+    }
+  ],
+  "rarityAffixCount": {
+    "common": [
+      1,
+      1
+    ],
+    "rare": [
+      2,
+      3
+    ],
+    "epic": [
+      3,
+      4
+    ],
+    "uncommon": [
+      1,
+      2
+    ],
+    "legendary": [
+      4,
+      5
+    ]
+  },
+  "affixRerollCostDiamonds": 3,
+  "configVersion": 1
+}

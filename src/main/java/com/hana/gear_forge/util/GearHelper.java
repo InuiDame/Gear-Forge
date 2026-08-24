@@ -26,7 +26,11 @@ public class GearHelper {
 
     public static List<ModDataComponents.AffixEntry> rollAffixes(ItemStack stack, RandomSource random) {
         AffixConfig config = ModConfigs.getAffixConfig();
-        List<AffixDefinition> pool = config.getAffixPool();
+        List<AffixDefinition> pool = config.getAffixPool().stream()
+                .filter(AffixDefinition::isEnabled)
+                .toList();
+
+        if (pool.isEmpty()) return List.of();
 
         int totalWeight = pool.stream().mapToInt(AffixDefinition::getWeight).sum();
 

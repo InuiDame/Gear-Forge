@@ -2,6 +2,7 @@ package com.hana.gear_forge.event;
 
 import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.Provider.ModEnchantments;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -14,16 +15,22 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 
 import java.util.List;
 
@@ -149,6 +156,107 @@ public class ModEnchantmentEvents {
         }
     }
 
+    @SubscribeEvent
+    public static void onBlockBreak(BlockEvent.BreakEvent event) {
+        if (!(event.getPlayer().level() instanceof ServerLevel serverLevel)) return;
+        Player player = event.getPlayer();
+        ItemStack tool = player.getMainHandItem();
+        if (tool.isEmpty()) return;
+
+        var registry = serverLevel.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+        BlockPos pos = event.getPos();
+
+        int miningCritLvl = EnchantmentHelper.getItemEnchantmentLevel(
+                registry.getHolderOrThrow(ModEnchantments.MINING_CRIT), tool);
+        if (miningCritLvl > 0 && player.getRandom().nextFloat() < miningCritLvl * 0.08) {
+            event.setCanceled(true);
+            serverLevel.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+            List<ItemStack> drops = Block.getDrops(event.getState(), serverLevel, pos, null, player, tool);
+            for (ItemStack drop : drops) {
+                ItemEntity entity = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, drop);
+                serverLevel.addFreshEntity(entity);
+            }
+            serverLevel.sendParticles(ParticleTypes.CRIT,
+                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                    20, 0.3, 0.3, 0.3, 0.1);
+            serverLevel.playSound(null, pos, SoundEvents.PLAYER_ATTACK_CRIT,
+                    SoundSource.BLOCKS, 1.0f, 1.5f);
+            return;
+        }
+
+        int oreHunterLvl = EnchantmentHelper.getItemEnchantmentLevel(
+                registry.getHolderOrThrow(ModEnchantments.ORE_HUNTER), tool);
+        if (oreHunterLvl > 0 && event.getState().is(Blocks.STONE)) {
+            if (player.getRandom().nextFloat() < oreHunterLvl * 0.06) {
+                event.setCanceled(true);
+                serverLevel.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+                ItemStack oreDrop = getRandomOre(serverLevel);
+                ItemEntity entity = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, oreDrop);
+                serverLevel.addFreshEntity(entity);
+                serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
+                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                        10, 0.3, 0.3, 0.3, 0.05);
+            }
+            return;
+        }
+
+        int harvestBountyLvl = EnchantmentHelper.getItemEnchantmentLevel(
+                registry.getHolderOrThrow(ModEnchantments.HARVEST_BOUNTY), tool);
+        if (harvestBountyLvl > 0 && player.getRandom().nextFloat() < harvestBountyLvl * 0.12) {
+            Block block = event.getState().getBlock();
+            ItemStack bonusDrop = getCropProduce(block);
+            if (!bonusDrop.isEmpty()) {
+                event.setCanceled(true);
+                serverLevel.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+                List<ItemStack> drops = Block.getDrops(event.getState(), serverLevel, pos, null, player, tool);
+                for (ItemStack drop : drops) {
+                    ItemEntity entity = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, drop);
+                    serverLevel.addFreshEntity(entity);
+                }
+                int bonusCount = 1 + player.getRandom().nextInt(harvestBountyLvl);
+                ItemStack bonus = bonusDrop.copy();
+                bonus.setCount(bonusCount);
+                ItemEntity bonusEntity = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, bonus);
+                serverLevel.addFreshEntity(bonusEntity);
+                serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
+                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                        15, 0.3, 0.3, 0.3, 0.05);
+            }
+        }
+    }
+
+    private static ItemStack getRandomOre(ServerLevel level) {
+        record WeightedOre(ItemStack stack, int weight) {}
+        List<WeightedOre> ores = List.of(
+                new WeightedOre(new ItemStack(Items.COAL, 1 + level.random.nextInt(2)), 30),
+                new WeightedOre(new ItemStack(Items.COPPER_ORE, 1), 20),
+                new WeightedOre(new ItemStack(Items.IRON_ORE, 1), 20),
+                new WeightedOre(new ItemStack(Items.GOLD_ORE, 1), 10),
+                new WeightedOre(new ItemStack(Items.LAPIS_LAZULI, 2 + level.random.nextInt(4)), 8),
+                new WeightedOre(new ItemStack(Items.REDSTONE, 2 + level.random.nextInt(3)), 7),
+                new WeightedOre(new ItemStack(Items.DIAMOND, 1), 3),
+                new WeightedOre(new ItemStack(Items.EMERALD, 1), 2)
+        );
+        int totalWeight = ores.stream().mapToInt(WeightedOre::weight).sum();
+        int roll = level.random.nextInt(totalWeight);
+        int cumulative = 0;
+        for (WeightedOre ore : ores) {
+            cumulative += ore.weight;
+            if (roll < cumulative) return ore.stack;
+        }
+        return new ItemStack(Items.COAL);
+    }
+
+    private static ItemStack getCropProduce(Block block) {
+        if (block == Blocks.WHEAT) return new ItemStack(Items.WHEAT);
+        if (block == Blocks.CARROTS) return new ItemStack(Items.CARROT);
+        if (block == Blocks.POTATOES) return new ItemStack(Items.POTATO);
+        if (block == Blocks.BEETROOTS) return new ItemStack(Items.BEETROOT);
+        if (block == Blocks.NETHER_WART) return new ItemStack(Items.NETHER_WART);
+        if (block == Blocks.COCOA) return new ItemStack(Items.COCOA_BEANS);
+        return ItemStack.EMPTY;
+    }
+
     // --- Tooltip 描述展示 ---
     @SubscribeEvent
     public static void onTooltip(ItemTooltipEvent event) {
@@ -168,6 +276,9 @@ public class ModEnchantmentEvents {
         addDesc(stack, registry.get(), ModEnchantments.FROST_ARROW, "enchantment.gear_forge.frost_arrow.desc", event.getToolTip());
         addDesc(stack, registry.get(), ModEnchantments.EXPLOSIVE_ARROW, "enchantment.gear_forge.explosive_arrow.desc", event.getToolTip());
         addDesc(stack, registry.get(), ModEnchantments.ARMOR_PIERCING_ARROW, "enchantment.gear_forge.armor_piercing_arrow.desc", event.getToolTip());
+        addDesc(stack, registry.get(), ModEnchantments.MINING_CRIT, "enchantment.gear_forge.mining_crit.desc", event.getToolTip());
+        addDesc(stack, registry.get(), ModEnchantments.ORE_HUNTER, "enchantment.gear_forge.ore_hunter.desc", event.getToolTip());
+        addDesc(stack, registry.get(), ModEnchantments.HARVEST_BOUNTY, "enchantment.gear_forge.harvest_bounty.desc", event.getToolTip());
     }
 
     private static void addDesc(ItemStack stack, net.minecraft.core.Registry<Enchantment> reg, ResourceKey<Enchantment> key, String langKey, List<Component> tooltips) {

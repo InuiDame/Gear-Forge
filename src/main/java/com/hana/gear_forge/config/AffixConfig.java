@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 public class AffixConfig {
+    private int configVersion = 1;
     private int maxAffixCount;
     private int minAffixCount;
     private List<AffixDefinition> affixPool;
@@ -13,8 +14,9 @@ public class AffixConfig {
     public AffixConfig() {
     }
 
-    public AffixConfig(int maxAffixCount, int minAffixCount, List<AffixDefinition> affixPool,
+    public AffixConfig(int configVersion, int maxAffixCount, int minAffixCount, List<AffixDefinition> affixPool,
                        Map<String, List<Integer>> rarityAffixCount, int affixRerollCostDiamonds) {
+        this.configVersion = configVersion;
         this.maxAffixCount = maxAffixCount;
         this.minAffixCount = minAffixCount;
         this.affixPool = affixPool;
@@ -22,6 +24,7 @@ public class AffixConfig {
         this.affixRerollCostDiamonds = affixRerollCostDiamonds;
     }
 
+    public int getConfigVersion() { return configVersion; }
     public int getMaxAffixCount() { return maxAffixCount; }
     public int getMinAffixCount() { return minAffixCount; }
     public List<AffixDefinition> getAffixPool() { return affixPool; }
@@ -35,17 +38,24 @@ public class AffixConfig {
         private List<Double> valueRange;
         private int weight;
         private String description;
+        private boolean enabled;
 
         public AffixDefinition() {
+            this.enabled = true;
         }
 
         public AffixDefinition(String id, String name, String type, List<Double> valueRange, int weight, String description) {
+            this(id, name, type, valueRange, weight, description, true);
+        }
+
+        public AffixDefinition(String id, String name, String type, List<Double> valueRange, int weight, String description, boolean enabled) {
             this.id = id;
             this.name = name;
             this.type = type;
             this.valueRange = valueRange;
             this.weight = weight;
             this.description = description;
+            this.enabled = enabled;
         }
 
         public String getId() { return id; }
@@ -54,10 +64,12 @@ public class AffixConfig {
         public List<Double> getValueRange() { return valueRange; }
         public int getWeight() { return weight; }
         public String getDescription() { return description; }
+        public boolean isEnabled() { return enabled; }
     }
 
     public static AffixConfig createDefault() {
         return new AffixConfig(
+                1,
                 5, 1,
                 List.of(
                         new AffixDefinition("attack_power", "攻击力", "stat_boost", List.of(1.0, 15.0), 20, "增加基础攻击伤害"),

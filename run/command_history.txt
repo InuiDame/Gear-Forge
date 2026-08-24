@@ -34,3 +34,5 @@
 /clear
 /loot give @a loot minecraft:chests/simple_dungeon
 /clear
+/gamemode survival
+/gamemode creative
