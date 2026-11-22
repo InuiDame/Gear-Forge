@@ -26,16 +26,23 @@ public class GearHelper {
 
     public static List<ModDataComponents.AffixEntry> rollAffixes(ItemStack stack, RandomSource random) {
         AffixConfig config = ModConfigs.getAffixConfig();
+        if (config == null || config.getAffixPool() == null) return List.of();
+
         List<AffixDefinition> pool = config.getAffixPool().stream()
+                .filter(java.util.Objects::nonNull)
                 .filter(AffixDefinition::isEnabled)
+                .filter(def -> def.getId() != null && def.getWeight() > 0)
                 .toList();
 
         if (pool.isEmpty()) return List.of();
 
         int totalWeight = pool.stream().mapToInt(AffixDefinition::getWeight).sum();
 
-        int minCount = config.getMinAffixCount();
-        int maxCount = Math.min(config.getMaxAffixCount(), pool.size());
+        // 配置是用户可改的：min > max 或 min > 池子大小时，原实现会调用 nextInt(负数/0) 抛
+        // IllegalArgumentException（怪物加入世界、重铸、调试命令三处都会踩到）。这里全部钳制。
+        int maxCount = Math.min(Math.max(0, config.getMaxAffixCount()), pool.size());
+        int minCount = Math.min(Math.max(0, config.getMinAffixCount()), maxCount);
+        if (maxCount <= 0) return List.of();
         int count = minCount + random.nextInt(maxCount - minCount + 1);
 
         List<ModDataComponents.AffixEntry> result = new ArrayList<>();
@@ -76,16 +83,18 @@ public class GearHelper {
 
     public static double getAffixTotalValue(List<ModDataComponents.AffixEntry> affixes, String type) {
         if (affixes == null) return 0;
-        return affixes.stream()
-                .filter(a -> isAffixOfType(a.id(), type))
-                .mapToDouble(ModDataComponents.AffixEntry::value)
-                .sum();
-    }
-
-    private static boolean isAffixOfType(String affixId, String statType) {
-        var def = ModConfigs.getAffixDefinition(affixId);
-        if (def == null) return false;
-        return def.getType().equals(statType) || def.getId().equals(statType);
+        double total = 0;
+        for (ModDataComponents.AffixEntry entry : affixes) {
+            if (entry == null) continue;
+            var def = ModConfigs.getAffixDefinition(entry.id());
+            if (def == null) continue;
+            // type 既可能是词条分类（percentage / stat_boost），也可能是具体词条 id。
+            String defType = def.getType() == null ? "" : def.getType();
+            if (defType.equals(type) || entry.id().equals(type)) {
+                total += entry.value();
+            }
+        }
+        return total;
     }
 
     public static boolean hasEnoughItems(Player player, Item item, int count) {
@@ -114,12 +123,16 @@ public class GearHelper {
     public static double getUpgradedStatBonus(String statKey, int upgradeLevel) {
         if (upgradeLevel <= 0) return 0;
         UpgradeConfig config = ModConfigs.getUpgradeConfig();
-        Double perLevel = config.getStatBoostPerLevel().get(statKey);
         double total = 0;
-        if (perLevel != null) total = perLevel * upgradeLevel;
-        for (int specialLevel : config.getSpecialBonusLevels()) {
-            if (upgradeLevel >= specialLevel) {
-                total += config.getSpecialBonusStat(statKey, specialLevel);
+        if (config.getStatBoostPerLevel() != null) {
+            Double perLevel = config.getStatBoostPerLevel().get(statKey);
+            if (perLevel != null) total = perLevel * upgradeLevel;
+        }
+        if (config.getSpecialBonusLevels() != null) {
+            for (int specialLevel : config.getSpecialBonusLevels()) {
+                if (upgradeLevel >= specialLevel) {
+                    total += config.getSpecialBonusStat(statKey, specialLevel);
+                }
             }
         }
         return total;
@@ -130,7 +143,7 @@ public class GearHelper {
         var gem = ModConfigs.getGemDefinition(gemId);
         if (gem == null || gem.getEffects() == null) return 0;
         for (GemConfig.GemEffect effect : gem.getEffects()) {
-            if (effect.getType().equals(statType)) {
+            if (effect != null && statType.equals(effect.getType())) {
                 return effect.getValue() * tier;
             }
         }
@@ -143,10 +156,10 @@ public class GearHelper {
             var gem = ModConfigs.getGemDefinition(entry.id());
             if (gem == null || gem.getEffects() == null) continue;
             for (GemConfig.GemEffect effect : gem.getEffects()) {
-                if (effect.getType().equals("unique")
-                        && (effect.getDescription().contains(effectId) || gem.getId().contains(effectId))) {
-                    return true;
-                }
+                if (effect == null || !"unique".equals(effect.getType())) continue;
+                if (effectId.equals(gem.getId())) return true;
+                String desc = effect.getDescription();
+                if (desc != null && desc.contains(effectId)) return true;
             }
         }
         return false;
@@ -154,15 +167,12 @@ public class GearHelper {
 
     public static boolean hasGemEffectType(List<ModDataComponents.GemsEntry> gems, String effectType) {
         if (gems == null) return false;
-        GemConfig config = ModConfigs.getGemConfig();
         for (ModDataComponents.GemsEntry entry : gems) {
-            for (GemDefinition gem : config.getGems()) {
-                if (gem.getId().equals(entry.id()) && gem.getEffects() != null) {
-                    for (GemEffect effect : gem.getEffects()) {
-                        if (effect.getType().equals(effectType)) {
-                            return true;
-                        }
-                    }
+            var gem = ModConfigs.getGemDefinition(entry.id());
+            if (gem == null || gem.getEffects() == null) continue;
+            for (GemEffect effect : gem.getEffects()) {
+                if (effect != null && effectType.equals(effect.getType())) {
+                    return true;
                 }
             }
         }
@@ -179,7 +189,7 @@ public class GearHelper {
 
     public static int getMaxSockets(ItemStack stack) {
         GemConfig config = ModConfigs.getGemConfig();
-        return config.getMaxSocketsPerGear();
+        return Math.max(0, config.getMaxSocketsPerGear());
     }
 
     public static String getSocketTypeForItem(ItemStack stack) {
@@ -197,13 +207,17 @@ public class GearHelper {
         return "tool";
     }
 
+    /**
+     * 是否是“可以被锻造的装备”。
+     *
+     * <p>原实现把 {@code Items.STICK} 也算作装备（GF-014），导致木棍能被强化/洗词条/镶宝石。
+     * 现在只保留“有耐久”这一条硬标准，外加几个原版里没有耐久但语义上是装备的特例。
+     */
     public static boolean isGearItem(ItemStack stack) {
-        return stack.isDamageableItem() || stack.is(Items.STICK)
+        if (stack.isEmpty()) return false;
+        return stack.isDamageableItem()
                 || stack.is(Items.BOW) || stack.is(Items.CROSSBOW)
-                || stack.is(Items.TRIDENT) || stack.is(Items.SHIELD)
-                || stack.getItem() instanceof net.minecraft.world.item.ArmorItem
-                || stack.getItem() instanceof net.minecraft.world.item.SwordItem
-                || stack.getItem() instanceof net.minecraft.world.item.DiggerItem;
+                || stack.is(Items.TRIDENT) || stack.is(Items.SHIELD);
     }
 
     public static double getTotalGemEffectValue(List<ModDataComponents.GemsEntry> gems, String effectType) {
@@ -213,12 +227,65 @@ public class GearHelper {
             var gem = ModConfigs.getGemDefinition(entry.id());
             if (gem == null || gem.getEffects() == null) continue;
             for (GemConfig.GemEffect effect : gem.getEffects()) {
-                if (effect.getType().equals(effectType)) {
+                if (effect != null && effectType.equals(effect.getType())) {
                     total += effect.getValue() * entry.tier();
                 }
             }
         }
         return total;
+    }
+
+    /**
+     * 一个物品（弓弩或盔甲）上的 {@code bow_charge_speed} 总量。
+     * 词条、宝石、转生奖励三处来源共用这一份实现，Mixin 与其它调用方不应各自复制逻辑。
+     */
+    public static double getBowChargeSpeed(ItemStack stack) {
+        double total = 0;
+
+        List<ModDataComponents.AffixEntry> affixes = stack.get(ModDataComponents.AFFIXES.get());
+        if (affixes != null) {
+            total += getAffixTotalValueDirect(affixes, "bow_charge_speed");
+        }
+
+        List<ModDataComponents.GemsEntry> gems = stack.get(ModDataComponents.GEMS.get());
+        if (gems != null) {
+            total += getTotalGemEffectValue(gems, "bow_charge_speed");
+        }
+
+        List<StoredBonus> stored = stack.get(ModDataComponents.STORED_BONUSES.get());
+        if (stored != null) {
+            total += getStoredBonusValue(stored, "bow_charge_speed");
+        }
+
+        return total;
+    }
+
+    /**
+     * 只作用于护甲的耐久损耗减免系数，钳制在 [0.05, 1]。
+     *
+     * <p>翡翠的 {@code durability_boost} 每阶 +0.5，T2 起原实现算出负系数（等于护甲永不掉耐久），
+     * 这里是所有耐久减免路径唯一的下限保护点。
+     */
+    public static float durabilityDamageFactor(ItemStack armor) {
+        double factor = 1.0;
+
+        List<ModDataComponents.GemsEntry> gems = armor.get(ModDataComponents.GEMS.get());
+        if (gems != null) {
+            factor *= 1.0 - getTotalGemEffectValue(gems, "durability_boost") * 0.5;
+        }
+
+        List<ModDataComponents.AffixEntry> affixes = armor.get(ModDataComponents.AFFIXES.get());
+        if (affixes != null) {
+            factor *= 1.0 - getAffixTotalValueDirect(affixes, "durability_reduction");
+        }
+
+        List<StoredBonus> stored = armor.get(ModDataComponents.STORED_BONUSES.get());
+        if (stored != null) {
+            factor *= 1.0 - getStoredBonusValue(stored, "durability_reduction");
+            factor *= 1.0 - getStoredBonusValue(stored, "durability_boost") * 0.5;
+        }
+
+        return (float) Math.max(0.05, Math.min(1.0, factor));
     }
 
     public static boolean isHoldingRangedWeapon(LivingEntity entity) {
@@ -242,18 +309,22 @@ public class GearHelper {
         int upgradeLevel = stack.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
         if (upgradeLevel > 0) {
             UpgradeConfig config = ModConfigs.getUpgradeConfig();
-            for (var entry : config.getStatBoostPerLevel().entrySet()) {
-                double value = entry.getValue() * upgradeLevel;
-                if (value > 0) {
-                    bonusMap.merge("upgrade_" + entry.getKey(), value, Double::sum);
+            if (config.getStatBoostPerLevel() != null) {
+                for (var entry : config.getStatBoostPerLevel().entrySet()) {
+                    double value = entry.getValue() * upgradeLevel;
+                    if (value > 0) {
+                        bonusMap.merge("upgrade_" + entry.getKey(), value, Double::sum);
+                    }
                 }
             }
-            for (int specialLevel : config.getSpecialBonusLevels()) {
-                if (upgradeLevel >= specialLevel) {
-                    Map<String, Double> levelBonuses = config.getSpecialBonusStats().get(specialLevel);
-                    if (levelBonuses != null) {
-                        for (var entry : levelBonuses.entrySet()) {
-                            bonusMap.merge("upgrade_" + entry.getKey(), entry.getValue(), Double::sum);
+            if (config.getSpecialBonusLevels() != null && config.getSpecialBonusStats() != null) {
+                for (int specialLevel : config.getSpecialBonusLevels()) {
+                    if (upgradeLevel >= specialLevel) {
+                        Map<String, Double> levelBonuses = config.getSpecialBonusStats().get(specialLevel);
+                        if (levelBonuses != null) {
+                            for (var entry : levelBonuses.entrySet()) {
+                                bonusMap.merge("upgrade_" + entry.getKey(), entry.getValue(), Double::sum);
+                            }
                         }
                     }
                 }
@@ -263,11 +334,15 @@ public class GearHelper {
         List<ModDataComponents.GemsEntry> gems = stack.get(ModDataComponents.GEMS.get());
         if (gems != null) {
             GemConfig gemConfig = ModConfigs.getGemConfig();
-            for (ModDataComponents.GemsEntry gem : gems) {
-                for (GemDefinition def : gemConfig.getGems()) {
-                    if (def.getId().equals(gem.id()) && def.getEffects() != null) {
-                        for (GemEffect effect : def.getEffects()) {
-                            bonusMap.merge("gem_" + effect.getType(), effect.getValue() * gem.tier(), Double::sum);
+            if (gemConfig.getGems() != null) {
+                for (ModDataComponents.GemsEntry gem : gems) {
+                    for (GemDefinition def : gemConfig.getGems()) {
+                        if (def != null && def.getId() != null && def.getId().equals(gem.id())
+                                && def.getEffects() != null) {
+                            for (GemEffect effect : def.getEffects()) {
+                                if (effect == null || effect.getType() == null) continue;
+                                bonusMap.merge("gem_" + effect.getType(), effect.getValue() * gem.tier(), Double::sum);
+                            }
                         }
                     }
                 }

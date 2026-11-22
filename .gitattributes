@@ -1,2 +1,17 @@
-# Auto detect text files and perform LF normalization
+# Normalize line endings for text files
 * text=auto
+
+# Shell scripts must keep LF, batch files must keep CRLF
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Binary files
+*.jar binary
+*.png binary
+*.ogg binary
+*.nbt binary
+
+# Data generator output must be byte-stable across platforms (runData writes CRLF on Windows)
+src/generated/** text eol=lf
+*.json text eol=lf

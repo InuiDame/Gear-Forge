@@ -1,6 +1,7 @@
 package com.hana.gear_forge.command;
 
 import com.hana.gear_forge.component.ModDataComponents;
+import com.hana.gear_forge.event.MobGearEventHandler;
 import com.hana.gear_forge.util.GearHelper;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -24,14 +25,20 @@ import java.util.*;
 
 public class GearForgeCommands {
 
+    /** 单次命令最多生成的实体数。没有上限时 /gear_forge test spawnmob zombie 100000 会在同一 tick 卡死服务器。 */
+    private static final int MAX_SPAWN_COUNT = 64;
+
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("gear_forge")
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("test")
                         .then(Commands.literal("spawnmob")
-                                .then(Commands.argument("entityType", StringArgumentType.word())
+                                // 用 string() 而不是 word()：word() 的 readUnquotedString 不允许冒号，
+                                // 导致 /gear_forge test spawnmob gear_forge:xxx 无法输入，
+                                // 只有省略命名空间的 minecraft 实体能写。
+                                .then(Commands.argument("entityType", StringArgumentType.string())
                                         .executes(ctx -> execute(ctx, 1, 1, "", ""))
-                                        .then(Commands.argument("count", IntegerArgumentType.integer(1))
+                                        .then(Commands.argument("count", IntegerArgumentType.integer(1, MAX_SPAWN_COUNT))
                                                 .executes(ctx -> execute(ctx,
                                                         IntegerArgumentType.getInteger(ctx, "count"),
                                                         1, "", ""))
@@ -115,6 +122,8 @@ public class GearForgeCommands {
                     livingEntity.setItemSlot(slot, gear);
                 }
 
+                // 测试命令自己指定了装备，标记为已处理，避免加入世界时被随机怪物装备逻辑覆盖
+                livingEntity.getPersistentData().putBoolean(MobGearEventHandler.GEARED_TAG, true);
                 livingEntity.setPos(source.getPosition());
                 level.addFreshEntity(livingEntity);
             }

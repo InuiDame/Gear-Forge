@@ -1,7 +1,7 @@
 package com.hana.gear_forge.item;
 
 import com.hana.gear_forge.GearForgeMod;
-import com.hana.gear_forge.Provider.ModEnchantments;
+import com.hana.gear_forge.content.ModEnchantments;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -43,12 +43,25 @@ public class ModCreativeTabs {
                         output.accept(ModItems.REINCARNATION_STONE.get());
                     }).build());
 
-    // 第二页：附魔书专栏
+    // 第二页：饰品
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> GEAR_FORGE_CURIOS_TAB =
+            CREATIVE_TABS.register("gear_forge_curios", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup." + GearForgeMod.MODID + ".curios"))
+                    .withTabsBefore(GEAR_FORGE_CORE_TAB.getKey())
+                    .icon(() -> ModItems.LUCKY_DIAMOND.get().getDefaultInstance())
+                    .displayItems((params, output) -> {
+                        output.accept(ModItems.LUCKY_DIAMOND.get());
+                        output.accept(ModItems.CURSED_ANVIL.get());
+                    }).build());
+
+    // 第三页：附魔书专栏
+    // 三页排成一条无环的链：附魔 → 饰品 → 核心 → 战斗。
+    // 旧写法让附魔页和饰品页都声明"排在核心页之前"，两者之间没有先后约束，
+    // 实际顺序取决于注册顺序。
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> GEAR_FORGE_ENCHANTMENT_TAB =
             CREATIVE_TABS.register("gear_forge_enchantment", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + GearForgeMod.MODID + ".enchantment"))
-                    // 让附魔页紧跟在核心页后面
-                    .withTabsBefore(GEAR_FORGE_CORE_TAB.getKey())
+                    .withTabsBefore(GEAR_FORGE_CURIOS_TAB.getKey())
                     .icon(() -> new ItemStack(Items.ENCHANTED_BOOK))
                     .displayItems((params, output) -> {
                         List<ResourceKey<Enchantment>> enchantKeys = List.of(
@@ -58,8 +71,7 @@ public class ModCreativeTabs {
                                 ModEnchantments.ARMOR_PIERCING_ARROW,
                                 ModEnchantments.MINING_CRIT,
                                 ModEnchantments.ORE_HUNTER,
-                                ModEnchantments.HARVEST_BOUNTY,
-                                ModEnchantments.CHARITY_BUNDLE
+                                ModEnchantments.HARVEST_BOUNTY
                         );
 
                         params.holders().lookup(Registries.ENCHANTMENT).ifPresent(enchantRegistry -> {
@@ -72,17 +84,6 @@ public class ModCreativeTabs {
                                 });
                             }
                         });
-                    }).build());
-
-    // 第三页：饰品
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> GEAR_FORGE_CURIOS_TAB =
-            CREATIVE_TABS.register("gear_forge_curios", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup." + GearForgeMod.MODID + ".curios"))
-                    .withTabsBefore(GEAR_FORGE_CORE_TAB.getKey())
-                    .icon(() -> ModItems.LUCKY_DIAMOND.get().getDefaultInstance())
-                    .displayItems((params, output) -> {
-                        output.accept(ModItems.LUCKY_DIAMOND.get());
-                        output.accept(ModItems.CURSED_ANVIL.get());
                     }).build());
 
     private static ItemStack createEnchantedBook(Holder<Enchantment> enchantment, int level) {

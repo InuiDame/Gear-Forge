@@ -4,7 +4,7 @@ import com.hana.gear_forge.component.ModDataComponents;
 import com.hana.gear_forge.config.ModConfigs;
 import com.hana.gear_forge.item.ModCreativeTabs;
 import com.hana.gear_forge.item.ModItems;
-import com.hana.gear_forge.component.ModGlobalLootModifiers;
+import com.hana.gear_forge.loot.ModGlobalLootModifiers;
 import com.hana.gear_forge.recipe.ModRecipeSerializers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;

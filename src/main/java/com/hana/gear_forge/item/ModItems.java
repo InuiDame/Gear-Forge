@@ -1,7 +1,7 @@
 package com.hana.gear_forge.item;
 
-import com.hana.gear_forge.Curios.CursedAnvilItem;
-import com.hana.gear_forge.Curios.LuckyDiamondItem;
+import com.hana.gear_forge.compat.curios.CursedAnvilItem;
+import com.hana.gear_forge.compat.curios.LuckyDiamondItem;
 import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.item.custom.*;
 import net.minecraft.core.component.DataComponents;

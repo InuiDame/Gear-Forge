@@ -9,11 +9,12 @@ import com.hana.gear_forge.item.ModItems;
 import com.hana.gear_forge.util.GearHelper;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -24,74 +25,94 @@ import net.minecraft.world.level.Level;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 全部锻造操作共用的唯一配方。
+ *
+ * <p>设计要点（见 docs/adr/0001、ADR-0007）：
+ * <ul>
+ *   <li>{@link #canApply} 是分派逻辑的<b>唯一真源</b>，{@code matches} 与 {@code assemble} 都调用它，
+ *       避免出现“匹配成功但装配走空分支、材料照扣”的情况。</li>
+ *   <li>所有不使用模板槽的操作都要求模板槽为空。原版取出时会无条件把三个输入格各扣 1 个，
+ *       如果允许在模板槽放钻石/下界合金块，这些材料会被白白吞掉。</li>
+ *   <li>重铸的随机结果由 {@link ModDataComponents#ROLL_SALT} 确定性推导，
+ *       预览阶段反复调用 {@code assemble} 不会得到不同结果，杜绝“免费刷词条”。</li>
+ * </ul>
+ */
 public class GearSmithingRecipe implements SmithingRecipe {
+
+    /** 唯一实例；配方本身无状态，全部状态都在物品数据组件上。 */
     public static final GearSmithingRecipe INSTANCE = new GearSmithingRecipe();
+
+    /** 重铸盐值到随机种子的混合常量（SplitMix64 的黄金比例常数）。 */
+    private static final long SALT_MIX = 0x9E3779B97F4A7C15L;
 
     private GearSmithingRecipe() {}
 
-    @Override
-    public boolean matches(SmithingRecipeInput input, Level level) {
+    // ===================== 分派逻辑（唯一真源） =====================
+
+    /**
+     * 判定这组输入是否构成一次合法的锻造操作。
+     *
+     * <p>顺序即优先级：锻造锤 → 重铸石 → 宝石镶嵌 → 宝石升阶 → 副手切换 → 附魔书 → 宝石摘除 → 转生石。
+     * {@code matches} 与 {@code assemble} 必须共用这一套判断。
+     */
+    private static boolean canApply(SmithingRecipeInput input) {
         ItemStack template = input.template();
         ItemStack base = input.base();
         ItemStack addition = input.addition();
 
         if (base.isEmpty() || addition.isEmpty()) return false;
 
-        // Upgrade
+        // 锻造锤：强化 +1。模板槽必须为空（钻石不再作为催化剂，否则每次强化都会白吞一个钻石）。
         if (addition.is(ModItems.FORGE_HAMMER.get()) && GearHelper.isGearItem(base)) {
+            if (!template.isEmpty()) return false;
             int currentLevel = base.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
-            UpgradeConfig config = ModConfigs.getUpgradeConfig();
-            if (currentLevel >= config.getMaxLevel()) return false;
-            if (!template.isEmpty() && !template.is(Items.DIAMOND)) return false;
-            return template.isEmpty() || template.getCount() >= 1;
+            return currentLevel < ModConfigs.getUpgradeConfig().getMaxLevel();
         }
 
-        // Reroll
+        // 重铸石：重掷词条。模板槽必须为空。
         if (addition.is(ModItems.REROLL_STONE.get()) && GearHelper.isGearItem(base)) {
-            if (!template.isEmpty() && !template.is(Items.DIAMOND)) return false;
-            return template.isEmpty() || template.getCount() >= 1;
+            return template.isEmpty();
         }
 
-        // Gem Socket
+        // 宝石镶嵌：装备 + 宝石。模板槽必须为空，否则会抢占原版纹饰配方并吞掉纹饰模板。
         if (GearHelper.isGearItem(base) && isGemItem(addition)) {
+            if (!template.isEmpty()) return false;
             List<ModDataComponents.GemsEntry> currentGems = base.getOrDefault(ModDataComponents.GEMS.get(), List.of());
-            int maxSockets = GearHelper.getMaxSockets(base);
-            if (currentGems.size() >= maxSockets) return false;
-            //System.out.println("Gem item detected: " + addition.getItem().getDescriptionId());
+            if (currentGems.size() >= GearHelper.getMaxSockets(base)) return false;
             String gemItemId = getGemItemId(addition);
-            //System.out.println("gemItemId: " + gemItemId);
             if (gemItemId == null) return false;
-            String socketType = GearHelper.getSocketTypeForItem(base);
-            //System.out.println("socketType: " + socketType);
-            boolean compatible = isGemCompatible(gemItemId, socketType);
-            //System.out.println("compatible: " + compatible);
-            return isGemCompatible(gemItemId, socketType);
+            return isGemCompatible(gemItemId, GearHelper.getSocketTypeForItem(base));
         }
 
-        // Gem Tier Upgrade
+        // 升阶水晶：宝石阶级 +1。模板槽必须为空。
         if (addition.is(ModItems.UPGRADE_CRYSTAL.get()) && isGemBaseItem(base)) {
+            if (!template.isEmpty()) return false;
             int currentTier = base.getOrDefault(ModDataComponents.GEM_TIER.get(), 1);
             return currentTier < ModConfigs.getGemConfig().getMaxTier();
         }
 
-        // Toggle Offhand
+        // 转移宝珠：切换副手模式。模板槽必须为空。
         if (addition.is(ModItems.TRANSFER_ORB.get()) && GearHelper.isGearItem(base)) {
-            return true;
+            return template.isEmpty();
         }
 
-        // Enchant Apply (需要 enchant_compat 宝石 → 允许冲突附魔)
+        // 附魔书：底材必须有 enchant_compat 宝石，且书上真的带附魔。模板槽必须为空。
         if (addition.is(Items.ENCHANTED_BOOK) && GearHelper.isGearItem(base)) {
+            if (!template.isEmpty()) return false;
             List<ModDataComponents.GemsEntry> gems = base.get(ModDataComponents.GEMS.get());
-            return gems != null && GearHelper.hasGemEffectType(gems, "enchant_compat");
+            if (gems == null || !GearHelper.hasGemEffectType(gems, "enchant_compat")) return false;
+            return !EnchantmentHelper.getEnchantmentsForCrafting(addition).isEmpty();
         }
 
-        // Gem Removal (逐个移除，只要有宝石就行)
+        // 宝石摘除器：摘掉最后镶嵌的一颗宝石。模板槽必须为空。
         if (addition.is(ModItems.GEM_REMOVER.get()) && GearHelper.isGearItem(base)) {
-            List<ModDataComponents.GemsEntry> currentGems = base.get(ModDataComponents.GEMS.get());
-            return currentGems != null && !currentGems.isEmpty();
+            if (!template.isEmpty()) return false;
+            List<ModDataComponents.GemsEntry> gems = base.get(ModDataComponents.GEMS.get());
+            return gems != null && !gems.isEmpty();
         }
 
-        // Reincarnation
+        // 转生石：装备满级 + 模板槽放下界合金块（可配置）。
         if (addition.is(ModItems.REINCARNATION_STONE.get()) && GearHelper.isGearItem(base)) {
             UpgradeConfig config = ModConfigs.getUpgradeConfig();
             if (!config.isReincarnationEnabled()) return false;
@@ -103,104 +124,101 @@ public class GearSmithingRecipe implements SmithingRecipe {
                 if (currentCount >= maxReincarnation) return false;
             }
             if (template.isEmpty()) return false;
-            String costMaterialId = config.getReincarnationCostMaterial();
-            int requiredCount = config.getReincarnationCostMaterialCount();
-            return isItemMatchingId(template, costMaterialId) && template.getCount() >= requiredCount;
+            return isItemMatchingId(template, config.getReincarnationCostMaterial())
+                    && template.getCount() >= config.getReincarnationCostMaterialCount();
         }
 
         return false;
     }
 
     @Override
-    public ItemStack assemble(SmithingRecipeInput input, HolderLookup.Provider registries) {
-        ItemStack base = input.base();
-        ItemStack addition = input.addition();
-        ItemStack result = base.copy();
+    public boolean matches(SmithingRecipeInput input, Level level) {
+        return canApply(input);
+    }
 
-        // Upgrade
+    // ===================== 装配 =====================
+
+    @Override
+    public ItemStack assemble(SmithingRecipeInput input, HolderLookup.Provider registries) {
+        // 装配前复核分派逻辑：assemble 可能被配方书预览、机器方块或其它 mod 直接调用，
+        // 不能假设调用方已经走过 matches()。
+        if (!canApply(input)) return ItemStack.EMPTY;
+
+        ItemStack addition = input.addition();
+        ItemStack base = input.base();
+        // 原版锻造台每次只消耗 1 个底材，产物也必须只有 1 个，否则整组底材放进去会被复制。
+        ItemStack result = base.copyWithCount(1);
+
         if (addition.is(ModItems.FORGE_HAMMER.get())) {
             int currentLevel = result.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
             result.set(ModDataComponents.UPGRADE_LEVEL.get(), currentLevel + 1);
             return result;
         }
 
-        // Reroll
         if (addition.is(ModItems.REROLL_STONE.get())) {
-            RandomSource random = RandomSource.create();
-            List<ModDataComponents.AffixEntry> newAffixes = GearHelper.rollAffixes(result, random);
-            result.set(ModDataComponents.AFFIXES.get(), newAffixes);
+            int salt = result.getOrDefault(ModDataComponents.ROLL_SALT.get(), 0);
+            RandomSource random = RandomSource.create(rerollSeed(result, salt));
+            result.set(ModDataComponents.AFFIXES.get(), GearHelper.rollAffixes(result, random));
+            result.set(ModDataComponents.ROLL_SALT.get(), salt + 1);
             return result;
         }
 
-        // Gem Socket
-        if (isGemItem(addition) && GearHelper.isGearItem(base)) {
-            List<ModDataComponents.GemsEntry> currentGems = new ArrayList<>(
+        if (isGemItem(addition)) {
+            List<ModDataComponents.GemsEntry> gems = new ArrayList<>(
                     result.getOrDefault(ModDataComponents.GEMS.get(), List.of()));
             String gemItemId = getGemItemId(addition);
-            if (gemItemId != null) {
-                int gemTier = addition.getOrDefault(ModDataComponents.GEM_TIER.get(), 1);
-                currentGems.add(new ModDataComponents.GemsEntry(findGemId(gemItemId), gemTier));
-                result.set(ModDataComponents.GEMS.get(), currentGems);
-            }
+            if (gemItemId == null) return ItemStack.EMPTY;
+            int gemTier = addition.getOrDefault(ModDataComponents.GEM_TIER.get(), 1);
+            gems.add(new ModDataComponents.GemsEntry(findGemId(gemItemId), gemTier));
+            result.set(ModDataComponents.GEMS.get(), List.copyOf(gems));
             return result;
         }
 
-        // Gem Tier Upgrade
-        if (addition.is(ModItems.UPGRADE_CRYSTAL.get()) && isGemBaseItem(base)) {
+        if (addition.is(ModItems.UPGRADE_CRYSTAL.get())) {
             int currentTier = result.getOrDefault(ModDataComponents.GEM_TIER.get(), 1);
             result.set(ModDataComponents.GEM_TIER.get(), currentTier + 1);
-            result.setCount(1);   // ← 关键修复：只产出 1 个升级后的宝石
             return result;
         }
 
-        // Toggle Offhand
-        if (addition.is(ModItems.TRANSFER_ORB.get()) && GearHelper.isGearItem(base)) {
+        if (addition.is(ModItems.TRANSFER_ORB.get())) {
             boolean current = result.getOrDefault(ModDataComponents.OFFHAND_MODE.get(), false);
             result.set(ModDataComponents.OFFHAND_MODE.get(), !current);
             return result;
         }
 
-        // Enchant Apply (无冲突限制，因为匹配已保证有 enchant_compat)
-        if (addition.is(Items.ENCHANTED_BOOK) && GearHelper.isGearItem(base)) {
+        if (addition.is(Items.ENCHANTED_BOOK)) {
             ItemEnchantments bookEnchants = EnchantmentHelper.getEnchantmentsForCrafting(addition);
-            if (!bookEnchants.isEmpty()) {
-                ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(
-                        EnchantmentHelper.getEnchantmentsForCrafting(result));
-                for (var entry : bookEnchants.entrySet()) {
-                    Holder<Enchantment> holder = entry.getKey();
-                    int bookLevel = entry.getIntValue();
-                    int existingLevel = mutable.getLevel(holder);
-                    if (bookLevel > existingLevel) {
-                        mutable.set(holder, bookLevel);
-                    }
+            ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(
+                    EnchantmentHelper.getEnchantmentsForCrafting(result));
+            for (var entry : bookEnchants.entrySet()) {
+                Holder<Enchantment> holder = entry.getKey();
+                int bookLevel = entry.getIntValue();
+                if (bookLevel > mutable.getLevel(holder)) {
+                    mutable.set(holder, bookLevel);
                 }
-                EnchantmentHelper.setEnchantments(result, mutable.toImmutable());
             }
+            EnchantmentHelper.setEnchantments(result, mutable.toImmutable());
             return result;
         }
 
-        // Gem Removal (逐个移除最后一个宝石)
-        if (addition.is(ModItems.GEM_REMOVER.get()) && GearHelper.isGearItem(base)) {
-            List<ModDataComponents.GemsEntry> currentGems = new ArrayList<>(
+        if (addition.is(ModItems.GEM_REMOVER.get())) {
+            List<ModDataComponents.GemsEntry> gems = new ArrayList<>(
                     result.getOrDefault(ModDataComponents.GEMS.get(), List.of()));
-            if (!currentGems.isEmpty()) {
-                currentGems.remove(currentGems.size() - 1);
-                if (currentGems.isEmpty()) {
-                    result.remove(ModDataComponents.GEMS.get());
-                } else {
-                    result.set(ModDataComponents.GEMS.get(), currentGems);
-                }
+            if (gems.isEmpty()) return ItemStack.EMPTY;
+            gems.remove(gems.size() - 1);
+            if (gems.isEmpty()) {
+                result.remove(ModDataComponents.GEMS.get());
+            } else {
+                result.set(ModDataComponents.GEMS.get(), List.copyOf(gems));
             }
             return result;
         }
 
-        // Reincarnation
-        if (addition.is(ModItems.REINCARNATION_STONE.get()) && GearHelper.isGearItem(base)) {
+        if (addition.is(ModItems.REINCARNATION_STONE.get())) {
             List<ModDataComponents.StoredBonus> currentBonuses =
                     result.getOrDefault(ModDataComponents.STORED_BONUSES.get(), List.of());
-            List<ModDataComponents.StoredBonus> newBonuses = GearHelper.calculateReincarnationBonuses(result);
             List<ModDataComponents.StoredBonus> merged = new ArrayList<>(currentBonuses);
-            for (ModDataComponents.StoredBonus nb : newBonuses) {
+            for (ModDataComponents.StoredBonus nb : GearHelper.calculateReincarnationBonuses(result)) {
                 boolean found = false;
                 for (int i = 0; i < merged.size(); i++) {
                     if (merged.get(i).id().equals(nb.id())) {
@@ -212,16 +230,29 @@ public class GearSmithingRecipe implements SmithingRecipe {
                 }
                 if (!found) merged.add(nb);
             }
-            result.set(ModDataComponents.STORED_BONUSES.get(), merged);
+            result.set(ModDataComponents.STORED_BONUSES.get(), List.copyOf(merged));
             result.set(ModDataComponents.REINCARNATION_COUNT.get(),
                     result.getOrDefault(ModDataComponents.REINCARNATION_COUNT.get(), 0) + 1);
             result.remove(ModDataComponents.UPGRADE_LEVEL.get());
             result.remove(ModDataComponents.AFFIXES.get());
             result.remove(ModDataComponents.GEMS.get());
+            result.remove(ModDataComponents.ROLL_SALT.get());
             return result;
         }
 
-        return result;
+        // canApply() 已通过却落到这里说明分派表与装配表不同步，返回空产物而不是原样复制底材。
+        return ItemStack.EMPTY;
+    }
+
+    // ===================== Recipe 接口 =====================
+
+    /**
+     * 本配方产物由输入动态决定，配方书/解锁 toast 无法表达，标记为 special 以免污染配方书。
+     * 这也是 1.21.1 里 {@code getResultItem()} 返回 {@link ItemStack#EMPTY} 的配套约定。
+     */
+    @Override
+    public boolean isSpecial() {
+        return true;
     }
 
     @Override
@@ -229,15 +260,20 @@ public class GearSmithingRecipe implements SmithingRecipe {
         return ItemStack.EMPTY;
     }
 
+    /**
+     * 必须显式返回 false：默认实现会因为 {@link #getIngredients()} 为空而判定为 incomplete，
+     * 从而让配方被配方管理器过滤掉。
+     */
+    @Override
+    public boolean isIncomplete() {
+        return false;
+    }
+
     @Override
     public boolean isTemplateIngredient(ItemStack stack) {
-        if (stack.is(Items.DIAMOND)) return true;
         UpgradeConfig config = ModConfigs.getUpgradeConfig();
-        if (config.isReincarnationEnabled()) {
-            String costMaterial = config.getReincarnationCostMaterial();
-            if (isItemMatchingId(stack, costMaterial)) return true;
-        }
-        return false;
+        return config.isReincarnationEnabled()
+                && isItemMatchingId(stack, config.getReincarnationCostMaterial());
     }
 
     @Override
@@ -262,35 +298,43 @@ public class GearSmithingRecipe implements SmithingRecipe {
         return ModRecipeSerializers.GEAR_SMITHING.get();
     }
 
-    @Override
-    public RecipeType<?> getType() {
-        return RecipeType.SMITHING;
+    // ===================== 辅助方法 =====================
+
+    /**
+     * 派生重铸用的确定种子。
+     *
+     * <p>种子只由「物品注册名 + 强化等级 + 转生次数 + 盐值」决定，刻意<b>不</b>把旧的词条列表算进去：
+     * 那会让同一件装备在两次预览之间产生不同的“旧内容哈希”，从而又变回可刷。
+     * 盐值只在真正取出后 +1，所以：
+     * <ul>
+     *   <li>同一次预览反复调用 {@code assemble} → 种子相同 → 词条相同（无法免费刷新）；</li>
+     *   <li>取出后再放回 → 盐值已前进 → 得到新的一套词条（重铸石被正常消耗）。</li>
+     * </ul>
+     */
+    private static long rerollSeed(ItemStack stack, int salt) {
+        long seed = BuiltInRegistries.ITEM.getKey(stack.getItem()).hashCode();
+        seed = seed * 31 + stack.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
+        seed = seed * 31 + stack.getOrDefault(ModDataComponents.REINCARNATION_COUNT.get(), 0);
+        seed = seed * 31 + salt;
+        return seed * SALT_MIX;
     }
 
-    @Override
-    public boolean isIncomplete() {
-        return false;
-    }
-
-    @Override
-    public boolean canCraftInDimensions(int width, int height) {
-        return width >= 3 && height >= 1;
-    }
-
-    // ========= 辅助方法 =========
-
+    /** 可作为“宝石”镶嵌进装备的物品。 */
     private static boolean isGemItem(ItemStack stack) {
-        return stack.is(ModItems.RUBY.get()) || stack.is(ModItems.SAPPHIRE.get())
-                || stack.is(ModItems.EMERALD_GEM.get()) || stack.is(ModItems.TOPAZ.get())
-                || stack.is(ModItems.JADE.get()) || stack.is(ModItems.ONYX.get())
-                || stack.is(Items.DIAMOND) || stack.is(Items.NETHER_STAR);
+        return isModGem(stack) || stack.is(Items.DIAMOND) || stack.is(Items.NETHER_STAR);
     }
 
+    /** 可作为“宝石底材”被升阶水晶提升阶级的物品。 */
     private static boolean isGemBaseItem(ItemStack stack) {
+        return isModGem(stack)
+                || stack.is(Items.DIAMOND) || stack.is(Items.NETHER_STAR)
+                || (stack.has(ModDataComponents.GEM_TIER.get()) && !GearHelper.isGearItem(stack));
+    }
+
+    private static boolean isModGem(ItemStack stack) {
         return stack.is(ModItems.RUBY.get()) || stack.is(ModItems.SAPPHIRE.get())
                 || stack.is(ModItems.EMERALD_GEM.get()) || stack.is(ModItems.TOPAZ.get())
-                || stack.is(ModItems.JADE.get()) || stack.is(ModItems.ONYX.get())
-                || (stack.has(ModDataComponents.GEM_TIER.get()) && !GearHelper.isGearItem(stack));
+                || stack.is(ModItems.JADE.get()) || stack.is(ModItems.ONYX.get());
     }
 
     private static String getGemItemId(ItemStack stack) {
@@ -305,31 +349,33 @@ public class GearSmithingRecipe implements SmithingRecipe {
         return null;
     }
 
+    /** 把物品 id 映射到配置里的宝石 id（配置用 "ruby" 之类的短 id，物品是 "gear_forge:ruby"）。 */
     private static String findGemId(String itemId) {
-        GemConfig config = ModConfigs.getGemConfig();
-        for (GemDefinition gem : config.getGems()) {
-            if (gem.getItemId().equals(itemId)) return gem.getId();
+        List<GemDefinition> gems = ModConfigs.getGemConfig().getGems();
+        if (gems != null) {
+            for (GemDefinition gem : gems) {
+                if (itemId.equals(gem.getItemId())) return gem.getId();
+            }
         }
         return itemId;
     }
 
     private static boolean isGemCompatible(String gemItemId, String socketType) {
         GemConfig config = ModConfigs.getGemConfig();
-        for (GemDefinition gem : config.getGems()) {
-            if (gem.getItemId().equals(gemItemId) && gem.getCompatibleSockets().contains(socketType)) {
-                //System.out.println("Found gem: " + gem.getId() + ", compatibleSockets: " + gem.getCompatibleSockets());
-                return gem.getCompatibleSockets().contains(socketType);
+        List<GemDefinition> gems = config.getGems();
+        if (gems == null) return false;
+        for (GemDefinition gem : gems) {
+            if (gemItemId.equals(gem.getItemId())) {
+                return gem.getCompatibleSockets() != null && gem.getCompatibleSockets().contains(socketType);
             }
         }
-        //System.out.println("Gem not found for itemId: " + gemItemId);
         return false;
     }
 
-    private static boolean isItemMatchingId(ItemStack stack, String itemId) {
+    public static boolean isItemMatchingId(ItemStack stack, String itemId) {
         if (itemId == null || itemId.isEmpty()) return false;
-        String[] parts = itemId.split(":");
-        if (parts.length != 2) return false;
-        return stack.is(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
-                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(parts[0], parts[1])));
+        ResourceLocation id = ResourceLocation.tryParse(itemId);
+        if (id == null) return false;
+        return BuiltInRegistries.ITEM.getOptional(id).map(stack::is).orElse(false);
     }
 }

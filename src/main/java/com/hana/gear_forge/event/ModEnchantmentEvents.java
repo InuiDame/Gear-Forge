@@ -1,12 +1,8 @@
 package com.hana.gear_forge.event;
 
 import com.hana.gear_forge.GearForgeMod;
-import com.hana.gear_forge.Provider.ModEnchantments;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
+import com.hana.gear_forge.content.ModEnchantments;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -21,208 +17,219 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CocoaBlock;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.NetherWartBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.BlockDropsEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 7 个数据驱动附魔的行为实现。
+ *
+ * <p>这些附魔在 {@code data/gear_forge/enchantment/*.json} 里只声明“能给谁、最高几级”，
+ * 效果全部写在这里。
+ *
+ * <p>两个关键设计约束：
+ * <ul>
+ *   <li><b>不取消原版方块破坏</b>。旧实现在 {@code BlockEvent.BreakEvent} 里取消事件再手动
+ *       {@code setBlockAndUpdate(AIR)}，跳过了 {@code playerWillDestroy}（潜影盒内容）、
+ *       {@code mineBlock}（工具耐久）、{@code playerDestroy}（战利品表/方块经验/其它 mod 的 GLM），
+ *       并且能绕过保护类 mod 的取消。现在改为在 {@link BlockDropsEvent} 里<b>追加/替换掉落</b>，
+ *       原版流程完整保留。</li>
+ *   <li><b>不在伤害事件里嵌套 {@code hurt()}</b>。在 {@link LivingIncomingDamageEvent} 内部再开一次
+ *       伤害序列会占用无敌帧、把外层箭伤抵消掉，还会让创造模式被扣血。现在只用
+ *       {@code setAmount} / {@code addReductionModifier} 在原地修改伤害。</li>
+ * </ul>
+ */
 @EventBusSubscriber(modid = GearForgeMod.MODID)
 public class ModEnchantmentEvents {
 
-    private static ItemStack getWeapon(LivingEntity shooter) {
-        ItemStack main = shooter.getMainHandItem();
-        ItemStack off = shooter.getOffhandItem();
+    /** 闪电箭在雷暴天气下的额外倍率。 */
+    private static final float STORM_BONUS = 1.15F;
 
-        if (main.getItem() instanceof net.minecraft.world.item.BowItem || main.getItem() instanceof net.minecraft.world.item.CrossbowItem) {
-            return main;
-        }
-        if (off.getItem() instanceof net.minecraft.world.item.BowItem || off.getItem() instanceof net.minecraft.world.item.CrossbowItem) {
-            return off;
-        }
-        return ItemStack.EMPTY;
-    }
+    // ===================== 箭矢类 =====================
 
     @SubscribeEvent
     public static void onArrowHit(ProjectileImpactEvent event) {
         if (!(event.getProjectile() instanceof AbstractArrow arrow) || arrow.level().isClientSide) return;
         if (!(arrow.getOwner() instanceof LivingEntity shooter)) return;
+        if (event.getRayTraceResult().getType() == net.minecraft.world.phys.HitResult.Type.MISS) return;
 
-        // 获取弓（由于箭已经射出，通常需要通过 EnchantmentHelper 获取射击时的附魔）
-        // 1.21 推荐通过射出箭时保存附魔信息，或者简单地获取主手物品
-        // 获取发射武器（弓或弩）
-        ItemStack weapon = getWeapon(shooter);
+        ItemStack weapon = resolveLauncher(arrow, shooter);
         if (weapon.isEmpty()) return;
 
-        var registry = arrow.level().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+        Level level = arrow.level();
 
-        // --- 闪电箭逻辑 ---
-        int lightLvl = EnchantmentHelper.getItemEnchantmentLevel(registry.getHolderOrThrow(ModEnchantments.LIGHTNING_ARROW), weapon);
-        if (lightLvl > 0 && event.getRayTraceResult().getType() != net.minecraft.world.phys.HitResult.Type.MISS) {
-            LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(arrow.level());
+        // 闪电箭：在命中点召唤闪电（伤害由原版闪电结算，本类不再重复加成）。
+        int lightning = getEnchantLevel(weapon, ModEnchantments.LIGHTNING_ARROW, level);
+        if (lightning > 0) {
+            LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
             if (bolt != null) {
                 bolt.moveTo(arrow.position());
-                // 伤害通过下面 onDamage 增强，或者在此手动处理
-                arrow.level().addFreshEntity(bolt);
+                if (shooter instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    bolt.setCause(serverPlayer);
+                }
+                level.addFreshEntity(bolt);
             }
         }
 
-        // --- 爆炸箭逻辑 (优化版) ---
-        int expLvl = EnchantmentHelper.getItemEnchantmentLevel(registry.getHolderOrThrow(ModEnchantments.EXPLOSIVE_ARROW), weapon);
-        if (expLvl > 0) {
-            Level level = arrow.level();
+        // 爆炸箭：不破坏方块、不点燃，随后本箭本身被移除（伤害在下方 IncomingDamage 里算）。
+        int explosive = getEnchantLevel(weapon, ModEnchantments.EXPLOSIVE_ARROW, level);
+        if (explosive > 0) {
             double x = arrow.getX();
             double y = arrow.getY();
             double z = arrow.getZ();
-            float radius = (float) expLvl;
-
-            // 1. 触发实际爆炸（不破坏方块，不产生火焰）
+            float radius = Math.min(0.5F + explosive * 0.5F, 4.0F);
             level.explode(arrow, x, y, z, radius, false, Level.ExplosionInteraction.NONE);
-
-            // 2. 注入自定义粒子效果 (只在服务端执行，发送包给客户端)
-            if (level instanceof ServerLevel serverLevel) {
-                // 核心冲击波：等级越高，闪光范围越大
-                serverLevel.sendParticles(ParticleTypes.FLASH, x, y + 0.5, z, 1 + expLvl, 0.2, 0.2, 0.2, 0.0);
-
-                // 环绕烟雾：模拟不同威力的扩散
-                int particleCount = 10 + (expLvl * 15); // 1级25个，5级85个
-                serverLevel.sendParticles(ParticleTypes.EXPLOSION, x, y, z,
-                        particleCount,
-                        radius * 0.5, radius * 0.5, radius * 0.5, 0.1);
-
-                // 可选：添加一些火花粒子增加视觉冲击力
-                serverLevel.sendParticles(ParticleTypes.LAVA, x, y, z,
-                        5 * expLvl, 0.1, 0.1, 0.1, 0.5);
-            }
-
-            // 3. 增强音效：根据等级改变音调，低等级清脆，高等级沉闷有力
-            float pitch = 1.5f - (expLvl * 0.2f); // 1级1.3(清脆), 5级0.5(重低音)
             level.playSound(null, x, y, z, SoundEvents.GENERIC_EXPLODE.value(),
-                    SoundSource.PLAYERS, 1.0f, pitch);
-
+                    SoundSource.PLAYERS, 1.0F, Math.max(0.5F, 1.5F - explosive * 0.2F));
             arrow.discard();
         }
     }
 
     @SubscribeEvent
-    public static void onDamage(LivingIncomingDamageEvent event) {
-        if (event.getSource().getDirectEntity() instanceof AbstractArrow arrow && arrow.getOwner() instanceof LivingEntity shooter) {
-            ItemStack weapon = getWeapon(shooter);
-            if (weapon.isEmpty()) return;
+    public static void onArrowDamage(LivingIncomingDamageEvent event) {
+        if (!(event.getSource().getDirectEntity() instanceof AbstractArrow arrow)) return;
+        if (!(arrow.getOwner() instanceof LivingEntity shooter)) return;
+        if (event.getEntity().level().isClientSide()) return;
 
-            var registry = arrow.level().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            LivingEntity victim = event.getEntity();
+        ItemStack weapon = resolveLauncher(arrow, shooter);
+        if (weapon.isEmpty()) return;
 
-            // 1. 闪电伤害加成 (每级10%)
-            int lightLvl = EnchantmentHelper.getItemEnchantmentLevel(registry.getHolderOrThrow(ModEnchantments.LIGHTNING_ARROW), weapon);
-            if (lightLvl > 0 && event.getSource().is(net.minecraft.world.damagesource.DamageTypes.LIGHTNING_BOLT)) {
-                event.setAmount(event.getAmount() * (1.0f + lightLvl * 0.1f));
+        Level level = event.getEntity().level();
+        LivingEntity victim = event.getEntity();
+        float amount = event.getAmount();
+
+        // 霜冻箭：额外寒冰伤害 + 减速，全部就地叠加，不再嵌套 hurt()。
+        int frost = getEnchantLevel(weapon, ModEnchantments.FROST_ARROW, level);
+        if (frost > 0) {
+            amount += 0.5F * frost;
+            victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
+                    (3 + frost) * 20, Math.min(frost - 1, 4)));
+        }
+
+        // 爆炸箭：额外伤害与等级挂钩，且是“加”不是“覆盖”（旧实现会把强力弓的伤害抹成 5~13）。
+        int explosive = getEnchantLevel(weapon, ModEnchantments.EXPLOSIVE_ARROW, level);
+        if (explosive > 0) {
+            amount += 5.0F + (explosive - 1) * 2.0F;
+        }
+
+        event.setAmount(amount);
+
+        // 破甲箭：按等级削弱目标的护甲减免，而不是再造成一次无视护甲的伤害。
+        // 用 Reduction.ARMOR 的修饰器实现，创造模式/图腾/无敌帧全部按原版规则走。
+        int piercing = getEnchantLevel(weapon, ModEnchantments.ARMOR_PIERCING_ARROW, level);
+        if (piercing > 0) {
+            float ignoreRatio = Math.min(piercing * 0.05F, 0.5F);
+            event.addReductionModifier(DamageContainer.Reduction.ARMOR,
+                    (container, reduction) -> reduction * (1.0F - ignoreRatio));
+        }
+    }
+
+    /**
+     * 射出这支箭的弓/弩。优先使用箭上记录的发射武器，
+     * 这样“射出后换手/换武器”不会改变附魔判定。
+     */
+    private static ItemStack resolveLauncher(AbstractArrow arrow, LivingEntity shooter) {
+        ItemStack fired = arrow.getWeaponItem();
+        if (fired != null && !fired.isEmpty()) return fired;
+        ItemStack main = shooter.getMainHandItem();
+        if (main.getItem() instanceof net.minecraft.world.item.ProjectileWeaponItem) return main;
+        ItemStack off = shooter.getOffhandItem();
+        if (off.getItem() instanceof net.minecraft.world.item.ProjectileWeaponItem) return off;
+        return ItemStack.EMPTY;
+    }
+
+    /**
+     * 读取附魔等级。附魔是数据驱动的：数据包删掉/改名某条附魔后，
+     * {@code getHolderOrThrow} 会在热路径（每次箭命中、每次破坏方块、每次 tooltip）抛异常并刷屏。
+     */
+    private static int getEnchantLevel(ItemStack stack, net.minecraft.resources.ResourceKey<Enchantment> key,
+                                       Level level) {
+        if (stack.isEmpty()) return 0;
+        return level.registryAccess().registryOrThrow(Registries.ENCHANTMENT)
+                .getHolder(key)
+                .map(holder -> stack.getEnchantmentLevel(holder))
+                .orElse(0);
+    }
+
+    // ===================== 挖掘类（BlockDropsEvent） =====================
+
+    @SubscribeEvent
+    public static void onBlockDrops(BlockDropsEvent event) {
+        if (!(event.getBreaker() instanceof Player player)) return;
+        ItemStack tool = event.getTool();
+        if (tool.isEmpty()) return;
+
+        ServerLevel level = event.getLevel();
+        BlockState state = event.getState();
+
+        // 挖矿暴击：额外复制一份本方块自己的掉落。
+        int miningCrit = getEnchantLevel(tool, ModEnchantments.MINING_CRIT, level);
+        if (miningCrit > 0 && player.getRandom().nextFloat() < miningCrit * 0.08F) {
+            List<ItemStack> copies = new ArrayList<>();
+            for (ItemEntity drop : event.getDrops()) {
+                copies.add(drop.getItem().copy());
             }
+            spawnAt(level, event, copies);
+        }
 
-            // 2. 霜冻箭 (持续掉血+减速)
-            int frostLvl = EnchantmentHelper.getItemEnchantmentLevel(registry.getHolderOrThrow(ModEnchantments.FROST_ARROW), weapon);
-            if (frostLvl > 0) {
-                // 减速时间：每级+1秒 (初始应该是3s + lvl)
-                victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, (3 + frostLvl) * 20, 1));
-                // 掉血：由于无法直接通过附魔做持续伤害，这里给予一个中毒或自定义伤害逻辑
-                // 每秒掉血 (0.5 + (lvl-1)*0.5)
-                victim.hurt(victim.damageSources().magic(), (float)(0.5 * frostLvl));
-            }
+        // 矿石猎手：把“石头”的掉落替换为随机矿石。只在原版石头（无 BlockEntity）上生效。
+        int oreHunter = getEnchantLevel(tool, ModEnchantments.ORE_HUNTER, level);
+        if (oreHunter > 0 && state.is(Blocks.STONE) && event.getBlockEntity() == null
+                && player.getRandom().nextFloat() < oreHunter * 0.06F) {
+            event.getDrops().clear();
+            event.getDrops().add(newItemEntity(level, event, getRandomOre(level)));
+            return;
+        }
 
-            // 3. 爆炸箭额外伤害 (1级5, 每级+2)
-            int expLvl = EnchantmentHelper.getItemEnchantmentLevel(registry.getHolderOrThrow(ModEnchantments.EXPLOSIVE_ARROW), weapon);
-            if (expLvl > 0) {
-                event.setAmount(5.0f + (expLvl - 1) * 2.0f);
-            }
-
-            // 4. 破甲箭 (每级穿透5%)
-            int pierceLvl = EnchantmentHelper.getItemEnchantmentLevel(registry.getHolderOrThrow(ModEnchantments.ARMOR_PIERCING_ARROW), weapon);
-            if (pierceLvl > 0) {
-                float armorValue = victim.getArmorValue();
-                if (armorValue > 0) {
-                    // 1.21 很难直接修改伤害公式，通常计算一段额外的“无视护甲伤害”注入
-                    float ignoreRatio = pierceLvl * 0.05f;
-                    float extra = event.getAmount() * ignoreRatio;
-                    victim.hurt(victim.damageSources().genericKill(), extra); // 使用 bypasses armor 的来源
-                }
+        // 丰收暴击：只对“已成熟”的作物追加产物，未成熟时绝不触发（否则可以站桩刷作物）。
+        int harvestBounty = getEnchantLevel(tool, ModEnchantments.HARVEST_BOUNTY, level);
+        if (harvestBounty > 0 && isMatureCrop(state)
+                && player.getRandom().nextFloat() < harvestBounty * 0.12F) {
+            ItemStack bonus = getCropProduce(state.getBlock());
+            if (!bonus.isEmpty()) {
+                bonus.setCount(1 + player.getRandom().nextInt(harvestBounty));
+                event.getDrops().add(newItemEntity(level, event, bonus));
             }
         }
     }
 
-    @SubscribeEvent
-    public static void onBlockBreak(BlockEvent.BreakEvent event) {
-        if (!(event.getPlayer().level() instanceof ServerLevel serverLevel)) return;
-        Player player = event.getPlayer();
-        ItemStack tool = player.getMainHandItem();
-        if (tool.isEmpty()) return;
-
-        var registry = serverLevel.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-        BlockPos pos = event.getPos();
-
-        int miningCritLvl = EnchantmentHelper.getItemEnchantmentLevel(
-                registry.getHolderOrThrow(ModEnchantments.MINING_CRIT), tool);
-        if (miningCritLvl > 0 && player.getRandom().nextFloat() < miningCritLvl * 0.08) {
-            event.setCanceled(true);
-            serverLevel.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-            List<ItemStack> drops = Block.getDrops(event.getState(), serverLevel, pos, null, player, tool);
-            for (ItemStack drop : drops) {
-                ItemEntity entity = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, drop);
-                serverLevel.addFreshEntity(entity);
-            }
-            serverLevel.sendParticles(ParticleTypes.CRIT,
-                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                    20, 0.3, 0.3, 0.3, 0.1);
-            serverLevel.playSound(null, pos, SoundEvents.PLAYER_ATTACK_CRIT,
-                    SoundSource.BLOCKS, 1.0f, 1.5f);
-            return;
-        }
-
-        int oreHunterLvl = EnchantmentHelper.getItemEnchantmentLevel(
-                registry.getHolderOrThrow(ModEnchantments.ORE_HUNTER), tool);
-        if (oreHunterLvl > 0 && event.getState().is(Blocks.STONE)) {
-            if (player.getRandom().nextFloat() < oreHunterLvl * 0.06) {
-                event.setCanceled(true);
-                serverLevel.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                ItemStack oreDrop = getRandomOre(serverLevel);
-                ItemEntity entity = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, oreDrop);
-                serverLevel.addFreshEntity(entity);
-                serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
-                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                        10, 0.3, 0.3, 0.3, 0.05);
-            }
-            return;
-        }
-
-        int harvestBountyLvl = EnchantmentHelper.getItemEnchantmentLevel(
-                registry.getHolderOrThrow(ModEnchantments.HARVEST_BOUNTY), tool);
-        if (harvestBountyLvl > 0 && player.getRandom().nextFloat() < harvestBountyLvl * 0.12) {
-            Block block = event.getState().getBlock();
-            ItemStack bonusDrop = getCropProduce(block);
-            if (!bonusDrop.isEmpty()) {
-                event.setCanceled(true);
-                serverLevel.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                List<ItemStack> drops = Block.getDrops(event.getState(), serverLevel, pos, null, player, tool);
-                for (ItemStack drop : drops) {
-                    ItemEntity entity = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, drop);
-                    serverLevel.addFreshEntity(entity);
-                }
-                int bonusCount = 1 + player.getRandom().nextInt(harvestBountyLvl);
-                ItemStack bonus = bonusDrop.copy();
-                bonus.setCount(bonusCount);
-                ItemEntity bonusEntity = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, bonus);
-                serverLevel.addFreshEntity(bonusEntity);
-                serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
-                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                        15, 0.3, 0.3, 0.3, 0.05);
+    private static void spawnAt(ServerLevel level, BlockDropsEvent event, List<ItemStack> stacks) {
+        for (ItemStack stack : stacks) {
+            if (!stack.isEmpty()) {
+                event.getDrops().add(newItemEntity(level, event, stack));
             }
         }
+    }
+
+    private static ItemEntity newItemEntity(ServerLevel level, BlockDropsEvent event, ItemStack stack) {
+        var pos = event.getPos();
+        return new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, stack);
+    }
+
+    /** 作物是否已经成熟。未成熟时丰收附魔必须完全不生效。 */
+    private static boolean isMatureCrop(BlockState state) {
+        Block block = state.getBlock();
+        if (block instanceof CropBlock crop) return crop.isMaxAge(state);
+        if (block instanceof NetherWartBlock) {
+            return state.getValue(NetherWartBlock.AGE) >= NetherWartBlock.MAX_AGE;
+        }
+        if (block instanceof CocoaBlock) {
+            return state.getValue(CocoaBlock.AGE) >= CocoaBlock.MAX_AGE;
+        }
+        return false;
     }
 
     private static ItemStack getRandomOre(ServerLevel level) {
@@ -255,35 +262,5 @@ public class ModEnchantmentEvents {
         if (block == Blocks.NETHER_WART) return new ItemStack(Items.NETHER_WART);
         if (block == Blocks.COCOA) return new ItemStack(Items.COCOA_BEANS);
         return ItemStack.EMPTY;
-    }
-
-    // --- Tooltip 描述展示 ---
-    @SubscribeEvent
-    public static void onTooltip(ItemTooltipEvent event) {
-        ItemStack stack = event.getItemStack();
-        // 1. 安全检查：如果实体为空，直接返回
-        if (event.getEntity() == null) {
-            return;
-        }
-
-        // 2. 此时可以安全调用 level()
-        var level = event.getEntity().level();
-        var registry = level.registryAccess().registry(Registries.ENCHANTMENT);
-
-        if (registry.isEmpty()) return;
-
-        addDesc(stack, registry.get(), ModEnchantments.LIGHTNING_ARROW, "enchantment.gear_forge.lightning_arrow.desc", event.getToolTip());
-        addDesc(stack, registry.get(), ModEnchantments.FROST_ARROW, "enchantment.gear_forge.frost_arrow.desc", event.getToolTip());
-        addDesc(stack, registry.get(), ModEnchantments.EXPLOSIVE_ARROW, "enchantment.gear_forge.explosive_arrow.desc", event.getToolTip());
-        addDesc(stack, registry.get(), ModEnchantments.ARMOR_PIERCING_ARROW, "enchantment.gear_forge.armor_piercing_arrow.desc", event.getToolTip());
-        addDesc(stack, registry.get(), ModEnchantments.MINING_CRIT, "enchantment.gear_forge.mining_crit.desc", event.getToolTip());
-        addDesc(stack, registry.get(), ModEnchantments.ORE_HUNTER, "enchantment.gear_forge.ore_hunter.desc", event.getToolTip());
-        addDesc(stack, registry.get(), ModEnchantments.HARVEST_BOUNTY, "enchantment.gear_forge.harvest_bounty.desc", event.getToolTip());
-    }
-
-    private static void addDesc(ItemStack stack, net.minecraft.core.Registry<Enchantment> reg, ResourceKey<Enchantment> key, String langKey, List<Component> tooltips) {
-        if (EnchantmentHelper.getItemEnchantmentLevel(reg.getHolderOrThrow(key), stack) > 0) {
-            tooltips.add(Component.translatable(langKey).withStyle(net.minecraft.ChatFormatting.GRAY));
-        }
     }
 }

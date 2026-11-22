@@ -1,6 +1,5 @@
 package com.hana.gear_forge.mixin;
 
-import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.component.ModDataComponents;
 import com.hana.gear_forge.util.GearHelper;
 import net.minecraft.world.entity.LivingEntity;
@@ -8,21 +7,30 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
+/**
+ * 弓/弩蓄力加速：每 tick 额外减少 {@code useItemRemaining}，加成来自手持弓弩和所穿盔甲上的
+ * {@code bow_charge_speed} 词条、宝石与转生奖励。
+ *
+ * <p>用“小数累加器”而不是 {@code Math.max(1, round(bonus))}：后者会让任何大于 0 的加成
+ * 都至少额外推进 1 tick（弓的 20 tick 蓄力直接变成 10 tick），与配置数值完全脱钩。
+ * 累加器放在 {@link Player} 的持久数据里，跨 tick 保持小数部分。
+ */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
 
-    @Accessor("useItemRemaining")
-    public abstract int getUseItemRemaining();
+    @Shadow
+    protected int useItemRemaining;
 
-    @Accessor("useItemRemaining")
-    public abstract void setUseItemRemaining(int value);
+    @Unique
+    private static final String GEAR_FORGE_CHARGE_ACC = "gear_forge_charge_acc";
 
     @Inject(method = "aiStep", at = @At("TAIL"))
     private void gearForge$modifyBowChargeSpeed(CallbackInfo ci) {
@@ -33,56 +41,31 @@ public abstract class LivingEntityMixin {
         if (item.isEmpty()) return;
         if (!item.is(Items.BOW) && !item.is(Items.CROSSBOW)) return;
 
-        double totalBowChargeSpeed = 0;
-
-        List<ModDataComponents.AffixEntry> affixes = item.get(ModDataComponents.AFFIXES.get());
-        if (affixes != null) {
-            totalBowChargeSpeed += GearHelper.getAffixTotalValueDirect(affixes, "bow_charge_speed");
-        }
-
-        List<ModDataComponents.GemsEntry> gems = item.get(ModDataComponents.GEMS.get());
-        if (gems != null) {
-            totalBowChargeSpeed += GearHelper.getTotalGemEffectValue(gems, "bow_charge_speed");
-        }
-
-        List<ModDataComponents.StoredBonus> stored = item.get(ModDataComponents.STORED_BONUSES.get());
-        if (stored != null) {
-            totalBowChargeSpeed += GearHelper.getStoredBonusValue(stored, "bow_charge_speed");
-        }
-
+        double total = GearHelper.getBowChargeSpeed(item);
         for (ItemStack armor : player.getArmorSlots()) {
-            if (armor.isEmpty()) continue;
-
-            List<ModDataComponents.AffixEntry> armorAffixes = armor.get(ModDataComponents.AFFIXES.get());
-            if (armorAffixes != null) {
-                totalBowChargeSpeed += GearHelper.getAffixTotalValueDirect(armorAffixes, "bow_charge_speed");
-            }
-
-            List<ModDataComponents.GemsEntry> armorGems = armor.get(ModDataComponents.GEMS.get());
-            if (armorGems != null) {
-                totalBowChargeSpeed += GearHelper.getTotalGemEffectValue(armorGems, "bow_charge_speed");
-            }
-
-            List<ModDataComponents.StoredBonus> armorStored = armor.get(ModDataComponents.STORED_BONUSES.get());
-            if (armorStored != null) {
-                totalBowChargeSpeed += GearHelper.getStoredBonusValue(armorStored, "bow_charge_speed");
+            if (!armor.isEmpty()) {
+                total += GearHelper.getBowChargeSpeed(armor);
             }
         }
 
-        if (totalBowChargeSpeed <= 0) return;
-
-        int totalDecrease = (int) Math.floor(totalBowChargeSpeed);
-        double fraction = totalBowChargeSpeed - totalDecrease;
-        if (fraction >= 0.5) {
-            totalDecrease++;
+        var data = player.getPersistentData();
+        if (total <= 0) {
+            data.remove(GEAR_FORGE_CHARGE_ACC);
+            return;
         }
-        totalDecrease = Math.max(1, totalDecrease);
 
-        int old = getUseItemRemaining();
-        setUseItemRemaining(Math.max(0, old - totalDecrease));
+        // 累加小数部分，攒够 1 tick 才真正推进，保证长期推进速率与配置值一致。
+        double acc = data.getDouble(GEAR_FORGE_CHARGE_ACC) + total;
+        int decrease = (int) acc;
+        acc -= decrease;
+        if (acc <= 1.0E-6) {
+            data.remove(GEAR_FORGE_CHARGE_ACC);
+        } else {
+            data.putDouble(GEAR_FORGE_CHARGE_ACC, acc);
+        }
 
-        GearForgeMod.LOGGER.info("[GearForge-Mixin] bow_charge_speed=" + totalBowChargeSpeed
-                + " useItemRemaining=" + old + " -> " + getUseItemRemaining()
-                + " side=" + (player.level().isClientSide() ? "CLIENT" : "SERVER"));
+        if (decrease > 0) {
+            this.useItemRemaining = Math.max(0, this.useItemRemaining - decrease);
+        }
     }
 }

@@ -92,6 +92,16 @@ public class ModDataComponents {
                             .persistent(Codec.INT)
                             .networkSynchronized(ByteBufCodecs.INT));
 
+    /**
+     * 重铸“盐值”。重铸结果必须由它确定性地推导出来，否则每次 createResult()（锻造台预览）都会掷一次新骰，
+     * 玩家可以反复放取免费刷词条。盐值只随“真正取出”而 +1，因此同一次预览永远得到同一套词条。
+     */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> ROLL_SALT =
+            DATA_COMPONENTS.registerComponentType("roll_salt",
+                    builder -> builder
+                            .persistent(Codec.INT)
+                            .networkSynchronized(ByteBufCodecs.INT));
+
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<List<StoredBonus>>> STORED_BONUSES =
             DATA_COMPONENTS.registerComponentType("stored_bonuses",
                     builder -> builder

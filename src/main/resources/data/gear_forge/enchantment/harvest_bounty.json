@@ -1,6 +1,6 @@
 {
   "description": { "translate": "enchantment.gear_forge.harvest_bounty" },
-  "supported_items": "#minecraft:enchantable/hoe",
+  "supported_items": "#minecraft:hoes",
   "primary_items": "#minecraft:hoes",
   "weight": 5,
   "max_level": 5,

@@ -1,6 +1,6 @@
 {
   "description": { "translate": "enchantment.gear_forge.lightning_arrow" },
-  "supported_items": "#minecraft:enchantable/crossbow",
+  "supported_items": "#gear_forge:enchantable/arrow_weapons",
   "primary_items": "#minecraft:enchantable/bow",
   "weight": 5,
   "max_level": 5,
