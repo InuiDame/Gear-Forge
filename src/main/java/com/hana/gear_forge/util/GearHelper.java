@@ -138,6 +138,16 @@ public class GearHelper {
         return total;
     }
 
+    /**
+     * 把装备从 {@code currentLevel} 强化到下一级需要几个模板材料。
+     *
+     * <p>配置关掉材料消耗（{@code consumeMaterial} 为空）时返回 0，表示模板槽可以空着。
+     */
+    public static int getUpgradeConsumeCount(ItemStack stack, UpgradeConfig config, int currentLevel) {
+        if (config == null || !config.consumesMaterial()) return 0;
+        return config.getConsumeAmount(currentLevel + 1);
+    }
+
     public static double getGemStatBonus(String gemId, String statType, int tier) {
         if (tier <= 0) tier = 1;
         var gem = ModConfigs.getGemDefinition(gemId);
@@ -218,6 +228,47 @@ public class GearHelper {
         return stack.isDamageableItem()
                 || stack.is(Items.BOW) || stack.is(Items.CROSSBOW)
                 || stack.is(Items.TRIDENT) || stack.is(Items.SHIELD);
+    }
+
+    /**
+     * 一次强化掷骰的结果。由 {@code SmithingMenuMixin} 在真正取出时决定，
+     * 不放在 {@code assemble} 里——否则预览阶段反复放取就能刷成功。
+     */
+    public enum UpgradeOutcome {
+        /** 强化成功，等级 +1。 */
+        SUCCESS,
+        /** 强化失败但装备完好，等级不变。 */
+        FAIL_KEEP,
+        /** 强化失败且降级。 */
+        FAIL_DOWNGRADE,
+        /** 强化失败且装备损毁。 */
+        DESTROYED
+    }
+
+    /**
+     * 掷一次强化结果。
+     *
+     * <p>顺序：先判损毁（配置开启时），再判成功；失败时按 {@code getDowngradeChance()} 决定是否降级。
+     * 损毁排在成功之前是有意的——否则高等级时"先成功后损毁"会让配置失去意义。
+     */
+    public static UpgradeOutcome rollUpgradeOutcome(UpgradeConfig config, int currentLevel, RandomSource random) {
+        if (config == null) return UpgradeOutcome.SUCCESS;
+
+        double destroyChance = config.getDestroyChanceSafe();
+        if (destroyChance > 0 && random.nextDouble() < destroyChance) {
+            return UpgradeOutcome.DESTROYED;
+        }
+
+        double successRate = config.getSuccessRate(currentLevel);
+        if (random.nextDouble() < successRate) {
+            return UpgradeOutcome.SUCCESS;
+        }
+
+        if (config.isAllowDowngrade() && config.getDowngradeLevelsSafe() > 0
+                && random.nextDouble() < config.getDowngradeChance()) {
+            return UpgradeOutcome.FAIL_DOWNGRADE;
+        }
+        return UpgradeOutcome.FAIL_KEEP;
     }
 
     public static double getTotalGemEffectValue(List<ModDataComponents.GemsEntry> gems, String effectType) {

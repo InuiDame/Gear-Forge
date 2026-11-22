@@ -54,9 +54,9 @@
   "tooltip.gear_forge.gem.durability_boost": "耐久度 +%s%%",
   "tooltip.gear_forge.gem.shield_block_recovery": "格挡后减伤 +%s",
 
-  "tooltip.gear_forge.forge_hammer": "放入锻造台的材料栏，与装备组合，最高强化到15级",
+  "tooltip.gear_forge.forge_hammer": "放入锻造台的材料栏，与装备组合进行强化。强化等级越高成功率越低，失败时可能保持等级、降级或损毁装备。材料消耗随等级增长（见 config/gear_forge/upgrades.json）。",
 
-  "tooltip.gear_forge.upgrade_crystal": "将宝石放在锻造台的装备栏，强化水晶放在材料栏，可以强化宝石的效果，最多强化到T5",
+  "tooltip.gear_forge.upgrade_crystal": "将宝石放在锻造台的装备栏，强化水晶放在材料栏，可以强化宝石的效果。阶级上限由 config/gear_forge/gems.json 的 maxTier 决定。",
 
   "tooltip.gear_forge.reroll_stone": "放入锻造台的材料栏，赋予装备词条，词条数量最低1条，最多5条",
 
@@ -64,12 +64,15 @@
 
   "tooltip.gear_forge.gem_remover": "放入锻造台的材料栏，能够销毁最近放入装备的一颗宝石",
 
-  "tooltip.gear_forge.reincarnation_stone": "当装备强化到+15时，将此道具放到锻造台材料栏中，同时在锻造模板栏位放上8个下界合金块，可将装备进行转生。装备将继承一切强化、重铸、宝石属性（如果宝石没有打满则无法转生，若无法打满宝石，请在无宝石状况下进行转生）。",
+  "tooltip.gear_forge.reincarnation_stone": "当装备达到强化上限时，将此道具放到锻造台材料栏中，并在锻造模板栏位放上配置要求的材料，可将装备进行转生。装备将继承一切强化、重铸、宝石属性作为转生保留奖励。所需数量与等级上限见 config/gear_forge/upgrades.json。",
 
 
   "curios.identifier.hhthing": "小玩意",
   "curios.modifiers.hhthing": " ",
   "item.gear_forge.lucky_diamond": "幸运钻石",
   "item.gear_forge.cursed_anvil": "魔性铁砧",
-  "tooltip.gear_forge.curse_anvil": "装备时：中立敌对|经验获取+15%|附魔等级需求-5"
+  "tooltip.gear_forge.curse_anvil": "佩戴时：激怒附近的中立生物（已驯服的宠物除外）| 经验获取 +15% | 附魔台等级需求 -5（附魔强度同步降低）",
+  "message.gear_forge.upgrade_destroyed": "强化失败，装备已损毁",
+  "message.gear_forge.upgrade_downgrade": "强化失败，等级下降",
+  "message.gear_forge.upgrade_fail": "强化失败，等级不变"
 }

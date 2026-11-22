@@ -30,6 +30,9 @@ import java.util.List;
 
 public class CursedAnvilItem extends Item implements ICurioItem {
 
+    /** 激怒半径（格）。 */
+    private static final double PROVOKE_RADIUS = 10.0;
+
     public CursedAnvilItem() {
         super(new Properties().stacksTo(1).fireResistant());
     }
@@ -44,14 +47,30 @@ public class CursedAnvilItem extends Item implements ICurioItem {
         applyHostileToNearby(player);
 
     }
+
+    /**
+     * 让附近的中立生物敌视佩戴者。
+     *
+     * <p>只挑原版定义了中立行为的 {@link NeutralMob}（狼、末影人、猪灵、蜜蜂、北极熊、铁傀儡），
+     * 并且排除已被驯服的个体——旧实现对"所有非 Enemy 的 Mob"生效，会让玩家自己的狗和猫、
+     * 村民、牛羊全都转头打玩家。
+     *
+     * <p>铁傀儡单独放行：在 1.21.1 里它实现的是 {@code NeutralMob}，但它是村庄守护者，
+     * "被魔性铁砧激怒"符合道具设定；如果不想让它参与，把 {@code provokeIronGolem} 关掉即可。
+     */
     private void applyHostileToNearby(Player player) {
-        var area = player.getBoundingBox().inflate(10);
+        var area = player.getBoundingBox().inflate(PROVOKE_RADIUS);
         var mobs = player.level().getEntitiesOfClass(net.minecraft.world.entity.Mob.class, area);
         for (var mob : mobs) {
-            if (!(mob instanceof net.minecraft.world.entity.monster.Enemy) && mob.getTarget() != player) {
-                mob.setTarget(player);
-                mob.setAggressive(true);
-            }
+            if (mob instanceof net.minecraft.world.entity.monster.Enemy) continue;
+            if (!(mob instanceof net.minecraft.world.entity.NeutralMob)) continue;
+            if (mob.getTarget() == player) continue;
+            // 有主人的个体（狼/猫/鹦鹉）不参与，避免宠物反咬主人。
+            if (mob instanceof net.minecraft.world.entity.OwnableEntity ownable
+                    && ownable.getOwnerUUID() != null) continue;
+
+            mob.setTarget(player);
+            mob.setAggressive(true);
         }
     }
 

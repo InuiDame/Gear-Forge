@@ -85,7 +85,7 @@ Dist 过滤发生在 `Class.forName` 之前，所以带 `value = Dist.CLIENT` �
 |---|---|---|
 | `affixes.json` | 词条池、词条数量范围 | `minAffixCount`、`maxAffixCount`、`affixPool`。`rarityAffixCount`、`affixRerollCostDiamonds` 仍未使用（GF-004） |
 | `gems.json` | 宝石定义、插槽数、阶级上限 | `maxSocketsPerGear`、`gems`、`maxTier`。`socketTypes` 未使用 |
-| `upgrades.json` | 强化和转生 | `maxLevel`、`statBoostPerLevel`、里程碑奖励、转生相关字段。成功率、降级、损毁、材料消耗共 11 个字段未使用（GF-001） |
+| `upgrades.json` | 强化和转生 | 全部字段。`maxLevel`、`statBoostPerLevel`、里程碑奖励、转生字段；强化侧的成功率（`baseSuccessRate` / `levelSuccessDecay`）、降级（`allowDowngrade` / `downgradeLevels` / `levelFailureDecay`）、损毁（`allowDestroy` / `destroyChance`）、材料消耗（`consumeMaterial` / `consumeAmountBase` / `consumeAmountIncrement` / `maxConsumeMaterialPerLevel`）均已接入（ADR-0009） |
 | `mob_gear.json` | 强化怪物概率和上限 | 5 个字段全部 |
 
 四份文件共有的 `configVersion` 目前没有任何读取方。
@@ -122,7 +122,7 @@ flowchart LR
 - **除转生外，所有操作的模板槽必须为空**。原版无条件扣模板槽，如果允许在模板槽放钻石/下界合金块，每次操作都会白吞一个。
 - 结果在放入物品时就算出并显示。重铸用的是盐值派生的确定种子，反复放取不会得到不同结果（ADR-0008）。
 - 宝石镶嵌分支要求模板槽为空，否则会抢占原版"钻石纹饰"配方并吞掉纹饰模板。
-- 强化永远成功，不消耗钻石（GF-001 未实现成功率配置）。
+- 强化的成功率/降级/损毁/材料消耗全部由 `upgrades.json` 决定（ADR-0009）。预览固定显示 +1，真正的掷骰在取出时（`SmithingMenuMixin.onTake`）发生，所以预览不能刷、客户端也不参与结算。默认配置下 0→5 级必成（合计 15 钻石），6→15 级成功率 75%→30%、每级 5 钻石。
 - 配方标记为 `isSpecial() = true`，产物由输入动态决定，不进入配方书。
 
 ## 6. 效果结算

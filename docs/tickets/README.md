@@ -52,6 +52,10 @@
 | `charity_bundle` 是死键（无附魔 JSON、无 lang、无行为） | 从 `ModEnchantments` 与创造页移除 | GF-011 |
 | 生命上限词条属性侧乘 2，提示值只有实际的一半 | 去掉 ×2；`all_stats` 的生命加成同样改为 ×1 | GF-017 |
 | 语言文件有 19 条无引用的 `message.gear_forge.*` 键 | 删除；en/zh 各剩 60 条且键集合一致 | GF-021 |
+| 强化成功率、降级、损毁、材料消耗 11 个配置字段完全没被读取，强化永远 100% 成功且只消耗 1 个锻造锤 | 全部接入：材料按等级递增（maxConsumeMaterialPerLevel 封顶）；成功/降级/损毁在取出时掷骰，预览固定 +1 不可刷；客户端不参与结算 | GF-001 |
+| 魔性铁砧对"所有非 Enemy 的 Mob"生效，会让自己的狗/猫、村民、牛羊反咬玩家 | 只对原版 NeutralMob 生效，排除 OwnableEntity 有主人的个体 | GF-012 |
+| 魔性铁砧的"附魔 -5"实为门槛与附魔强度同时下降，tooltip 却只写"等级 -5" | 核实原版 costs 双用途后保留现状，tooltip 改为"等级需求 -5（附魔强度同步降低）" | GF-012 |
+| 附魔台用 10 格内最近玩家近似操作者，路过的人也会影响别人的附魔 | 半径收紧到 4 格（与原版交互距离一致） | GF-012 |
 
 ### 2026-11-10 首次整理
 
@@ -90,10 +94,8 @@
 
 | ID | 标题 | 优先级 | 状态 |
 |---|---|---|---|
-| [GF-001](GF-001-upgrade-config-not-implemented.md) | 强化成功率、降级、损毁、材料消耗配置没有实现 | P1 | 待决议 |
 | [GF-004](GF-004-unused-affix-gem-config.md) | 词条和宝石配置里有未使用的字段 | P2 | 待决议 |
 | [GF-008](GF-008-hardcoded-chinese-in-tooltips.md) | 提示文本与配置里的名称/描述硬编码中文 | P2 | 待修复 |
-| [GF-012](GF-012-cursed-anvil-behaviour.md) | 魔性铁砧效果范围过宽、附魔 -5 有副作用 | P2 | 待决议 |
 | [GF-016](GF-016-unique-gem-effect-substring-match.md) | 宝石特殊效果靠字符串包含匹配 | P3 | 待修复 |
 | [GF-018](GF-018-no-automated-tests.md) | 没有自动化测试 | P2 | 待决议 |
 | [GF-019](GF-019-ci-and-release-process.md) | 没有 CI，版本号和发布流程不统一 | P2 | 待决议 |
@@ -103,5 +105,5 @@
 
 1. GF-022：先按 [docs/development.md](../development.md) 第 4 节的回归清单在游戏里逐项过一遍。构建、`runData`、`runServer` 已经通过（`Done (3.101s)`，0 ERROR，两个 mixin 均注入成功），但玩法行为需要人工确认。
 2. GF-008、GF-016：不需要决议的 P2/P3 清理。
-3. GF-001、GF-012、GF-018：需要作者决定数值取向与测试投入。
+3. GF-018：需要作者决定测试投入。
 4. GF-019：CI 与发布流程。

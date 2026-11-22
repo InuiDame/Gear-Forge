@@ -54,9 +54,9 @@
   "tooltip.gear_forge.gem.durability_boost": "Increases Durability by %s%%",
   "tooltip.gear_forge.gem.shield_block_recovery": "Reduces Block Damage by %s",
 
-  "tooltip.gear_forge.forge_hammer": "Place in the smithing table's material slot with a gear to upgrade it (Max +15)",
+  "tooltip.gear_forge.forge_hammer": "Place in the smithing table's material slot with a gear to upgrade it. Success rate drops as the level rises; failure may keep the level, downgrade it, or destroy the gear. Material cost grows with level (see config/gear_forge/upgrades.json).",
 
-  "tooltip.gear_forge.upgrade_crystal": "Place a gem in the smithing table's equipment slot and this in the material slot to enhance the gem's effects (Max Tier 5)",
+  "tooltip.gear_forge.upgrade_crystal": "Place a gem in the smithing table's equipment slot and this in the material slot to enhance the gem's effects. The tier cap is set by maxTier in config/gear_forge/gems.json.",
 
   "tooltip.gear_forge.reroll_stone": "Place in the smithing table's material slot to grant random affixes (1~5 affixes)",
 
@@ -64,11 +64,14 @@
 
   "tooltip.gear_forge.gem_remover": "Place in the smithing table's material slot to remove the most recently socketed gem from the equipment",
 
-  "tooltip.gear_forge.reincarnation_stone": "When your gear reaches +15, place this in the material slot and 8 Netherite Blocks in the template slot to Reincarnate. The gear will inherit all upgrades, affixes, and gem bonuses. (Gear must have full gem sockets to reincarnate; if you cannot fill all sockets, reincarnate without any gems first.)",
+  "tooltip.gear_forge.reincarnation_stone": "When your gear reaches its max upgrade level, place this in the material slot and the configured cost material in the template slot to Reincarnate. The gear inherits all upgrade, affix and gem values as stored bonuses. Amounts and the level cap come from config/gear_forge/upgrades.json.",
 
   "curios.identifier.hhthing": "Little Thing",
   "curios.modifiers.hhthing": " ",
   "item.gear_forge.lucky_diamond": "Lucky Diamond",
   "item.gear_forge.cursed_anvil": "Cursed Anvil",
-  "tooltip.gear_forge.curse_anvil": "When equipped: Neutral Hostile | EXP Gain +15% | Enchantment Level Requirement -5"
+  "tooltip.gear_forge.curse_anvil": "When equipped: nearby neutral mobs are provoked (tamed pets excluded) | EXP Gain +15% | Enchanting Table level requirement -5 (enchantment power drops with it)",
+  "message.gear_forge.upgrade_destroyed": "Upgrade failed, the gear was destroyed",
+  "message.gear_forge.upgrade_downgrade": "Upgrade failed, the level dropped",
+  "message.gear_forge.upgrade_fail": "Upgrade failed, the level is unchanged"
 }

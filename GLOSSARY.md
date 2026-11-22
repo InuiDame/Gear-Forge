@@ -33,6 +33,12 @@ _Avoid_：锻造模板（原版概念，本模组不使用原版模板物品）
 装备被锻造锤强化的次数，从 0 到强化上限（默认 15）。
 _Avoid_：星级、等级（会和玩家经验等级混淆）
 
+**强化成功率 (Upgrade Success Rate)**：
+从当前等级强化到下一级时成功的概率，随等级线性下降（aseSuccessRate 与 levelSuccessDecay）。失败时按 levelFailureDecay 的概率降级，否则等级不变；开启 llowDestroy 时还可能直接损毁装备。掷骰只发生在真正取出产物时，预览固定显示成功。见 ADR-0009。
+
+**强化材料 (Upgrade Cost)**：
+强化时模板格要放的物品与数量，默认每级 1→5 个钻石（consumeMaterial / consumeAmountBase / consumeAmountIncrement / maxConsumeMaterialPerLevel）。consumeMaterial 为空表示强化不消耗材料。
+
 **里程碑等级 (Special Bonus Level)**：
 达到后额外获得一次性奖励的强化等级，默认 5、10、15。
 

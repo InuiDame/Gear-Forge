@@ -82,15 +82,50 @@ public class UpgradeConfig {
     public int getMaxReincarnationCount() { return maxReincarnationCount; }
 
     public int getConsumeAmount(int level) {
-        return consumeAmountBase + consumeAmountIncrement * Math.max(0, level - 1);
+        // 单次最多消耗 maxConsumeMaterialPerLevel 个（默认 5）。模板槽上限 64，
+        // 没有这个上限时高等级会要求几十个材料，玩家放不下也看不明白。
+        int raw = consumeAmountBase + consumeAmountIncrement * Math.max(0, level - 1);
+        int cap = maxConsumeMaterialPerLevel > 0 ? maxConsumeMaterialPerLevel : Integer.MAX_VALUE;
+        return Math.max(1, Math.min(raw, cap));
     }
 
     public double getSuccessRate(int level) {
-        return Math.max(0, baseSuccessRate - levelSuccessDecay * (level - 1));
+        return Math.max(0.0, Math.min(1.0, baseSuccessRate - levelSuccessDecay * (level - 1)));
+    }
+
+    /**
+     * 失败时的降级概率。
+     *
+     * <p>语义：{@code levelFailureDecay} 既表示“失败会让后续强化更难的衰减量”，
+     * 也用作“这次失败是否真的降级”的概率。这样 {@code allowDowngrade=true} 不等于必定掉级，
+     * 配置可以做出“失败了但没掉级”的层次感。
+     */
+    public double getDowngradeChance() {
+        return Math.max(0.0, Math.min(1.0, levelFailureDecay));
+    }
+
+    /** 失败时的损毁概率。{@code allowDestroy=false} 时恒为 0。 */
+    public double getDestroyChanceSafe() {
+        if (!allowDestroy) return 0.0;
+        return Math.max(0.0, Math.min(1.0, destroyChance));
+    }
+
+    /** 是否消耗材料。材料 id 为空或数量恒为 0 时视为“强化不消耗材料”。 */
+    public boolean consumesMaterial() {
+        return consumeMaterial != null && !consumeMaterial.isBlank();
+    }
+
+    public int getDowngradeLevelsSafe() {
+        return Math.max(0, downgradeLevels);
+    }
+
+    public int getMaxLevelSafe() {
+        return Math.max(1, maxLevel);
     }
 
     public double getSpecialBonusStat(String statKey, int level) {
-        if (specialBonusStats == null || !specialBonusLevels.contains(level)) return 0;
+        if (specialBonusStats == null || specialBonusLevels == null
+                || !specialBonusLevels.contains(level)) return 0;
         Map<String, Double> levelBonuses = specialBonusStats.get(level);
         if (levelBonuses == null) return 0;
         return levelBonuses.getOrDefault(statKey, 0.0);

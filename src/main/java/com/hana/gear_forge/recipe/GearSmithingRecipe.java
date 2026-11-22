@@ -63,11 +63,12 @@ public class GearSmithingRecipe implements SmithingRecipe {
 
         if (base.isEmpty() || addition.isEmpty()) return false;
 
-        // 锻造锤：强化 +1。模板槽必须为空（钻石不再作为催化剂，否则每次强化都会白吞一个钻石）。
+        // 锻造锤：强化 +1，模板槽放消耗材料（可配置，默认钻石）。
         if (addition.is(ModItems.FORGE_HAMMER.get()) && GearHelper.isGearItem(base)) {
-            if (!template.isEmpty()) return false;
+            UpgradeConfig upgrade = ModConfigs.getUpgradeConfig();
             int currentLevel = base.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
-            return currentLevel < ModConfigs.getUpgradeConfig().getMaxLevel();
+            if (currentLevel >= upgrade.getMaxLevelSafe()) return false;
+            return matchesUpgradeCost(template, upgrade, GearHelper.getUpgradeConsumeCount(base, upgrade, currentLevel));
         }
 
         // 重铸石：重掷词条。模板槽必须为空。
@@ -136,6 +137,18 @@ public class GearSmithingRecipe implements SmithingRecipe {
         return canApply(input);
     }
 
+    /**
+     * 强化是否满足模板槽的材料要求。
+     *
+     * <p>与转生不同，这里允许模板槽为空——只要配置的消耗数量是 0。这样既支持
+     * "强化完全免费"（把 {@code consumeMaterial} 置空），也支持按等级递增的材料成本。
+     */
+    private static boolean matchesUpgradeCost(ItemStack template, UpgradeConfig config, int required) {
+        if (required <= 0) return template.isEmpty();
+        if (template.isEmpty()) return false;
+        return isItemMatchingId(template, config.getConsumeMaterial()) && template.getCount() >= required;
+    }
+
     // ===================== 装配 =====================
 
     @Override
@@ -150,6 +163,8 @@ public class GearSmithingRecipe implements SmithingRecipe {
         ItemStack result = base.copyWithCount(1);
 
         if (addition.is(ModItems.FORGE_HAMMER.get())) {
+            // 预览固定显示 +1：真正的成功/降级/损毁由 SmithingMenuMixin 在取出时掷骰决定。
+            // 这样预览是确定的（不能刷），而结果又是随机的。
             int currentLevel = result.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
             result.set(ModDataComponents.UPGRADE_LEVEL.get(), currentLevel + 1);
             return result;
