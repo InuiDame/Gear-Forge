@@ -29,6 +29,7 @@ public class ModCreativeTabs {
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> ModItems.FORGE_HAMMER.get().getDefaultInstance())
                     .displayItems((params, output) -> {
+                        output.accept(ModItems.FORGE_TABLE.get());
                         output.accept(ModItems.FORGE_HAMMER.get());
                         output.accept(ModItems.REROLL_STONE.get());
                         output.accept(ModItems.UPGRADE_CRYSTAL.get());

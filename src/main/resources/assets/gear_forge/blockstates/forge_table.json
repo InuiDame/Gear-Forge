@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "gear_forge:block/forge_table" }
+  }
+}

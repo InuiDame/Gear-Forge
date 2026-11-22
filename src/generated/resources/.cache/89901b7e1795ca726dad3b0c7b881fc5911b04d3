@@ -1,7 +1,8 @@
-// 1.21.1	2026-11-22T21:10:49.4361067	Item Models: gear_forge
+// 1.21.1	2026-11-23T03:33:47.1465905	Item Models: gear_forge
 c92e2a52b71a1f09607a7bfbe6ee06943d0f1077 assets/gear_forge/models/item/cursed_anvil.json
 fe06a6c92bef82533a385dc731343dd0b5f8a8e9 assets/gear_forge/models/item/emerald_gem.json
 7aa81040acdebf760bf60c0f04ac9fde2dadc658 assets/gear_forge/models/item/forge_hammer.json
+5c04ed68927c66e8d4964b0f705f5b2889ea7b59 assets/gear_forge/models/item/forge_table.json
 db8dad251bacfd04c2665a9d55d667a0131fe987 assets/gear_forge/models/item/gem_remover.json
 5160e6e026538c034b7913d82e059aeaefcda04f assets/gear_forge/models/item/jade.json
 6061feef0e10aba61e8ca8c07ae8ad8037ff1524 assets/gear_forge/models/item/lucky_diamond.json

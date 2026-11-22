@@ -30,6 +30,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         // 也让“重跑 runData 即可完整重建资源”不成立。
         basicItem(ModItems.LUCKY_DIAMOND.get());
         basicItem(ModItems.CURSED_ANVIL.get());
+        // 方块物品的模型继承方块模型，用原版锻造台的贴图拼出紫色版本。
+        withExistingParent("forge_table", modLoc("block/forge_table"));
 
     }
 

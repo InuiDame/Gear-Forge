@@ -21,6 +21,8 @@ com.hana.gear_forge
 ├── component/              数据组件定义（装备状态）
 ├── config/                 四份 JSON 配置的模型类和加载/合并/同步逻辑（ModConfigs）
 ├── recipe/                 GearSmithingRecipe（全部锻造操作）和它的序列化器
+├── block/                  强化台方块（ForgeTableBlock）
+├── menu/                   强化台菜单（ForgeTableMenu）与 MenuType
 ├── item/                   物品、创造模式标签页；item/custom/ 是材料物品（提示文本 + 右键提示去锻造台）
 ├── compat/curios/          两个饰品物品（实现 ICurioItem）
 ├── content/                ModEnchantments：7 个附魔的 ResourceKey 常量
@@ -98,7 +100,14 @@ Dist 过滤发生在 `Class.forName` 之前，所以带 `value = Dist.CLIENT` �
 
 ## 5. 锻造流程
 
-整个模组只有一个锻造配方 `gear_forge:gear_smithing`（`data/gear_forge/recipe/gear_smithing.json`），类型是原版 `RecipeType.SMITHING`，没有自己的方块和界面（ADR-0001）。另有两个 switch 条件相关的 `ItemAttributeModifiers` 之外，模组没有自己的方块。
+整个模组只有一个锻造配方 `gear_forge:gear_smithing`（`data/gear_forge/recipe/gear_smithing.json`），类型是原版 `RecipeType.SMITHING`。
+
+**两个入口共用同一套逻辑**（ADR-0010）：
+
+- **强化台**（`gear_forge:forge_table`，本模组方块）：`ForgeTableMenu` 继承 `ItemCombinerMenu`，复刻三格布局，结算委托 `GearHelper`。
+- **原版锻造台**：`SmithingMenuMixin` 调用同样那几个 `GearHelper` 函数。
+
+判定逻辑只有一份：`GearSmithingRecipe.canApply` 决定"这组输入算哪种操作"，`GearHelper.applyUpgradeOutcome` 决定强化结果，`GearHelper.consumeTemplateExtra` 负责多材料补扣。两个入口不会逐渐走样。
 
 ```mermaid
 flowchart LR

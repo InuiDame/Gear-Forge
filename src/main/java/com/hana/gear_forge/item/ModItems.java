@@ -1,11 +1,13 @@
 package com.hana.gear_forge.item;
 
+import com.hana.gear_forge.block.ModBlocks;
 import com.hana.gear_forge.compat.curios.CursedAnvilItem;
 import com.hana.gear_forge.compat.curios.LuckyDiamondItem;
 import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.item.custom.*;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -63,6 +65,10 @@ public class ModItems {
     public static final DeferredItem<Item> CURSED_ANVIL = registerItem(
             "cursed_anvil",
             CursedAnvilItem::new);
+
+    /** 强化台的方块物品。 */
+    public static final DeferredItem<BlockItem> FORGE_TABLE = ITEMS.registerSimpleBlockItem(
+            ModBlocks.FORGE_TABLE);
 
     private static DeferredItem<Item> registerItem(String name, Supplier<Item> itemSupplier) {
         return ITEMS.register(name, itemSupplier);

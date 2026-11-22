@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "gear_forge:block/gear_forge_table_bottom",
+    "east": "gear_forge:block/gear_forge_table_side",
+    "north": "gear_forge:block/gear_forge_table_front",
+    "particle": "gear_forge:block/gear_forge_table_front",
+    "south": "gear_forge:block/gear_forge_table_front",
+    "up": "gear_forge:block/gear_forge_table_top",
+    "west": "gear_forge:block/gear_forge_table_side"
+  }
+}

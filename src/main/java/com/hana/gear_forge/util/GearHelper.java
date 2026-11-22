@@ -271,6 +271,68 @@ public class GearHelper {
         return UpgradeOutcome.FAIL_KEEP;
     }
 
+    /**
+     * 掷骰并把结果写回玩家实际拿到的这一份产物。
+     *
+     * <p>由强化台菜单和原版锻造台的 mixin 共用，避免两处各写一份判定逻辑而逐渐走样。
+     */
+    public static void applyUpgradeOutcome(Player player, ItemStack result, int baseLevel, UpgradeConfig config) {
+        switch (rollUpgradeOutcome(config, baseLevel, player.getRandom())) {
+            case SUCCESS -> player.level().playSound(null, player.blockPosition(),
+                    net.minecraft.sounds.SoundEvents.ANVIL_USE,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 0.8F, 1.2F);
+            case FAIL_KEEP -> {
+                setUpgradeLevel(result, baseLevel);
+                notifyActionBar(player, "message.gear_forge.upgrade_fail");
+            }
+            case FAIL_DOWNGRADE -> {
+                setUpgradeLevel(result, baseLevel - config.getDowngradeLevelsSafe());
+                notifyActionBar(player, "message.gear_forge.upgrade_downgrade");
+            }
+            case DESTROYED -> {
+                result.setCount(0);
+                notifyActionBar(player, "message.gear_forge.upgrade_destroyed");
+                player.level().playSound(null, player.blockPosition(),
+                        net.minecraft.sounds.SoundEvents.ITEM_BREAK,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 0.8F);
+            }
+        }
+    }
+
+    /** 写回强化等级，0 时直接移除组件而不是写 0。 */
+    public static void setUpgradeLevel(ItemStack stack, int level) {
+        if (level <= 0) {
+            stack.remove(ModDataComponents.UPGRADE_LEVEL.get());
+        } else {
+            stack.set(ModDataComponents.UPGRADE_LEVEL.get(), level);
+        }
+    }
+
+    /**
+     * 从模板槽补扣材料，给原版留 1 个。
+     *
+     * <p>原版取出时会把三个输入槽各扣 1 个，所以这里只扣 {@code required - 1}。
+     * 对非法配置（数量 &lt; 1、&gt; 64）直接放弃补扣而不是抛异常：配置写错只应导致材料消耗不准确。
+     */
+    public static void consumeTemplateExtra(ItemStack template, String materialId, int required) {
+        if (required <= 1) return;
+        int extra = Math.min(required, 64) - 1;
+        if (extra <= 0) return;
+        if (!com.hana.gear_forge.recipe.GearSmithingRecipe.isItemMatchingId(template, materialId)) return;
+
+        int removable = Math.min(extra, template.getCount() - 1);
+        if (removable > 0) {
+            template.shrink(removable);
+        }
+    }
+
+    /** 在 actionbar 上发一条提示。 */
+    public static void notifyActionBar(Player player, String langKey) {
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            serverPlayer.displayClientMessage(net.minecraft.network.chat.Component.translatable(langKey), true);
+        }
+    }
+
     public static double getTotalGemEffectValue(List<ModDataComponents.GemsEntry> gems, String effectType) {
         if (gems == null) return 0;
         double total = 0;

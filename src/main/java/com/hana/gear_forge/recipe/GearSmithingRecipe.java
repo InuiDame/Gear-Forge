@@ -284,9 +284,23 @@ public class GearSmithingRecipe implements SmithingRecipe {
         return false;
     }
 
+    /**
+     * 模板槽能放什么。
+     *
+     * <p>这个方法是模板槽 {@code mayPlace} 的唯一依据（原版 {@code ItemCombinerMenuSlotDefinition}
+     * 对每个输入槽都调用它）。它必须把<b>所有</b>操作需要的模板材料都包含进来，
+     * 否则会出现"配方要求材料、但槽位不允许放入"的死锁——强化需要钻石、
+     * 转生需要下界合金块，两者都必须能放进这一格。
+     */
     @Override
     public boolean isTemplateIngredient(ItemStack stack) {
+        if (stack.isEmpty()) return false;
         UpgradeConfig config = ModConfigs.getUpgradeConfig();
+        // 强化材料
+        if (config.consumesMaterial() && isItemMatchingId(stack, config.getConsumeMaterial())) {
+            return true;
+        }
+        // 转生材料
         return config.isReincarnationEnabled()
                 && isItemMatchingId(stack, config.getReincarnationCostMaterial());
     }
