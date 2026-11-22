@@ -1,8 +1,0 @@
-{
-  "easyChance": 0.001,
-  "normalChance": 0.005,
-  "hardChance": 0.01,
-  "maxUpgradeLevel": 10,
-  "maxAffixes": 2,
-  "configVersion": 1
-}

@@ -1,8 +1,0 @@
-{
-  "replace": false,
-  "entries": [
-    "gear_forge:add_lucky_diamond_to_mineshaft",
-    "gear_forge:add_lucky_diamond_to_dungeon",
-    "gear_forge:add_cursed_anvil_to_village"
-  ]
-}
