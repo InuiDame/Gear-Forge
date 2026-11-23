@@ -460,13 +460,15 @@ public class GearSmithingRecipe implements SmithingRecipe {
     /**
      * 是否可以被耀金铁锤锻造成弧刀。
      *
-     * <p>只接受剑类（{@link net.minecraft.world.item.SwordItem}）。弧刀本身就是剑的子类，
+     * <p>接受剑类与 26.3 新增的矛类（都带 {@code WEAPON} 组件）。弧刀本身就是剑的子类，
      * 但已经是弧刀的物品不再参与，避免"弧刀 → 弧刀"这种无意义转换。
      */
     private static boolean isSwordLike(ItemStack stack) {
         if (stack.isEmpty()) return false;
         if (isCurvedBlade(stack)) return false;
-        return stack.has(DataComponents.WEAPON) && stack.is(net.minecraft.tags.ItemTags.SWORDS);
+        if (!stack.has(DataComponents.WEAPON)) return false;
+        return stack.is(net.minecraft.tags.ItemTags.SWORDS)
+                || stack.is(net.minecraft.tags.ItemTags.SPEARS);
     }
 
     /** 是否已经是弧刀（避免"弧刀 → 弧刀"的无意义转换）。 */
@@ -477,14 +479,15 @@ public class GearSmithingRecipe implements SmithingRecipe {
     }
 
     /**
-     * 底材剑对应的弧刀：钻石剑 → 钻石弧刀，下界合金剑 → 下界合金弧刀，
-     * 其余剑（含耀金剑与其它模组的剑）→ 耀金弧刀。
+     * 底材武器对应的弧刀：同材质的剑/矛 → 同材质弧刀，其余 → 耀金弧刀。
+     * 26.3 新增原版矛（WOODEN/STONE/COPPER/IRON/GOLDEN/DIAMOND/NETHERITE_SPEAR），
+     * 按材质映射到已有的三档弧刀；低阶矛统一落到耀金弧刀。
      */
     private static ItemStack curvedBladeFor(ItemStack base) {
-        if (base.is(Items.DIAMOND_SWORD)) {
+        if (base.is(Items.DIAMOND_SWORD) || base.is(Items.DIAMOND_SPEAR)) {
             return new ItemStack(ModItems.DIAMOND_CURVED_BLADE.get());
         }
-        if (base.is(Items.NETHERITE_SWORD)) {
+        if (base.is(Items.NETHERITE_SWORD) || base.is(Items.NETHERITE_SPEAR)) {
             return new ItemStack(ModItems.NETHERITE_CURVED_BLADE.get());
         }
         return new ItemStack(ModItems.YAOKIN_CURVED_BLADE.get());

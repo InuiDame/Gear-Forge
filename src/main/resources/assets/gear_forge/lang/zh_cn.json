@@ -4,7 +4,6 @@
   "itemGroup.gear_forge.equipment": "hana的装备锻造工坊·装备",
   "itemGroup.gear_forge.enchantment": "hana的装备锻造工坊·附魔书",
   "itemGroup.gear_forge.curios": "hana的装备锻造工坊·饰品",
-
   "item.gear_forge.reroll_stone": "词条重铸石",
   "item.gear_forge.forge_hammer": "锻造锤",
   "item.gear_forge.upgrade_crystal": "强化水晶",
@@ -17,7 +16,6 @@
   "item.gear_forge.transfer_orb": "转移宝珠",
   "item.gear_forge.gem_remover": "宝石拆除器",
   "item.gear_forge.reincarnation_stone": "转生石",
-
   "enchantment.gear_forge.lightning_arrow": "闪电箭",
   "enchantment.gear_forge.lightning_arrow.desc": "命中召唤闪电，每级增加10%闪电伤害",
   "enchantment.gear_forge.frost_arrow": "霜冻箭",
@@ -32,16 +30,13 @@
   "enchantment.gear_forge.ore_hunter.desc": "挖掘石头时概率获得矿物",
   "enchantment.gear_forge.harvest_bounty": "丰收暴击",
   "enchantment.gear_forge.harvest_bounty.desc": "收获农作物时概率获得额外产出",
-
   "message.gear_forge.use_smithing_table": "请在锻造台上使用该物品！",
-
   "tooltip.gear_forge.upgrade_level": "✦ 强化 +%s",
   "tooltip.gear_forge.reincarnation_count": "✦ 转生次数: %s",
   "tooltip.gear_forge.affixes_header": "--- 词条 ---",
   "tooltip.gear_forge.gems_header": "--- 宝石 ---",
   "tooltip.gear_forge.stored_bonuses_header": "--- 转生继承 ---",
   "tooltip.gear_forge.offhand_mode": "⚡ 副手模式",
-
   "tooltip.gear_forge.gem.attack_damage": "增加 %s 点攻击力",
   "tooltip.gear_forge.gem.fire_damage": "额外造成 %s 点火焰伤害",
   "tooltip.gear_forge.gem.frost_damage": "额外造成 %s 点寒冰伤害",
@@ -54,20 +49,12 @@
   "tooltip.gear_forge.gem.projectile_damage": "投射物伤害 +%s",
   "tooltip.gear_forge.gem.durability_boost": "耐久度 +%s%%",
   "tooltip.gear_forge.gem.shield_block_recovery": "格挡后减伤 +%s",
-
   "tooltip.gear_forge.forge_hammer": "放入锻造台的材料栏，与装备组合，并在模板栏放上钻石，可将装备强化 1 级。等级越高成功率越低，失败时可能保持等级、降级或损毁装备。所需钻石数量随等级增长。",
-
   "tooltip.gear_forge.upgrade_crystal": "将宝石放在锻造台的装备栏，强化水晶放在材料栏，可提升宝石阶级，宝石的全部效果按阶级放大。",
-
   "tooltip.gear_forge.reroll_stone": "放入锻造台的材料栏，赋予装备词条，词条数量最低1条，最多5条",
-
   "tooltip.gear_forge.transfer_orb": "放入锻造台的材料栏，能将主手武器转变为副手武器",
-
   "tooltip.gear_forge.gem_remover": "放入锻造台的材料栏，能够销毁最近放入装备的一颗宝石",
-
   "tooltip.gear_forge.reincarnation_stone": "当装备达到强化上限时，将此道具放到锻造台材料栏中，并在模板栏放上所需材料，可将装备进行转生。装备将继承一切强化、重铸、宝石属性作为转生保留奖励。",
-
-
   "curios.identifier.hhthing": "小玩意",
   "curios.modifiers.hhthing": " ",
   "item.gear_forge.lucky_diamond": "幸运钻石",
@@ -111,5 +98,7 @@
   "jei.gear_forge.reincarnate": "转生（需满级）",
   "jei.gear_forge.enchant": "写入冲突附魔",
   "jei.gear_forge.curved_blade": "将剑重新锻打成同材质弧刀",
-  "attribute.name.gear_forge.curved_blade_reach": "弧刀攻击范围"
+  "attribute.name.gear_forge.curved_blade_reach": "弧刀攻击范围",
+  "tooltip.gear_forge.stored_bonuses_hint": "按住 Ctrl 查看转生继承详情",
+  "tooltip.gear_forge.reincarnation_cost": "✦ 转生材料：模板栏放入 %s 个 %s"
 }

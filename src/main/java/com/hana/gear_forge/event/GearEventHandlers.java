@@ -711,6 +711,14 @@ public class GearEventHandlers {
     @EventBusSubscriber(modid = GearForgeMod.MODID, value = Dist.CLIENT)
     public static class ClientEvents {
 
+        /** 转生继承详情是否展开：按住任一 Ctrl 键才显示，避免长列表刷屏。 */
+        private static boolean isControlHeld() {
+            return com.mojang.blaze3d.platform.InputConstants.isKeyDown(
+                    com.mojang.blaze3d.platform.InputConstants.KEY_LCONTROL)
+                    || com.mojang.blaze3d.platform.InputConstants.isKeyDown(
+                    com.mojang.blaze3d.platform.InputConstants.KEY_RCONTROL);
+        }
+
         @SubscribeEvent
         public static void onItemTooltip(ItemTooltipEvent event) {
             ItemStack stack = event.getItemStack();
@@ -831,6 +839,11 @@ public class GearEventHandlers {
             if (storedBonuses != null && !storedBonuses.isEmpty()) {
                 tooltip.add(Component.translatable("tooltip.gear_forge.stored_bonuses_header")
                         .withStyle(ChatFormatting.GRAY));
+                if (!isControlHeld()) {
+                    tooltip.add(Component.translatable("tooltip.gear_forge.stored_bonuses_hint")
+                            .withStyle(ChatFormatting.DARK_GRAY));
+                    return;
+                }
                 Map<String, Double> mergedStored = new LinkedHashMap<>();
                 for (ModDataComponents.StoredBonus sb : storedBonuses) {
                     String displayName = getStoredBonusDisplayName(sb.id());

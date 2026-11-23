@@ -204,6 +204,7 @@ public class GearHelper {
 
     public static String getSocketTypeForItem(ItemStack stack) {
         if (stack.is(net.minecraft.tags.ItemTags.SWORDS)
+                || stack.is(net.minecraft.tags.ItemTags.SPEARS)
                 || stack.is(net.minecraft.tags.ItemTags.PICKAXES)
                 || stack.is(net.minecraft.tags.ItemTags.AXES)
                 || stack.is(net.minecraft.tags.ItemTags.SHOVELS)
