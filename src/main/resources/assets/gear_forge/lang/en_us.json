@@ -4,7 +4,6 @@
   "itemGroup.gear_forge.equipment": "Hana's Gear Forge: Equipment",
   "itemGroup.gear_forge.enchantment": "Hana's Gear Forge: Enchantments",
   "itemGroup.gear_forge.curios": "Hana's Gear Forge: Curios",
-
   "item.gear_forge.reroll_stone": "Reroll Stone",
   "item.gear_forge.forge_hammer": "Forge Hammer",
   "item.gear_forge.upgrade_crystal": "Upgrade Crystal",
@@ -17,7 +16,6 @@
   "item.gear_forge.transfer_orb": "Transfer Orb",
   "item.gear_forge.gem_remover": "Gem Remover",
   "item.gear_forge.reincarnation_stone": "Reincarnation Stone",
-
   "enchantment.gear_forge.lightning_arrow": "Lightning Arrow",
   "enchantment.gear_forge.lightning_arrow.desc": "Summons lightning on hit, +10% lightning dmg/lvl",
   "enchantment.gear_forge.frost_arrow": "Frost Arrow",
@@ -32,16 +30,13 @@
   "enchantment.gear_forge.ore_hunter.desc": "Chance to get ore from stone",
   "enchantment.gear_forge.harvest_bounty": "Harvest Bounty",
   "enchantment.gear_forge.harvest_bounty.desc": "Chance for extra crop yields",
-
   "message.gear_forge.use_smithing_table": "Please use this item on a Smithing Table!",
-
   "tooltip.gear_forge.upgrade_level": "✦ Upgrade +%s",
   "tooltip.gear_forge.reincarnation_count": "✦ Reincarnation: %s",
   "tooltip.gear_forge.affixes_header": "--- Affixes ---",
   "tooltip.gear_forge.gems_header": "--- Gems ---",
   "tooltip.gear_forge.stored_bonuses_header": "--- Reincarnation Inherited ---",
   "tooltip.gear_forge.offhand_mode": "⚡ Offhand Mode",
-
   "tooltip.gear_forge.gem.attack_damage": "Increases Attack Damage by %s",
   "tooltip.gear_forge.gem.fire_damage": "Deals +%s Fire Damage",
   "tooltip.gear_forge.gem.frost_damage": "Deals +%s Frost Damage",
@@ -54,19 +49,12 @@
   "tooltip.gear_forge.gem.projectile_damage": "Increases Projectile Damage by %s",
   "tooltip.gear_forge.gem.durability_boost": "Increases Durability by %s%%",
   "tooltip.gear_forge.gem.shield_block_recovery": "Reduces Block Damage by %s",
-
   "tooltip.gear_forge.forge_hammer": "Place in the smithing table's material slot with a gear, and put Diamonds in the template slot, to upgrade it by one level. The higher the level, the lower the success rate; on failure the level may stay, drop, or the gear may be destroyed. The number of Diamonds needed grows with the level.",
-
   "tooltip.gear_forge.upgrade_crystal": "Place a gem in the smithing table's equipment slot and this in the material slot to raise the gem's tier, which scales all of its effects.",
-
   "tooltip.gear_forge.reroll_stone": "Place in the smithing table's material slot to grant random affixes (1~5 affixes)",
-
   "tooltip.gear_forge.transfer_orb": "Place in the smithing table's material slot to toggle the weapon between main-hand and off-hand mode",
-
   "tooltip.gear_forge.gem_remover": "Place in the smithing table's material slot to remove the most recently socketed gem from the equipment",
-
   "tooltip.gear_forge.reincarnation_stone": "When your gear reaches its max upgrade level, place this in the material slot and the required material in the template slot to Reincarnate. The gear inherits all upgrade, affix and gem values as stored bonuses.",
-
   "curios.identifier.hhthing": "Little Thing",
   "curios.modifiers.hhthing": " ",
   "item.gear_forge.lucky_diamond": "Lucky Diamond",
@@ -110,5 +98,7 @@
   "jei.gear_forge.gem_remove": "Remove the last gem",
   "jei.gear_forge.reincarnate": "Reincarnate (max level)",
   "jei.gear_forge.curved_blade": "Reforge a sword into a Curved Blade of the same tier",
-  "attribute.name.gear_forge.curved_blade_reach": "Curved Blade Reach"
+  "attribute.name.gear_forge.curved_blade_reach": "Curved Blade Reach",
+  "tooltip.gear_forge.stored_bonuses_hint": "Hold Ctrl to see reincarnation inherited details",
+  "tooltip.gear_forge.reincarnation_cost": "✦ Reincarnation cost: place %s x %s in the template slot"
 }

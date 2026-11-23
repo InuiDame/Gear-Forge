@@ -21,8 +21,8 @@ import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 @EventBusSubscriber(modid = GearForgeMod.MODID)
 public class LootModEvents {
 
-    /** 幸运钻石的掉落概率。 */
-    private static final float LUCKY_DIAMOND_CHANCE = 0.02F;
+    /** 幸运钻石的掉落概率（僵尸）。饰品效果很强，保持稀有。 */
+    private static final float LUCKY_DIAMOND_CHANCE = 0.005F;
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onLivingDrops(LivingDropsEvent event) {

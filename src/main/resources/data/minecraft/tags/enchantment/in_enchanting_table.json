@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "gear_forge:lightning_arrow",
+    "gear_forge:frost_arrow",
+    "gear_forge:explosive_arrow",
+    "gear_forge:armor_piercing_arrow",
+    "gear_forge:mining_crit",
+    "gear_forge:ore_hunter",
+    "gear_forge:harvest_bounty"
+  ]
+}
