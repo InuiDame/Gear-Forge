@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "gear_forge:item/forge_hammer"
+  }
+}
