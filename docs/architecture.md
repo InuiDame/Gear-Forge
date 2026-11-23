@@ -106,7 +106,7 @@ Dist 过滤发生在 `Class.forName` 之前，所以带 `value = Dist.CLIENT` �
 **两个入口共用同一套逻辑**（ADR-0010）：
 
 - **强化台**（`gear_forge:forge_table`，本模组方块）：`ForgeTableMenu` 继承 `ItemCombinerMenu`，复刻三格布局，结算委托 `GearHelper`。
-- **原版锻造台**：`SmithingMenuMixin` 调用同样那几个 `GearHelper` 函数。
+- **原版锻造台**：不再注入本模组操作，仅保留锻造模板原生升级与纹饰（26.3 下 mixin 为空）。
 
 判定逻辑只有一份：`GearSmithingRecipe.canApply` 决定"这组输入算哪种操作"，`GearHelper.applyUpgradeOutcome` 决定强化结果，`GearHelper.consumeTemplateExtra` 负责多材料补扣。两个入口不会逐渐走样。
 
@@ -137,7 +137,7 @@ flowchart LR
 
 ### 耀金升级与弧刀
 
-耀金升级没有写成数据包配方，而是在 `YaokinUpgradeRecipe` 里维护「下界合金装备 → 耀金装备」的映射（四件盔甲、剑、镐、斧、锹、锄），由 `GearSmithingRecipe` 在运行时判定。模板槽使用**原版下界合金升级模板**，材料槽放耀金锭；不再有本模组的耀金升级模板，也没有工作台直接合成配方。这样强化台和原版锻造台共用同一份逻辑，也避免为九件装备各写一份 `smithing_transform` JSON。升级保留附魔、自定义名称和耐久比例，不继承强化等级/词条/宝石。
+耀金升级没有写成数据包配方，而是在 `YaokinUpgradeRecipe` 里维护「下界合金装备 → 耀金装备」的映射（四件盔甲、剑、镐、斧、锹、锄），由 `GearSmithingRecipe` 在运行时判定。模板槽使用**原版下界合金升级模板**，材料槽放耀金锭；不再有本模组的耀金升级模板，也没有工作台直接合成配方。这样强化台独占这份逻辑，也避免为九件装备各写一份 `smithing_transform` JSON。升级保留附魔、自定义名称和耐久比例，不继承强化等级/词条/宝石。
 
 耀金铁锤（`YaokinHammerItem`）本身没有逻辑，分派在 `GearSmithingRecipe` 的 `YAOKIN_HAMMER` 分支：只接受 `SwordItem`（排除已是弧刀的物品），按底材材质产出对应弧刀——钻石剑 → 钻石弧刀、下界合金剑 → 下界合金弧刀、其余剑 → 耀金弧刀，保留原剑附魔与名称。三种弧刀共用 `CurvedBladeItem`，只是构造时传入不同 `Tier`；属性由 `createBladeAttributes(tier)` 定义（攻击距离 +1、最终攻速 2.0、伤害比同级剑低 1），每第 3 次命中由 `ArcSlashHandler` 做扇形额外伤害与粒子/音效，计数存在 `arc_slash_charges` 数据组件里，随物品持久化并同步。
 
@@ -147,7 +147,7 @@ flowchart LR
 
 `content/ModMobEffects` 注册两个自定义效果：`midas_touch`（点金）和 `gilded`（金化）。
 
-点金有三个来源：耀金苹果（II，限时）、耀金硬币击杀（I，30 秒）、耀金四件套（I，常驻）。`MidasTouchHandler` 按来源记录等级和到期时间，每 5 tick 重算总和，把可见效果刷成总等级——这样苹果 II 到期后金币 I 还在时能正确降级，多个来源也能叠加。`YaokinEquipmentEvents.onBlockDrops` 在 `BlockDropsEvent` 里把石头/圆石/深板岩的掉落替换成 1~2 个金锭。
+点金有三个来源：耀金苹果（II，限时）、耀金硬币击杀（I，30 秒）、耀金四件套（I，常驻）。`MidasTouchHandler` 按来源记录等级和到期时间，每 5 tick 重算总和，把可见效果刷成总等级——这样苹果 II 到期后金币 I 还在时能正确降级，多个来源也能叠加。`YaokinEquipmentEvents.onBlockDrops` 在 `BlockDropsEvent` 里把石头/圆石/深板岩的掉落替换成与点金等级相同数量的金锭（N 级掉 N 个）。
 
 四件套的判定在 `YaokinEquipmentEvents.updateFullSet`：每 20 tick 检查四个盔甲槽，穿齐就刷新 `gilded` 60 tick 并挂上常驻点金来源。`PiglinAiMixin` 注入 `PiglinAi.isWearingGold`，带 `gilded` 时直接返回 true，因此猪灵会把玩家当成金装。
 

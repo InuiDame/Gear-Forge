@@ -1,5 +1,6 @@
 package com.hana.gear_forge.recipe;
 
+import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.component.ModDataComponents;
 import com.hana.gear_forge.config.GemConfig;
 import com.hana.gear_forge.config.GemConfig.GemDefinition;
@@ -15,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -42,6 +44,22 @@ public class GearSmithingRecipe implements SmithingRecipe {
 
     /** 唯一实例；配方本身无状态，全部状态都在物品数据组件上。 */
     public static final GearSmithingRecipe INSTANCE = new GearSmithingRecipe();
+
+    /**
+     * 强化台专用配方类型。
+     *
+     * <p>刻意不挂原版 {@link RecipeType#SMITHING}：26.3 的 {@code RecipeManager} 在
+     * {@code RecipeMap.create()} 里按 {@code recipe.getType()} 把配方归档，
+     * {@code recipeAccess().getRecipeFor(type, ...)} 只查对应类型的配方。
+     * 本配方的 {@link #getType()} 返回此类型后，原版锻造台（只查 {@code RecipeType.SMITHING}）
+     * 就匹配不到本模组的任何操作；只有强化台 {@code ForgeTableMenu} 会查询这个类型。
+     * 原版锻造模板（下界合金升级、纹饰）仍是原版自己的 SMITHING 配方，行为不变。
+     *
+     * <p>该类型无需注册进 {@code BuiltInRegistries.RECIPE_TYPE}：JSON 的 {@code type} 字段
+     * 解析的是 {@code RecipeSerializer}，配方归档用的类型完全由 {@code getType()} 决定。
+     */
+    public static final RecipeType<SmithingRecipe> FORGE_TABLE_TYPE =
+            RecipeType.simple(Identifier.fromNamespaceAndPath(GearForgeMod.MODID, "forge_table"));
 
     /** 重铸盐值到随机种子的混合常量（SplitMix64 的黄金比例常数）。 */
     private static final long SALT_MIX = 0x9E3779B97F4A7C15L;
@@ -298,6 +316,12 @@ public class GearSmithingRecipe implements SmithingRecipe {
     }
 
     // ===================== Recipe 接口 =====================
+
+    /** 挂到强化台专用类型，原版锻造台不会匹配到本配方的任何操作。 */
+    @Override
+    public RecipeType<SmithingRecipe> getType() {
+        return FORGE_TABLE_TYPE;
+    }
 
     /**
      * 本配方产物由输入动态决定，配方书/解锁 toast 无法表达，标记为 special 以免污染配方书。

@@ -4,6 +4,7 @@ import com.hana.gear_forge.block.ModBlocks;
 import com.hana.gear_forge.config.ModConfigs;
 import com.hana.gear_forge.config.UpgradeConfig;
 import com.hana.gear_forge.item.ModItems;
+import com.hana.gear_forge.recipe.GearSmithingRecipe;
 import com.hana.gear_forge.util.GearHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Inventory;
@@ -17,7 +18,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeAccess;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipePropertySet;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.level.Level;
@@ -71,15 +71,32 @@ public class ForgeTableMenu extends ItemCombinerMenu {
         this.additionItemTest = level.recipeAccess().propertySet(RecipePropertySet.SMITHING_ADDITION);
     }
 
-    /** 26.3 中原版通过配方属性集判断物品能否放入三个槽，替代已移除的 isXxxIngredient。 */
+    /**
+     * 输入槽谓词：原版配方属性集 <b>或</b> 本配方自己的 ingredient 判定。
+     *
+     * <p>26.3 的 {@code SMITHING_*} 属性集是从所有 {@link SmithingRecipe} 的
+     * {@code templateIngredient()/baseIngredient()/additionIngredient()} 提取的，
+     * 与本配方挂在哪个 {@code RecipeType} 无关。但本配方是运行时分派型，这三个方法
+     * 返回空/AIR，所以属性集里没有本模组的锻造锤、宝石、耀金锭、强化材料等——若只用
+     * 属性集判断，这些材料根本放不进强化台。因此这里附加 {@link GearSmithingRecipe}
+     * 原有的 isXxxIngredient 判定（纯静态逻辑，客户端也能用，配置已由网络层同步）。
+     *
+     * <p>原版锻造台仍然只用 {@code SMITHING_*} 属性集，拿不到本模组材料，自然也就
+     * 无法执行本模组操作；再加上配方归档在 {@link GearSmithingRecipe#FORGE_TABLE_TYPE}，
+     * 它连配方都查不到。
+     */
     private static ItemCombinerMenuSlotDefinition createInputSlotDefinitions(RecipeAccess recipes) {
         RecipePropertySet templateItemTest = recipes.propertySet(RecipePropertySet.SMITHING_TEMPLATE);
         RecipePropertySet baseItemTest = recipes.propertySet(RecipePropertySet.SMITHING_BASE);
         RecipePropertySet additionItemTest = recipes.propertySet(RecipePropertySet.SMITHING_ADDITION);
+        GearSmithingRecipe modRecipe = GearSmithingRecipe.INSTANCE;
         return ItemCombinerMenuSlotDefinition.create()
-                .withSlot(TEMPLATE_SLOT, 8, 48, templateItemTest::test)
-                .withSlot(BASE_SLOT, 26, 48, baseItemTest::test)
-                .withSlot(ADDITIONAL_SLOT, 44, 48, additionItemTest::test)
+                .withSlot(TEMPLATE_SLOT, 8, 48,
+                        stack -> templateItemTest.test(stack) || modRecipe.isTemplateIngredient(stack))
+                .withSlot(BASE_SLOT, 26, 48,
+                        stack -> baseItemTest.test(stack) || modRecipe.isBaseIngredient(stack))
+                .withSlot(ADDITIONAL_SLOT, 44, 48,
+                        stack -> additionItemTest.test(stack) || modRecipe.isAdditionIngredient(stack))
                 .withResultSlot(RESULT_SLOT, 98, 48)
                 .build();
     }
@@ -100,7 +117,10 @@ public class ForgeTableMenu extends ItemCombinerMenu {
         SmithingRecipeInput input = this.createRecipeInput();
         Optional<RecipeHolder<SmithingRecipe>> foundRecipe;
         if (this.level instanceof ServerLevel serverLevel) {
-            foundRecipe = serverLevel.recipeAccess().getRecipeFor(RecipeType.SMITHING, input, serverLevel);
+            // 只查强化台专用配方类型：本模组的所有强化/重铸/镶嵌等操作都归档在这里，
+            // 原版锻造台只查 RecipeType.SMITHING，因此匹配不到本配方。
+            foundRecipe = serverLevel.recipeAccess().getRecipeFor(
+                    GearSmithingRecipe.FORGE_TABLE_TYPE, input, serverLevel);
         } else {
             // 26.3 客户端只同步配方属性集，不持有完整配方，和原版 SmithingMenu 一样交给服务端计算结果。
             foundRecipe = Optional.empty();
@@ -195,15 +215,19 @@ public class ForgeTableMenu extends ItemCombinerMenu {
         return this.findSlotToQuickMoveTo(stack).isPresent();
     }
 
-    /** 用 26.3 的配方属性集判断物品能放入哪个输入槽（原 isXxxIngredient 已移除）。 */
+    /** 与输入槽谓词保持一致：属性集或本配方判定，二者命中其一即可放入。 */
     private OptionalInt findSlotToQuickMoveTo(ItemStack stack) {
-        if (!this.getSlot(TEMPLATE_SLOT).hasItem() && this.templateItemTest.test(stack)) {
+        GearSmithingRecipe modRecipe = GearSmithingRecipe.INSTANCE;
+        if (!this.getSlot(TEMPLATE_SLOT).hasItem()
+                && (this.templateItemTest.test(stack) || modRecipe.isTemplateIngredient(stack))) {
             return OptionalInt.of(TEMPLATE_SLOT);
         }
-        if (!this.getSlot(BASE_SLOT).hasItem() && this.baseItemTest.test(stack)) {
+        if (!this.getSlot(BASE_SLOT).hasItem()
+                && (this.baseItemTest.test(stack) || modRecipe.isBaseIngredient(stack))) {
             return OptionalInt.of(BASE_SLOT);
         }
-        return !this.getSlot(ADDITIONAL_SLOT).hasItem() && this.additionItemTest.test(stack)
+        return !this.getSlot(ADDITIONAL_SLOT).hasItem()
+                && (this.additionItemTest.test(stack) || modRecipe.isAdditionIngredient(stack))
                 ? OptionalInt.of(ADDITIONAL_SLOT) : OptionalInt.empty();
     }
 

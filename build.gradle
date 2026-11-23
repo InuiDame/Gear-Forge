@@ -18,7 +18,9 @@ version = mod_version
 group = mod_group_id
 
 base {
-    archivesName = mod_id
+    // 26.3 分支：jar 文件名带 MC 版本后缀，避免与 1.21.1 分支的同版本 jar 混淆
+    // （两个分支 mod_version 相同，默认都会产出 gear_forge-1.67.jar）。
+    archivesName = "${mod_id}-mc${minecraft_version}"
 }
 
 sourceSets.main.resources {

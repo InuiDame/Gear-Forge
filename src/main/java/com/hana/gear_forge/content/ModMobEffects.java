@@ -10,7 +10,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 /**
  * 本模组的自定义状态效果。
  *
- * <p>{@link #MIDAS_TOUCH}：点金。等级 I 挖石头掉 1 个金锭，等级 II 掉 2 个。
+ * <p>{@link #MIDAS_TOUCH}：点金。等级 N 挖石头掉 N 个金锭（I 掉 1 个、II 掉 2 个、III 掉 3 个，以此类推）。
  * 多个来源（耀金苹果、耀金硬币、耀金四件套）的等级会相加，由 {@code MidasTouchHandler} 统一合成。
  *
  * <p>{@link #GILDED}：金化。让玩家对猪灵视为穿着金装，见 {@code PiglinAiMixin}。
