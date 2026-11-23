@@ -166,6 +166,21 @@ public class ModEnchantmentEvents {
 
     // ===================== 挖掘类（BlockDropsEvent） =====================
 
+    /**
+     * 挖掘掉落统一入口：点金、挖矿暴击、矿石猎手、丰收暴击都在这里结算。
+     *
+     * <p>过去这些效果分散在两个 {@link BlockDropsEvent} 监听器里，彼此都调用
+     * {@code getDrops().clear()}：点金把石头掉落换成金锭，矿石猎手又换成矿石，
+     * 后执行的一个会把前一个的结果覆盖掉，暴击复制到的也可能是空列表。现在合并为
+     * 单一监听器、固定结算顺序，所有效果按“叠加、不互相吞”处理：
+     * <ol>
+     *   <li>矿石猎手先判定，把石头的基础掉落替换成随机矿石；</li>
+     *   <li>点金在此基础上<b>追加</b>金锭（N 级 N 个），不清空已有掉落；</li>
+     *   <li>挖矿暴击复制当前全部掉落一份；</li>
+     *   <li>丰收暴击对成熟作物追加产物。</li>
+     * </ol>
+     * 这样一个石头可以同时掉随机矿石 + N 个金锭，暴击再复制一份，效果互不覆盖。
+     */
     @SubscribeEvent
     public static void onBlockDrops(BlockDropsEvent event) {
         if (!(event.getBreaker() instanceof Player player)) return;
@@ -175,7 +190,27 @@ public class ModEnchantmentEvents {
         ServerLevel level = event.getLevel();
         BlockState state = event.getState();
 
-        // 挖矿暴击：额外复制一份本方块自己的掉落。
+        // 矿石猎手：把“石头”的掉落替换为随机矿石。只在原版石头（无 BlockEntity）上生效。
+        int oreHunter = getEnchantLevel(tool, ModEnchantments.ORE_HUNTER, level);
+        if (oreHunter > 0 && state.is(Blocks.STONE) && event.getBlockEntity() == null
+                && player.getRandom().nextFloat() < oreHunter * 0.06F) {
+            event.getDrops().clear();
+            event.getDrops().add(newItemEntity(level, event, getRandomOre(level)));
+        }
+
+        // 点金：石头/圆石/深板岩类掉落按等级追加金锭（N 级 N 个）。
+        // 用 append 而不是 clear+replace，才能和矿石猎手/挖矿暴击叠加。
+        if (isStone(state) && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            int midasLevel = MidasTouchHandler.currentLevel(serverPlayer);
+            if (midasLevel > 0) {
+                var pos = event.getPos();
+                event.getDrops().add(new ItemEntity(level,
+                        pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D,
+                        new ItemStack(Items.GOLD_INGOT, midasLevel)));
+            }
+        }
+
+        // 挖矿暴击：额外复制一份“当前”全部掉落（已含矿石猎手/点金的结果）。
         int miningCrit = getEnchantLevel(tool, ModEnchantments.MINING_CRIT, level);
         if (miningCrit > 0 && player.getRandom().nextFloat() < miningCrit * 0.08F) {
             List<ItemStack> copies = new ArrayList<>();
@@ -183,15 +218,6 @@ public class ModEnchantmentEvents {
                 copies.add(drop.getItem().copy());
             }
             spawnAt(level, event, copies);
-        }
-
-        // 矿石猎手：把“石头”的掉落替换为随机矿石。只在原版石头（无 BlockEntity）上生效。
-        int oreHunter = getEnchantLevel(tool, ModEnchantments.ORE_HUNTER, level);
-        if (oreHunter > 0 && state.is(Blocks.STONE) && event.getBlockEntity() == null
-                && player.getRandom().nextFloat() < oreHunter * 0.06F) {
-            event.getDrops().clear();
-            event.getDrops().add(newItemEntity(level, event, getRandomOre(level)));
-            return;
         }
 
         // 丰收暴击：只对“已成熟”的作物追加产物，未成熟时绝不触发（否则可以站桩刷作物）。
@@ -204,6 +230,12 @@ public class ModEnchantmentEvents {
                 event.getDrops().add(newItemEntity(level, event, bonus));
             }
         }
+    }
+
+    /** 点金适用的石头类方块。 */
+    private static boolean isStone(BlockState state) {
+        return state.is(Blocks.STONE) || state.is(Blocks.COBBLESTONE)
+                || state.is(Blocks.DEEPSLATE) || state.is(Blocks.COBBLED_DEEPSLATE);
     }
 
     private static void spawnAt(ServerLevel level, BlockDropsEvent event, List<ItemStack> stacks) {
