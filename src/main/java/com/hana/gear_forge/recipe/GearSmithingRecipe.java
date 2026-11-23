@@ -393,7 +393,10 @@ public class GearSmithingRecipe implements SmithingRecipe {
 
     @Override
     public net.minecraft.world.item.crafting.Ingredient baseIngredient() {
-        return net.minecraft.world.item.crafting.Ingredient.of(net.minecraft.world.item.Items.AIR);
+        // 26.3 RecipeManager 在加载时会收集所有配方的 ingredient 建索引，
+        // Ingredient 不允许包含 AIR（"Ingredient can't contain air"），故用一个真实物品占位。
+        // 本配方实际匹配走 canApply 唯一真源，这个 ingredient 不参与判定。
+        return net.minecraft.world.item.crafting.Ingredient.of(net.minecraft.world.item.Items.IRON_INGOT);
     }
 
     @Override
