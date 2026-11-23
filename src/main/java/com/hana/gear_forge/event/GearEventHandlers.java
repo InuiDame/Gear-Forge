@@ -749,9 +749,11 @@ public class GearEventHandlers {
                     // 根据实际等级生成动态效果描述
                     for (GemEffect effect : gem.getEffects()) {
                         String type = effect.getType();
-                        // 特殊效果：纯文字，无数值
+                        // 特殊效果：纯文字，无数值（走语言文件，避免英文语言下显示中文）
                         if ("unique".equals(type) || "enchant_compat".equals(type)) {
-                            tooltip.add(Component.literal(" " + effect.getDescription()).withStyle(gemColor));
+                            tooltip.add(Component.literal(" ").append(
+                                    Component.translatable("tooltip.gear_forge.gem_effect." + type))
+                                    .withStyle(gemColor));
                         } else {
                             double actualValue = GearHelper.getGemStatBonus(gem.getId(), type, tier);
                             MutableComponent display = formatGemEffectText(type, actualValue);
@@ -808,15 +810,17 @@ public class GearEventHandlers {
                 Map<String, Double> mergedAffixes = new LinkedHashMap<>();
                 Map<String, String> firstIdByName = new LinkedHashMap<>();
                 for (ModDataComponents.AffixEntry entry : affixes) {
-                    String displayName = getAffixDisplayName(entry.id());
-                    mergedAffixes.merge(displayName, entry.value(), Double::sum);
-                    firstIdByName.putIfAbsent(displayName, entry.id());
+                    String nameKey = getAffixNameKey(entry.id());
+                    mergedAffixes.merge(nameKey, entry.value(), Double::sum);
+                    firstIdByName.putIfAbsent(nameKey, entry.id());
                 }
 
                 for (var entry : mergedAffixes.entrySet()) {
-                    String displayName = entry.getKey();
-                    String formattedValue = formatAffixValue(firstIdByName.get(displayName), entry.getValue());
-                    tooltip.add(Component.literal(" ").append(Component.literal(displayName + ": " + formattedValue))
+                    String affixId = firstIdByName.get(entry.getKey());
+                    Component affixName = Component.translatable(getAffixNameKey(affixId));
+                    String formattedValue = formatAffixValue(affixId, entry.getValue());
+                    tooltip.add(Component.literal(" ").append(affixName)
+                            .append(Component.literal(": " + formattedValue))
                             .withStyle(ChatFormatting.DARK_AQUA));
                 }
             }
@@ -825,12 +829,13 @@ public class GearEventHandlers {
                 tooltip.add(Component.translatable("tooltip.gear_forge.gems_header")
                         .withStyle(ChatFormatting.GRAY));
                 for (ModDataComponents.GemsEntry entry : gems) {
-                    String gemName = getGemDisplayName(entry.id());
+                    Component gemName = Component.translatable(getGemNameKey(entry.id()));
                     if (entry.tier() > 1) {
-                        tooltip.add(Component.literal(" ").append(Component.literal("\u2666 " + gemName + " (T" + entry.tier() + ")"))
+                        tooltip.add(Component.literal(" ").append(Component.literal("\u2666 "))
+                                .append(gemName).append(Component.literal(" (T" + entry.tier() + ")"))
                                 .withStyle(ChatFormatting.LIGHT_PURPLE));
                     } else {
-                        tooltip.add(Component.literal(" ").append(Component.literal("\u2666 " + gemName))
+                        tooltip.add(Component.literal(" \u2666 ").append(gemName)
                                 .withStyle(ChatFormatting.LIGHT_PURPLE));
                     }
                 }
@@ -844,37 +849,43 @@ public class GearEventHandlers {
                             .withStyle(ChatFormatting.DARK_GRAY));
                     return;
                 }
+                // 用原始 id 作合并 key，显示名按语言文件翻译（避免英文语言下显示中文）
                 Map<String, Double> mergedStored = new LinkedHashMap<>();
                 for (ModDataComponents.StoredBonus sb : storedBonuses) {
-                    String displayName = getStoredBonusDisplayName(sb.id());
-                    mergedStored.merge(displayName, sb.value(), Double::sum);
+                    mergedStored.merge(sb.id(), sb.value(), Double::sum);
                 }
                 for (var entry : mergedStored.entrySet()) {
-                    String displayName = entry.getKey();
+                    String rawId = entry.getKey();
                     double totalValue = entry.getValue();
-                    String rawId = storedBonuses.stream()
-                            .filter(sb -> getStoredBonusDisplayName(sb.id()).equals(displayName))
-                            .findFirst().map(ModDataComponents.StoredBonus::id).orElse(displayName);
+                    Component displayName = getStoredBonusName(rawId);
                     String formattedValue;
                     if (isStoredBonusPercentage(rawId)) {
                         formattedValue = fmt(totalValue * 100) + "%";
                     } else {
                         formattedValue = fmt(totalValue);
                     }
-                    tooltip.add(Component.literal(" ").append(Component.literal(displayName + ": " + formattedValue))
+                    tooltip.add(Component.literal(" ").append(displayName)
+                            .append(Component.literal(": " + formattedValue))
                             .withStyle(ChatFormatting.GOLD));
                 }
             }
 
         }
 
-        private static String getAffixDisplayName(String id) {
+        /** 词条 id → 语言文件键；未在池中登记的 id 回退为 affix.gear_forge.<id>。 */
+        private static String getAffixNameKey(String id) {
             var config = ModConfigs.getAffixConfig();
-            return config.getAffixPool().stream()
-                    .filter(a -> a.getId().equals(id))
-                    .findFirst()
-                    .map(AffixDefinition::getName)
-                    .orElse(id);
+            boolean known = config.getAffixPool().stream().anyMatch(a -> a.getId().equals(id));
+            return known ? "affix.gear_forge." + id : id;
+        }
+
+        /** 宝石 id → 语言文件键。 */
+        private static String getGemNameKey(String id) {
+            var config = ModConfigs.getGemConfig();
+            for (GemConfig.GemDefinition gem : config.getGems()) {
+                if (gem.getId().equals(id)) return "gem.gear_forge." + id;
+            }
+            return "gem.gear_forge." + id;
         }
 
         private static String formatAffixValue(String id, double value) {
@@ -907,49 +918,46 @@ public class GearEventHandlers {
             };
         }
 
-        private static String getGemDisplayName(String id) {
-            var config = ModConfigs.getGemConfig();
-            for (GemConfig.GemDefinition gem : config.getGems()) {
-                if (gem.getId().equals(id)) return gem.getName();
+        /**
+         * 转生继承项显示名。全部走语言文件，避免英文语言下出现中文。
+         * 用 Component 作 translation 参数，让"[转生]"/"宝石"/"强化"前缀随语言切换。
+         */
+        private static Component getStoredBonusName(String id) {
+            var affixCfg = ModConfigs.getAffixConfig();
+            boolean knownAffix = affixCfg.getAffixPool().stream().anyMatch(a -> a.getId().equals(id));
+            if (knownAffix) {
+                return Component.translatable("tooltip.gear_forge.reincarnated",
+                        Component.translatable("affix.gear_forge." + id));
             }
-            return id;
-        }
-
-        private static String getStoredBonusDisplayName(String id) {
-            String name = getAffixDisplayName(id);
-            if (!name.equals(id)) return "[转生]" + name;
 
             if (id.startsWith("gem_")) {
                 String base = id.substring(4);
-                String baseName = getAffixDisplayName(base);
-                if (!baseName.equals(base)) return "[转生]宝石:" + baseName;
-                return "[转生]宝石:" + base;
+                Component inner = knownStat(base)
+                        ? Component.translatable("stat.gear_forge." + base)
+                        : Component.translatable("gem.gear_forge." + base);
+                return Component.translatable("tooltip.gear_forge.reincarnated.gem", inner);
             }
 
             if (id.startsWith("upgrade_")) {
                 String base = id.substring(8);
-                String baseName = getAffixDisplayName(base);
-                if (!baseName.equals(base)) return "[转生]强化:" + baseName;
-                String statName = STAT_NAME_MAP.get(base);
-                if (statName != null) return "[转生]强化:" + statName;
-                return "[转生]强化:" + base;
+                Component inner = knownStat(base)
+                        ? Component.translatable("stat.gear_forge." + base)
+                        : Component.translatable("affix.gear_forge." + base);
+                return Component.translatable("tooltip.gear_forge.reincarnated.upgrade", inner);
             }
 
-            return "[转生]" + id;
+            return Component.translatable("tooltip.gear_forge.reincarnated", id);
         }
 
-        private static final Map<String, String> STAT_NAME_MAP = Map.ofEntries(
-                Map.entry("attack_damage", "攻击力"),
-                Map.entry("defense", "防御力"),
-                Map.entry("toughness", "韧性"),
-                Map.entry("knockback_resistance", "击退抗性"),
-                Map.entry("movement_speed", "移动速度"),
-                Map.entry("attack_speed", "攻击速度"),
-                Map.entry("armor", "护甲值"),
-                Map.entry("armor_toughness", "护甲韧性"),
-                Map.entry("max_health", "最大生命"),
-                Map.entry("luck", "幸运值")
-        );
+        /** 是否为已知的原版属性名。 */
+        private static boolean knownStat(String base) {
+            return switch (base) {
+                case "attack_damage", "defense", "toughness", "knockback_resistance",
+                     "movement_speed", "attack_speed", "armor", "armor_toughness",
+                     "max_health", "luck" -> true;
+                default -> false;
+            };
+        }
 
         private static boolean isStoredBonusPercentage(String id) {
             String lookup = id;
