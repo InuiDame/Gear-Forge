@@ -13,18 +13,22 @@ import net.neoforged.neoforge.data.event.GatherDataRegistryEntriesEvent;
 @EventBusSubscriber(modid = GearForgeMod.MODID)
 public class DataGenerators {
 
+    /*
+     * 26.3 起 GatherDataEvent 是 abstract sealed 类，事件总线不允许为抽象类注册监听器，
+     * 否则客户端启动即抛 "Cannot register listeners for abstract class ...GatherDataEvent"。
+     * 必须分别订阅它的两个具体子类 Client / Server，不能在抽象参数上做 instanceof。
+     */
     @SubscribeEvent
-    public static void gatherData(GatherDataEvent event) {
-        // 26.3 起 GatherDataEvent 拆成 sealed 的 Client/Server 子类，通过 instanceof 区分。
-        if (event instanceof GatherDataEvent.Client) {
-            event.addProvider(new ModItemModelProvider(event.getGenerator().getPackOutput()));
-        }
-        if (event instanceof GatherDataEvent.Server) {
-            event.addProvider(new CuriosProvider(
-                    GearForgeMod.MODID,
-                    event.getGenerator().getPackOutput(),
-                    event.getWorldLookupProvider()));
-        }
+    public static void gatherDataClient(GatherDataEvent.Client event) {
+        event.addProvider(new ModItemModelProvider(event.getGenerator().getPackOutput()));
+    }
+
+    @SubscribeEvent
+    public static void gatherDataServer(GatherDataEvent.Server event) {
+        event.addProvider(new CuriosProvider(
+                GearForgeMod.MODID,
+                event.getGenerator().getPackOutput(),
+                event.getWorldLookupProvider()));
     }
 
     @SubscribeEvent
