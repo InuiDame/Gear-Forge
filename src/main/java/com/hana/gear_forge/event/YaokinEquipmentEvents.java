@@ -124,6 +124,11 @@ public final class YaokinEquipmentEvents {
     /** 携带耀金硬币击杀怪物 → 30 秒点金 I。 */
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
+        // 玩家死亡时清掉点金来源，避免复活后残留苹果/硬币的剩余时间。
+        if (event.getEntity() instanceof ServerPlayer dead) {
+            MidasTouchHandler.clear(dead);
+            return;
+        }
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
         if (!(event.getEntity() instanceof Mob)) return;
         if (!hasCurio(player, ModItems.YAOKIN_COIN.get())) return;
