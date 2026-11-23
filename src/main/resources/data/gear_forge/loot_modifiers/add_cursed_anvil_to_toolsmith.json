@@ -1,14 +1,6 @@
 {
   "type": "gear_forge:add_item",
-  "conditions": [
-    {
-      "condition": "neoforge:loot_table_id",
-      "loot_table_id": "minecraft:chests/village/village_toolsmith"
-    },
-    {
-      "condition": "minecraft:random_chance",
-      "chance": 0.005
-    }
-  ],
-  "item": "gear_forge:cursed_anvil"
+  "item": "gear_forge:cursed_anvil",
+  "chance": 0.005,
+  "loot_table_id": "minecraft:chests/village/village_toolsmith"
 }
