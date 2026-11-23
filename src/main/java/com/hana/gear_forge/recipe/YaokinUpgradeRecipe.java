@@ -14,7 +14,7 @@ import java.util.Map;
  * <p>这是原版"锻造模板"范式的复用：模板槽放耀金升级模板、底材放下界合金装备、
  * 材料槽放耀金锭。之所以不用原版 {@code SmithingTransformRecipe} 数据文件，是因为
  * 那样每个部位要写 5 个 JSON，且无法被 {@code ForgeTableMenu} 的独立菜单共享；
- * 写成代码判断后，强化台与原版锻造台都能用同一份逻辑。
+ * 写成代码判断后由强化台独占；原版锻造台只保留原版模板自己的升级与纹饰。
  */
 public final class YaokinUpgradeRecipe {
 
@@ -22,7 +22,7 @@ public final class YaokinUpgradeRecipe {
      * 下界合金装备 → 耀金装备 的映射。
      *
      * <p>包含四件盔甲、剑和四种工具。耀金装备不再有工作台配方，唯一来源就是用
-     * 原版下界合金升级模板在锻造台上升级。
+     * 原版下界合金升级模板在强化台上升级。
      *
      * <p>剑升级成耀金剑，不是弧刀；弧刀仍然由耀金铁锤把剑重锻得到（见
      * {@code GearSmithingRecipe} 的耀金铁锤分支）。两条路径产物不同，不会混淆。

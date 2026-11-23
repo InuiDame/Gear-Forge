@@ -1,5 +1,6 @@
 package com.hana.gear_forge.recipe;
 
+import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.component.ModDataComponents;
 import com.hana.gear_forge.config.GemConfig;
 import com.hana.gear_forge.config.GemConfig.GemDefinition;
@@ -15,6 +16,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -32,7 +34,7 @@ import java.util.List;
  * <ul>
  *   <li>{@link #canApply} 是分派逻辑的<b>唯一真源</b>，{@code matches} 与 {@code assemble} 都调用它，
  *       避免出现“匹配成功但装配走空分支、材料照扣”的情况。</li>
- *   <li>所有不使用模板槽的操作都要求模板槽为空。原版取出时会无条件把三个输入格各扣 1 个，
+ *   <li>所有不使用模板槽的操作都要求模板槽为空。取出时会无条件把三个输入格各扣 1 个，
  *       如果允许在模板槽放钻石/下界合金块，这些材料会被白白吞掉。</li>
  *   <li>重铸的随机结果由 {@link ModDataComponents#ROLL_SALT} 确定性推导，
  *       预览阶段反复调用 {@code assemble} 不会得到不同结果，杜绝“免费刷词条”。</li>
@@ -42,6 +44,18 @@ public class GearSmithingRecipe implements SmithingRecipe {
 
     /** 唯一实例；配方本身无状态，全部状态都在物品数据组件上。 */
     public static final GearSmithingRecipe INSTANCE = new GearSmithingRecipe();
+
+    /**
+     * 强化台专用配方类型。
+     *
+     * <p>刻意不挂在原版 {@link RecipeType#SMITHING} 下：原版锻造台按该类型查找配方，
+     * 一旦我们的操作混进去，玩家就能在锻造台上强化/重铸/镶宝石。改挂到独立类型后，
+     * 锻造台连本模组的材料都放不进槽位（槽位谓词同样按配方类型取），而只有强化台
+     * ({@code ForgeTableMenu}) 会查询这个类型。原版锻造模板（下界合金升级、纹饰）
+     * 仍是原版自己的 SMITHING 配方，行为不变。
+     */
+    public static final RecipeType<SmithingRecipe> FORGE_TABLE_TYPE =
+            RecipeType.simple(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "forge_table"));
 
     /** 重铸盐值到随机种子的混合常量（SplitMix64 的黄金比例常数）。 */
     private static final long SALT_MIX = 0x9E3779B97F4A7C15L;
@@ -175,7 +189,7 @@ public class GearSmithingRecipe implements SmithingRecipe {
 
         ItemStack addition = input.addition();
         ItemStack base = input.base();
-        // 原版锻造台每次只消耗 1 个底材，产物也必须只有 1 个，否则整组底材放进去会被复制。
+        // 强化台每次只消耗 1 个底材，产物也必须只有 1 个，否则整组底材放进去会被复制。
         ItemStack result = base.copyWithCount(1);
 
         // 耀金升级：产出一件全新的耀金装备，不走 copyWithCount 的路径。
@@ -186,7 +200,7 @@ public class GearSmithingRecipe implements SmithingRecipe {
         }
 
         if (addition.is(ModItems.FORGE_HAMMER.get())) {
-            // 预览固定显示 +1：真正的成功/降级/损毁由 SmithingMenuMixin 在取出时掷骰决定。
+            // 预览固定显示 +1：真正的成功/降级/损毁由 ForgeTableMenu 在取出时掷骰决定。
             // 这样预览是确定的（不能刷），而结果又是随机的。
             int currentLevel = result.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
             result.set(ModDataComponents.UPGRADE_LEVEL.get(), currentLevel + 1);
@@ -308,6 +322,12 @@ public class GearSmithingRecipe implements SmithingRecipe {
         return true;
     }
 
+    /** 挂到强化台专用类型，原版锻造台不会匹配到本配方的任何操作。 */
+    @Override
+    public RecipeType<?> getType() {
+        return FORGE_TABLE_TYPE;
+    }
+
     @Override
     public ItemStack getResultItem(HolderLookup.Provider registries) {
         return ItemStack.EMPTY;
@@ -360,7 +380,7 @@ public class GearSmithingRecipe implements SmithingRecipe {
                 || stack.is(ModItems.REINCARNATION_STONE.get())
                 || stack.is(ModItems.YAOKIN_HAMMER.get())
                 // 耀金锭：下界合金盔甲 → 耀金盔甲的材料槽也由本配方接管，
-                // 不加入这里会让原版锻造台/强化台直接拒绝放入，升级链整体不可用。
+                // 不加入这里会让强化台直接拒绝放入，升级链整体不可用。
                 || stack.is(ModItems.YAOKIN_INGOT.get())
                 || stack.is(Items.ENCHANTED_BOOK)
                 || isGemItem(stack);

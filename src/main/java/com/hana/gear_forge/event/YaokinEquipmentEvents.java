@@ -100,7 +100,7 @@ public final class YaokinEquipmentEvents {
         }
     }
 
-    /** 点金：等级 I 掉 1 个金锭，等级 II 及以上掉 2 个。 */
+    /** 点金：掉落金锭数等于点金等级（N 级掉 N 个）。 */
     @SubscribeEvent
     public static void onBlockDrops(BlockDropsEvent event) {
         if (!(event.getBreaker() instanceof ServerPlayer player)) return;
@@ -110,7 +110,7 @@ public final class YaokinEquipmentEvents {
         if (level <= 0) return;
 
         event.getDrops().clear();
-        int count = level >= 2 ? 2 : 1;
+        int count = level;
         var pos = event.getPos();
         event.getDrops().add(new ItemEntity(event.getLevel(),
                 pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D,

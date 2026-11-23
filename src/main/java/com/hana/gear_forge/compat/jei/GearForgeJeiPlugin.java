@@ -6,7 +6,6 @@ import com.hana.gear_forge.content.ModEnchantments;
 import com.hana.gear_forge.item.ModItems;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
-import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
@@ -14,7 +13,6 @@ import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.RecipeHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +26,8 @@ import java.util.List;
  *       但本模组的 {@code gear_smithing} 配方产物是运行时计算的（{@code getResultItem()} 返回空），
  *       JEI 无法从配方管理器反推出任何东西。所以这里手工构造一份"每种操作一条"的示例配方，
  *       用 {@link ForgeSmithingCategory} 展示。</li>
- *   <li><b>把耀金升级挂到原版锻造台分类里</b>。耀金升级本质是"模板 + 底材 + 材料"，
- *       与下界合金升级同构，直接以原版 {@code smithing} 配方形式喂给 JEI 即可。</li>
+ *   <li><b>把耀金升级也放进强化台分类</b>。它虽复用原版下界合金升级模板，但属于本模组
+ *       的升级操作，只能在强化台进行，故不再展示在原版锻造台分类里误导玩家。</li>
  * </ol>
  *
  * <p>本类带 {@code @JeiPlugin}，只在 JEI 存在时被它扫描；没有安装 JEI 时这个类根本不会被加载，
@@ -59,10 +57,6 @@ public class GearForgeJeiPlugin implements IModPlugin {
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         registration.addRecipes(FORGE_SMITHING, buildForgeDisplays());
-
-        // 耀金升级：喂给原版锻造台分类。用 SmithingTransformRecipe 的真实实例，
-        // 这样 JEI 会按原版锻造界面渲染，玩家一眼能对上。
-        registration.addRecipes(RecipeTypes.SMITHING, buildYaokinUpgradeRecipes());
     }
 
     @Override
@@ -151,47 +145,29 @@ public class GearForgeJeiPlugin implements IModPlugin {
                 new ItemStack(ModItems.YAOKIN_CURVED_BLADE.get()),
                 "jei.gear_forge.curved_blade"));
 
+        // 耀金升级：复用原版下界合金升级模板，但属于本模组操作，只在强化台可进行。
+        addYaokinDisplay(list, Items.NETHERITE_HELMET, ModItems.YAOKIN_HELMET.get());
+        addYaokinDisplay(list, Items.NETHERITE_CHESTPLATE, ModItems.YAOKIN_CHESTPLATE.get());
+        addYaokinDisplay(list, Items.NETHERITE_LEGGINGS, ModItems.YAOKIN_LEGGINGS.get());
+        addYaokinDisplay(list, Items.NETHERITE_BOOTS, ModItems.YAOKIN_BOOTS.get());
+        addYaokinDisplay(list, Items.NETHERITE_SWORD, ModItems.YAOKIN_SWORD.get());
+        addYaokinDisplay(list, Items.NETHERITE_PICKAXE, ModItems.YAOKIN_PICKAXE.get());
+        addYaokinDisplay(list, Items.NETHERITE_AXE, ModItems.YAOKIN_AXE.get());
+        addYaokinDisplay(list, Items.NETHERITE_SHOVEL, ModItems.YAOKIN_SHOVEL.get());
+        addYaokinDisplay(list, Items.NETHERITE_HOE, ModItems.YAOKIN_HOE.get());
+
         return list;
     }
 
-    /** 耀金升级：9 条（四件护甲 + 剑 + 四种工具），以原版锻造台配方形式展示。弧刀仍走耀金铁锤那条路径。 */
-    private static List<RecipeHolder<net.minecraft.world.item.crafting.SmithingRecipe>>
-    buildYaokinUpgradeRecipes() {
-        List<RecipeHolder<net.minecraft.world.item.crafting.SmithingRecipe>> list = new ArrayList<>();
-        net.minecraft.world.item.crafting.Ingredient template =
-                net.minecraft.world.item.crafting.Ingredient.of(
-                        Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
-        net.minecraft.world.item.crafting.Ingredient material =
-                net.minecraft.world.item.crafting.Ingredient.of(ModItems.YAOKIN_INGOT.get());
-
-        addUpgrade(list, template, material, Items.NETHERITE_HELMET, ModItems.YAOKIN_HELMET.get());
-        addUpgrade(list, template, material, Items.NETHERITE_CHESTPLATE, ModItems.YAOKIN_CHESTPLATE.get());
-        addUpgrade(list, template, material, Items.NETHERITE_LEGGINGS, ModItems.YAOKIN_LEGGINGS.get());
-        addUpgrade(list, template, material, Items.NETHERITE_BOOTS, ModItems.YAOKIN_BOOTS.get());
-        addUpgrade(list, template, material, Items.NETHERITE_SWORD, ModItems.YAOKIN_SWORD.get());
-        addUpgrade(list, template, material, Items.NETHERITE_PICKAXE, ModItems.YAOKIN_PICKAXE.get());
-        addUpgrade(list, template, material, Items.NETHERITE_AXE, ModItems.YAOKIN_AXE.get());
-        addUpgrade(list, template, material, Items.NETHERITE_SHOVEL, ModItems.YAOKIN_SHOVEL.get());
-        addUpgrade(list, template, material, Items.NETHERITE_HOE, ModItems.YAOKIN_HOE.get());
-        return list;
-    }
-
-    private static void addUpgrade(
-            List<RecipeHolder<net.minecraft.world.item.crafting.SmithingRecipe>> out,
-            net.minecraft.world.item.crafting.Ingredient template,
-            net.minecraft.world.item.crafting.Ingredient material,
-            net.minecraft.world.item.Item base,
-            net.minecraft.world.item.Item result) {
-        var recipe = new net.minecraft.world.item.crafting.SmithingTransformRecipe(
-                template,
-                net.minecraft.world.item.crafting.Ingredient.of(base),
-                material,
-                new ItemStack(result));
-        out.add(new RecipeHolder<>(
-                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID,
-                        "jei_yaokin_" + net.minecraft.core.registries.BuiltInRegistries.ITEM
-                                .getKey(result).getPath()),
-                recipe));
+    private static void addYaokinDisplay(List<SmithingDisplay> out,
+                                         net.minecraft.world.item.Item base,
+                                         net.minecraft.world.item.Item result) {
+        out.add(new SmithingDisplay(
+                new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE),
+                new ItemStack(base),
+                new ItemStack(ModItems.YAOKIN_INGOT.get()),
+                new ItemStack(result),
+                "jei.gear_forge.upgrade"));
     }
 
     /** 让编译器知道 ModEnchantments 的 import 有意义（附魔书在 JEI 里也走锻造分类）。 */

@@ -4,6 +4,7 @@ import com.hana.gear_forge.block.ModBlocks;
 import com.hana.gear_forge.config.ModConfigs;
 import com.hana.gear_forge.config.UpgradeConfig;
 import com.hana.gear_forge.item.ModItems;
+import com.hana.gear_forge.recipe.GearSmithingRecipe;
 import com.hana.gear_forge.util.GearHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -14,7 +15,6 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.inventory.SmithingMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.level.Level;
@@ -35,6 +35,10 @@ import java.util.OptionalInt;
  * <p>所以这里改为直接继承 {@link ItemCombinerMenu}，复刻 {@code SmithingMenu} 的三格布局与
  * 配方查找逻辑（约 100 行），从而可以挂在自己的 {@link MenuType} 上。
  * 布局常量与父类保持一致，界面贴图可以直接复用原版 {@code smithing.png}。
+ *
+ * <p>配方查询只走 {@link GearSmithingRecipe#FORGE_TABLE_TYPE}（强化台专用类型），
+ * 不查 {@code RecipeType.SMITHING}。因此本模组的强化/重铸/镶宝石等操作只能在强化台进行；
+ * 原版锻造台只保留锻造模板的原生升级与纹饰。
  */
 public class ForgeTableMenu extends ItemCombinerMenu {
 
@@ -55,7 +59,7 @@ public class ForgeTableMenu extends ItemCombinerMenu {
     public ForgeTableMenu(int containerId, Inventory playerInventory, ContainerLevelAccess access) {
         super(ModMenus.FORGE_TABLE.get(), containerId, playerInventory, access);
         this.level = playerInventory.player.level();
-        this.recipes = this.level.getRecipeManager().getAllRecipesFor(RecipeType.SMITHING);
+        this.recipes = this.level.getRecipeManager().getAllRecipesFor(GearSmithingRecipe.FORGE_TABLE_TYPE);
     }
 
     @Override
@@ -86,7 +90,7 @@ public class ForgeTableMenu extends ItemCombinerMenu {
     public void createResult() {
         SmithingRecipeInput input = this.createRecipeInput();
         List<RecipeHolder<SmithingRecipe>> matches =
-                this.level.getRecipeManager().getRecipesFor(RecipeType.SMITHING, input, this.level);
+                this.level.getRecipeManager().getRecipesFor(GearSmithingRecipe.FORGE_TABLE_TYPE, input, this.level);
         if (matches.isEmpty()) {
             this.resultSlots.setItem(0, ItemStack.EMPTY);
             this.selectedRecipe = null;

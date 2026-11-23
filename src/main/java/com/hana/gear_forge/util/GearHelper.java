@@ -231,7 +231,7 @@ public class GearHelper {
     }
 
     /**
-     * 一次强化掷骰的结果。由 {@code SmithingMenuMixin} 在真正取出时决定，
+     * 一次强化掷骰的结果。由 {@code ForgeTableMenu} 在真正取出时决定，
      * 不放在 {@code assemble} 里——否则预览阶段反复放取就能刷成功。
      */
     public enum UpgradeOutcome {
@@ -274,7 +274,7 @@ public class GearHelper {
     /**
      * 掷骰并把结果写回玩家实际拿到的这一份产物。
      *
-     * <p>由强化台菜单和原版锻造台的 mixin 共用，避免两处各写一份判定逻辑而逐渐走样。
+     * <p>由强化台菜单在取出时调用；强化结果只有这一处判定逻辑。
      */
     public static void applyUpgradeOutcome(Player player, ItemStack result, int baseLevel, UpgradeConfig config) {
         switch (rollUpgradeOutcome(config, baseLevel, player.getRandom())) {

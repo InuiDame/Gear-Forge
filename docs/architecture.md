@@ -147,7 +147,7 @@ flowchart LR
 
 `content/ModMobEffects` 注册两个自定义效果：`midas_touch`（点金）和 `gilded`（金化）。
 
-点金有三个来源：耀金苹果（II，限时）、耀金硬币击杀（I，30 秒）、耀金四件套（I，常驻）。`MidasTouchHandler` 按来源记录等级和到期时间，每 5 tick 重算总和，把可见效果刷成总等级——这样苹果 II 到期后金币 I 还在时能正确降级，多个来源也能叠加。`YaokinEquipmentEvents.onBlockDrops` 在 `BlockDropsEvent` 里把石头/圆石/深板岩的掉落替换成 1~2 个金锭。
+点金有三个来源：耀金苹果（II，限时）、耀金硬币击杀（I，30 秒）、耀金四件套（I，常驻）。`MidasTouchHandler` 按来源记录等级和到期时间，每 5 tick 重算总和，把可见效果刷成总等级——这样苹果 II 到期后金币 I 还在时能正确降级，多个来源也能叠加。`YaokinEquipmentEvents.onBlockDrops` 在 `BlockDropsEvent` 里把石头/圆石/深板岩的掉落替换成与点金等级相同数量的金锭（N 级掉 N 个）。
 
 四件套的判定在 `YaokinEquipmentEvents.updateFullSet`：每 20 tick 检查四个盔甲槽，穿齐就刷新 `gilded` 60 tick 并挂上常驻点金来源。`PiglinAiMixin` 注入 `PiglinAi.isWearingGold`，带 `gilded` 时直接返回 true，因此猪灵会把玩家当成金装。
 
