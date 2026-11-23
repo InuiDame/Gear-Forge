@@ -1,6 +1,19 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "gear_forge:item/yaokin_curved_blade"
+    "type": "minecraft:select",
+    "property": "minecraft:display_context",
+    "cases": [
+      {
+        "when": ["gui", "ground", "fixed", "on_shelf"],
+        "model": {
+          "type": "minecraft:model",
+          "model": "gear_forge:item/yaokin_curved_blade"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "gear_forge:item/yaokin_curved_blade_in_hand"
+    }
   }
 }

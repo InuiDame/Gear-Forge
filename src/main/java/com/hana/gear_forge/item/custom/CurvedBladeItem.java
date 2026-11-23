@@ -39,18 +39,38 @@ public class CurvedBladeItem extends Item {
         super(properties);
     }
 
-    /** 构造弧刀的 Properties：标准剑（伤害 -1、攻速 2.0）+ 攻击范围 +1。 */
+    /**
+     * 构造弧刀的 Properties：剑的伤害/攻速 + 攻击范围 +1。
+     *
+     * <p>不能再对 {@code .sword(...)} 的结果调用第二个 {@code .attributes(...)}——
+     * 后者会整体替换掉剑的攻击伤害/攻速组件，导致武器没有伤害（实测 tooltip 只剩范围）。
+     * 这里把 damage/speed/reach 三个修饰符一次性放进同一个 builder，
+     * 与原版 {@code ToolMaterial#createSwordAttributes} 的写法一致。
+     */
     public static Properties createBladeProperties(ToolMaterial material) {
-        Properties props = new Properties()
-                .sword(material, 3.0F - DAMAGE_PENALTY, ATTACK_SPEED_MODIFIER);
-        return props.attributes(ItemAttributeModifiers.builder()
+        ItemAttributeModifiers attributes = ItemAttributeModifiers.builder()
+                .add(Attributes.ATTACK_DAMAGE,
+                        new AttributeModifier(
+                                Item.BASE_ATTACK_DAMAGE_ID,
+                                3.0F - DAMAGE_PENALTY + material.attackDamageBonus(),
+                                AttributeModifier.Operation.ADD_VALUE),
+                        EquipmentSlotGroup.MAINHAND)
+                .add(Attributes.ATTACK_SPEED,
+                        new AttributeModifier(
+                                Item.BASE_ATTACK_SPEED_ID,
+                                ATTACK_SPEED_MODIFIER,
+                                AttributeModifier.Operation.ADD_VALUE),
+                        EquipmentSlotGroup.MAINHAND)
                 .add(Attributes.ENTITY_INTERACTION_RANGE,
                         new AttributeModifier(
                                 Identifier.fromNamespaceAndPath("gear_forge", "curved_blade_reach"),
                                 REACH_BONUS,
                                 AttributeModifier.Operation.ADD_VALUE),
                         EquipmentSlotGroup.MAINHAND)
-                .build());
+                .build();
+        // .sword() 提供挖蜘蛛网等工具行为与 WEAPON 组件；随后用 attributes 覆盖为含三项的修饰符集。
+        return new Properties().sword(material, 3.0F - DAMAGE_PENALTY, ATTACK_SPEED_MODIFIER)
+                .attributes(attributes);
     }
 
     @Override
