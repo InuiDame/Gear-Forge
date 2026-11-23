@@ -9,17 +9,11 @@ import com.hana.gear_forge.content.YaokinMaterial;
 import com.hana.gear_forge.item.custom.*;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.EnchantedBookItem;
-import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.PickaxeItem;
-import net.minecraft.world.item.ShovelItem;
-import net.minecraft.world.item.SwordItem;
-import net.minecraft.world.item.Tiers;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -99,80 +93,65 @@ public class ModItems {
             YaokinAppleItem::new);
 
     /** 耀金剑：标准剑属性，8 点伤害、1.6 攻速。 */
-    public static final DeferredItem<SwordItem> YAOKIN_SWORD = registerTyped("yaokin_sword",
-            () -> new SwordItem(YaokinMaterial.TIER, new Item.Properties()
-                    .fireResistant()
-                    .attributes(SwordItem.createAttributes(YaokinMaterial.TIER, 3, -2.4F))));
+    public static final DeferredItem<Item> YAOKIN_SWORD = registerItem("yaokin_sword",
+            () -> new Item(new Item.Properties().sword(YaokinMaterial.TOOL, 3.0F, -2.4F).fireResistant()));
 
     /** 耀金镐。 */
-    public static final DeferredItem<PickaxeItem> YAOKIN_PICKAXE = registerTyped("yaokin_pickaxe",
-            () -> new PickaxeItem(YaokinMaterial.TIER, new Item.Properties()
-                    .fireResistant()
-                    .attributes(PickaxeItem.createAttributes(YaokinMaterial.TIER, 1.0F, -2.8F))));
+    public static final DeferredItem<Item> YAOKIN_PICKAXE = registerItem("yaokin_pickaxe",
+            () -> new Item(new Item.Properties().pickaxe(YaokinMaterial.TOOL, 1.0F, -2.8F).fireResistant()));
 
     /** 耀金斧。 */
-    public static final DeferredItem<AxeItem> YAOKIN_AXE = registerTyped("yaokin_axe",
-            () -> new AxeItem(YaokinMaterial.TIER, new Item.Properties()
-                    .fireResistant()
-                    .attributes(AxeItem.createAttributes(YaokinMaterial.TIER, 5.0F, -3.0F))));
+    public static final DeferredItem<Item> YAOKIN_AXE = registerItem("yaokin_axe",
+            () -> new Item(new Item.Properties().axe(YaokinMaterial.TOOL, 5.0F, -3.0F).fireResistant()));
 
     /** 耀金锹。 */
-    public static final DeferredItem<ShovelItem> YAOKIN_SHOVEL = registerTyped("yaokin_shovel",
-            () -> new ShovelItem(YaokinMaterial.TIER, new Item.Properties()
-                    .fireResistant()
-                    .attributes(ShovelItem.createAttributes(YaokinMaterial.TIER, 1.5F, -3.0F))));
+    public static final DeferredItem<Item> YAOKIN_SHOVEL = registerItem("yaokin_shovel",
+            () -> new Item(new Item.Properties().shovel(YaokinMaterial.TOOL, 1.5F, -3.0F).fireResistant()));
 
     /** 耀金锄。 */
-    public static final DeferredItem<HoeItem> YAOKIN_HOE = registerTyped("yaokin_hoe",
-            () -> new HoeItem(YaokinMaterial.TIER, new Item.Properties()
-                    .fireResistant()
-                    .attributes(HoeItem.createAttributes(YaokinMaterial.TIER, -4.0F, 0.0F))));
+    public static final DeferredItem<Item> YAOKIN_HOE = registerItem("yaokin_hoe",
+            () -> new Item(new Item.Properties().hoe(YaokinMaterial.TOOL, -4.0F, 0.0F).fireResistant()));
 
     // ===================== 弧刀 =====================
 
     /** 钻石弧刀：钻石剑用耀金铁锤重锻而成。 */
     public static final DeferredItem<CurvedBladeItem> DIAMOND_CURVED_BLADE =
             registerTyped("diamond_curved_blade",
-                    () -> new CurvedBladeItem(Tiers.DIAMOND, new Item.Properties()
-                            .attributes(CurvedBladeItem.createBladeAttributes(Tiers.DIAMOND))));
+                    () -> new CurvedBladeItem(CurvedBladeItem.createBladeProperties(ToolMaterial.DIAMOND)));
 
     /** 下界合金弧刀：下界合金剑用耀金铁锤重锻而成。 */
     public static final DeferredItem<CurvedBladeItem> NETHERITE_CURVED_BLADE =
             registerTyped("netherite_curved_blade",
-                    () -> new CurvedBladeItem(Tiers.NETHERITE, new Item.Properties()
-                            .fireResistant()
-                            .attributes(CurvedBladeItem.createBladeAttributes(Tiers.NETHERITE))));
+                    () -> new CurvedBladeItem(CurvedBladeItem.createBladeProperties(ToolMaterial.NETHERITE).fireResistant()));
 
     /** 耀金弧刀：耀金剑（或其它剑）用耀金铁锤重锻而成。 */
     public static final DeferredItem<CurvedBladeItem> YAOKIN_CURVED_BLADE =
             registerTyped("yaokin_curved_blade",
-                    () -> new CurvedBladeItem(YaokinMaterial.TIER, new Item.Properties()
-                            .fireResistant()
-                            .attributes(CurvedBladeItem.createBladeAttributes(YaokinMaterial.TIER))));
+                    () -> new CurvedBladeItem(CurvedBladeItem.createBladeProperties(YaokinMaterial.TOOL).fireResistant()));
 
     // ===================== 耀金套装 =====================
 
-    public static final DeferredItem<ArmorItem> YAOKIN_HELMET = registerTyped("yaokin_helmet",
-            () -> new ArmorItem(YaokinMaterial.ARMOR, ArmorItem.Type.HELMET,
-                    new Item.Properties().fireResistant()));
+    public static final DeferredItem<Item> YAOKIN_HELMET = registerItem("yaokin_helmet",
+            () -> new Item(new Item.Properties()
+                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.HELMET).fireResistant()));
 
-    public static final DeferredItem<ArmorItem> YAOKIN_CHESTPLATE = registerTyped("yaokin_chestplate",
-            () -> new ArmorItem(YaokinMaterial.ARMOR, ArmorItem.Type.CHESTPLATE,
-                    new Item.Properties().fireResistant()));
+    public static final DeferredItem<Item> YAOKIN_CHESTPLATE = registerItem("yaokin_chestplate",
+            () -> new Item(new Item.Properties()
+                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.CHESTPLATE).fireResistant()));
 
-    public static final DeferredItem<ArmorItem> YAOKIN_LEGGINGS = registerTyped("yaokin_leggings",
-            () -> new ArmorItem(YaokinMaterial.ARMOR, ArmorItem.Type.LEGGINGS,
-                    new Item.Properties().fireResistant()));
+    public static final DeferredItem<Item> YAOKIN_LEGGINGS = registerItem("yaokin_leggings",
+            () -> new Item(new Item.Properties()
+                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.LEGGINGS).fireResistant()));
 
-    public static final DeferredItem<ArmorItem> YAOKIN_BOOTS = registerTyped("yaokin_boots",
-            () -> new ArmorItem(YaokinMaterial.ARMOR, ArmorItem.Type.BOOTS,
-                    new Item.Properties().fireResistant()));
+    public static final DeferredItem<Item> YAOKIN_BOOTS = registerItem("yaokin_boots",
+            () -> new Item(new Item.Properties()
+                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.BOOTS).fireResistant()));
 
     private static DeferredItem<Item> registerItem(String name, Supplier<Item> itemSupplier) {
         return ITEMS.register(name, itemSupplier);
     }
 
-    /** 泛型重载：用于 {@link ArmorItem} 这类需要保留具体类型的注册。 */
+    /** 泛型重载：用于 需要保留具体类型的注册。 */
     private static <T extends Item> DeferredItem<T> registerTyped(String name, Supplier<T> itemSupplier) {
         return ITEMS.register(name, itemSupplier);
     }

@@ -6,11 +6,11 @@
 
 | 项 | 版本 / 选择 |
 |---|---|
-| Minecraft | 1.21.1 |
-| 加载器 | NeoForge 21.1.228（FML 4.0.42） |
-| 构建 | Gradle 9.2.0 wrapper（阿里云镜像），ModDevGradle 2.0.141，Parchment 2024.11.17 |
-| Java | 21（Gradle toolchain 固定） |
-| 依赖 | Curios 9.5.1（编译期只用 API，运行期必需，见 ADR-0005） |
+| Minecraft | 26.3 |
+| 加载器 | NeoForge 26.3.0.103 |
+| 构建 | Gradle 9.2.0 wrapper（阿里云镜像），ModDevGradle 2.0.148（Parchment 已移除，26.x 无映射） |
+| Java | 25（Gradle toolchain 固定，foojay 自动下载） |
+| 依赖 | Curios 17.0.1+26.3（编译期只用 API，运行期必需，见 ADR-0005） |
 | 字节码修改 | Mixin，2 个注入点（见第 6 节） |
 
 ## 2. 包结构

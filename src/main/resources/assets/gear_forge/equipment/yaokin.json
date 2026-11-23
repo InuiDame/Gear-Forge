@@ -1,0 +1,19 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "gear_forge:yaokin"
+      }
+    ],
+    "humanoid_baby": [
+      {
+        "texture": "gear_forge:yaokin"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "gear_forge:yaokin"
+      }
+    ]
+  }
+}

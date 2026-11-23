@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.141'
+    id 'net.neoforged.moddev' version '2.0.148'
     id 'idea'
 }
 
@@ -35,26 +35,21 @@ repositories {
         name = 'Curios'
         url = uri('https://maven.theillusivec4.top/')
     }
-    // JEI 的 API jar 从 Maven 下载时会被 TLS 层拦截（证书吊销检查失败），
-    // 因此改为把 API jar 放在 libs/ 下当作平铺目录依赖。
-    // 完整 JEI 是运行期可选依赖，由玩家自行安装；开发客户端默认不带 JEI。
-    flatDir {
-        name = 'jeiApi'
-        dirs 'libs'
+    maven {
+        name = 'JEI'
+        url = uri('https://maven.blamejared.com/')
     }
 }
 
-// Mojang ships Java 21 to end users in 1.21.1, so mods should target Java 21.
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+// Minecraft 26.3 targets Java 25. The foojay toolchain resolver in settings.gradle
+// provisions the JDK automatically.
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 neoForge {
     // Specify the version of NeoForge to use.
     version = project.neo_version
 
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
+    // Parchment has no 26.3 mappings yet; Mojang official names are used.
 
     runs {
         client {
@@ -119,11 +114,10 @@ dependencies {
     compileOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}:api"
     runtimeOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}"
 
-    // JEI: 只编译期依赖 API，运行期可选。玩家没装 JEI 时本模组照常工作——
+    // JEI: 编译期依赖 API，运行期可选。玩家没装 JEI 时本模组照常工作——
     // 插件类带 @JeiPlugin，只在 JEI 存在时才被它扫描到。
-    // API jar 走 libs/ 平铺目录（见 repositories 里的说明），运行时的完整 JEI 由玩家自己安装。
-    compileOnly files('libs/jei-1.21.1-neoforge-api-19.76.1.478.jar',
-                      'libs/jei-1.21.1-common-api-19.76.1.478.jar')
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

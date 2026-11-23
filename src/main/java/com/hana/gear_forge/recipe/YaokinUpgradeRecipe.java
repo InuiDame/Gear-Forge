@@ -1,7 +1,6 @@
 package com.hana.gear_forge.recipe;
 
 import com.hana.gear_forge.item.ModItems;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -79,8 +78,4 @@ public final class YaokinUpgradeRecipe {
     public static boolean isUpgradeMaterial(ItemStack stack) {
         return stack.is(ModItems.YAOKIN_INGOT.get());
     }
-
-    /** 让 IDE 知道 ArmorItem 的 import 有意义（下界合金装备都是 ArmorItem 子类）。 */
-    @SuppressWarnings("unused")
-    private static final Class<?> ARMOR_TYPE = ArmorItem.class;
 }

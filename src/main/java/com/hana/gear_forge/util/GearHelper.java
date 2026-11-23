@@ -99,7 +99,7 @@ public class GearHelper {
 
     public static boolean hasEnoughItems(Player player, Item item, int count) {
         int found = 0;
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
             if (stack.is(item)) {
                 found += stack.getCount();
                 if (found >= count) return true;
@@ -110,8 +110,8 @@ public class GearHelper {
 
     public static void consumeItems(Player player, Item item, int count) {
         int remaining = count;
-        for (int i = 0; i < player.getInventory().items.size() && remaining > 0; i++) {
-            ItemStack stack = player.getInventory().items.get(i);
+        for (int i = 0; i < player.getInventory().getNonEquipmentItems().size() && remaining > 0; i++) {
+            ItemStack stack = player.getInventory().getNonEquipmentItems().get(i);
             if (stack.is(item)) {
                 int toRemove = Math.min(stack.getCount(), remaining);
                 stack.shrink(toRemove);
@@ -203,15 +203,18 @@ public class GearHelper {
     }
 
     public static String getSocketTypeForItem(ItemStack stack) {
-        if (stack.getItem() instanceof net.minecraft.world.item.SwordItem
-                || stack.getItem() instanceof net.minecraft.world.item.DiggerItem
+        if (stack.is(net.minecraft.tags.ItemTags.SWORDS)
+                || stack.is(net.minecraft.tags.ItemTags.PICKAXES)
+                || stack.is(net.minecraft.tags.ItemTags.AXES)
+                || stack.is(net.minecraft.tags.ItemTags.SHOVELS)
+                || stack.is(net.minecraft.tags.ItemTags.HOES)
                 || stack.is(net.minecraft.world.item.Items.BOW)
                 || stack.is(net.minecraft.world.item.Items.CROSSBOW)
                 || stack.is(net.minecraft.world.item.Items.TRIDENT)
                 || stack.is(net.minecraft.world.item.Items.SHIELD)) {
             return "weapon";
         }
-        if (stack.getItem() instanceof net.minecraft.world.item.ArmorItem) {
+        if (stack.has(net.minecraft.core.component.DataComponents.EQUIPPABLE)) {
             return "armor";
         }
         return "tool";
@@ -293,7 +296,7 @@ public class GearHelper {
                 result.setCount(0);
                 notifyActionBar(player, "message.gear_forge.upgrade_destroyed");
                 player.level().playSound(null, player.blockPosition(),
-                        net.minecraft.sounds.SoundEvents.ITEM_BREAK,
+                        net.minecraft.sounds.SoundEvents.ITEM_BREAK.value(),
                         net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 0.8F);
             }
         }
@@ -329,7 +332,7 @@ public class GearHelper {
     /** 在 actionbar 上发一条提示。 */
     public static void notifyActionBar(Player player, String langKey) {
         if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-            serverPlayer.displayClientMessage(net.minecraft.network.chat.Component.translatable(langKey), true);
+            serverPlayer.sendSystemMessage(net.minecraft.network.chat.Component.translatable(langKey), true);
         }
     }
 

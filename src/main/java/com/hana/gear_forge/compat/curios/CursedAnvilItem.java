@@ -7,18 +7,20 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.attribute.modifier.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
+import java.util.function.Consumer;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -26,7 +28,6 @@ import net.minecraft.world.phys.AABB;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.type.capability.ICurioItem;
 
-import java.util.List;
 
 public class CursedAnvilItem extends Item implements ICurioItem {
 
@@ -39,7 +40,7 @@ public class CursedAnvilItem extends Item implements ICurioItem {
 
     @Override
     public void curioTick(SlotContext slotContext, ItemStack stack) {
-        if (!(slotContext.entity() instanceof Player player) || player.level().isClientSide || player.tickCount % 100 != 0) {
+        if (!(slotContext.entity() instanceof Player player) || player.level().isClientSide() || player.tickCount % 100 != 0) {
             return; // 每5秒尝试一次
         }
 
@@ -67,7 +68,7 @@ public class CursedAnvilItem extends Item implements ICurioItem {
             if (mob.getTarget() == player) continue;
             // 有主人的个体（狼/猫/鹦鹉）不参与，避免宠物反咬主人。
             if (mob instanceof net.minecraft.world.entity.OwnableEntity ownable
-                    && ownable.getOwnerUUID() != null) continue;
+                    && ownable.getOwnerReference() != null) continue;
 
             mob.setTarget(player);
             mob.setAggressive(true);
@@ -75,8 +76,8 @@ public class CursedAnvilItem extends Item implements ICurioItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("tooltip.gear_forge.curse_anvil").withStyle(ChatFormatting.GRAY));
-        super.appendHoverText(stack, context, tooltip, flag);
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
+        tooltip.accept(Component.translatable("tooltip.gear_forge.curse_anvil").withStyle(ChatFormatting.GRAY));
+        super.appendHoverText(stack, context, display, tooltip, flag);
     }
 }

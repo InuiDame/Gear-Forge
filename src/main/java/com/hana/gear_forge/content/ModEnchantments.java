@@ -3,7 +3,7 @@ package com.hana.gear_forge.content;
 import com.hana.gear_forge.GearForgeMod;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.enchantment.Enchantment;
 
 public class ModEnchantments {
@@ -16,6 +16,6 @@ public class ModEnchantments {
     public static final ResourceKey<Enchantment> HARVEST_BOUNTY = createKey("harvest_bounty");
 
     private static ResourceKey<Enchantment> createKey(String name) {
-        return ResourceKey.create(Registries.ENCHANTMENT, ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, name));
+        return ResourceKey.create(Registries.ENCHANTMENT, Identifier.fromNamespaceAndPath(GearForgeMod.MODID, name));
     }
 }

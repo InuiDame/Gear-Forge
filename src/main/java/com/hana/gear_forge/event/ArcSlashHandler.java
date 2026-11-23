@@ -84,7 +84,11 @@ public final class ArcSlashHandler {
             double cos = toTarget.normalize().dot(look.normalize());
             if (cos < Math.cos(SLASH_HALF_ANGLE)) continue;
 
-            if (target.hurt(player.damageSources().playerAttack(player), slashDamage)) {
+            // 26.3 起 Entity#hurt 返回 void，用伤害前后的血量差判断是否真正造成了伤害
+            // （无敌帧/创造模式下 hurt 不会扣血，与旧版返回 false 的语义一致）。
+            float healthBefore = target.getHealth();
+            target.hurt(player.damageSources().playerAttack(player), slashDamage);
+            if (target.getHealth() < healthBefore) {
                 hitCount++;
             }
         }

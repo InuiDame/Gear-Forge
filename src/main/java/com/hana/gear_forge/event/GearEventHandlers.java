@@ -14,7 +14,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -29,10 +29,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.ArmorItem;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -129,7 +128,7 @@ public class GearEventHandlers {
             }
             damage += gemFrost;
             if (gemFrost > 0) {
-                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, slownessAmplifier(gemFrost, 2)));
+                target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 80, slownessAmplifier(gemFrost, 2)));
             }
         }
 
@@ -153,11 +152,11 @@ public class GearEventHandlers {
             }
             double storedFrost = GearHelper.getStoredBonusValue(stored, "frost_damage");
             if (storedFrost > 0) {
-                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, slownessAmplifier(storedFrost, 3)));
+                target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 100, slownessAmplifier(storedFrost, 3)));
             }
             double storedLightning = GearHelper.getStoredBonusValue(stored, "lightning_damage");
             if (storedLightning > 0 && target.getRandom().nextDouble() < 0.25) {
-                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
+                target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 1));
                 if (target.level().isThundering()) {
                     damage *= 1.15f;
                 }
@@ -168,7 +167,7 @@ public class GearEventHandlers {
             // 雷暴加成必须在 setNewDamage 之前算，否则改的只是局部变量
             double lightningValue = GearHelper.getAffixTotalValue(affixes, "lightning_damage");
             if (lightningValue > 0 && target.getRandom().nextDouble() < 0.25) {
-                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
+                target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 1));
                 if (target.level().isThundering()) {
                     damage *= 1.15f;
                 }
@@ -190,7 +189,7 @@ public class GearEventHandlers {
 
             double frostValue = GearHelper.getAffixTotalValue(affixes, "frost_damage");
             if (frostValue > 0) {
-                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, slownessAmplifier(frostValue, 3)));
+                target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 100, slownessAmplifier(frostValue, 3)));
             }
         }
 
@@ -287,7 +286,7 @@ public class GearEventHandlers {
                 // ARMOR / ARMOR_TOUGHNESS 属性，这里不再重复做固定减伤。
 
                 if (armorApplies && gems != null && GearHelper.hasUniqueGemEffect("nether_star", gems)) {
-                    entity.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 0, false, false));
+                    entity.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 100, 0, false, false));
                 }
 
                 if (affixes != null) {
@@ -384,8 +383,9 @@ public class GearEventHandlers {
 
         // 护甲只在自己的护甲槽生效（拿在手里不生效）；武器/工具在主手生效，开启副手模式后在副手生效。
         EquipmentSlotGroup slot;
-        if (stack.getItem() instanceof ArmorItem armorItem) {
-            slot = EquipmentSlotGroup.bySlot(armorItem.getEquipmentSlot());
+        var equippable = stack.get(net.minecraft.core.component.DataComponents.EQUIPPABLE);
+        if (equippable != null) {
+            slot = EquipmentSlotGroup.bySlot(equippable.slot());
         } else if (Boolean.TRUE.equals(stack.get(ModDataComponents.OFFHAND_MODE.get()))) {
             slot = EquipmentSlotGroup.OFFHAND;
         } else {
@@ -494,7 +494,7 @@ public class GearEventHandlers {
     private record ModifierSink(ItemAttributeModifierEvent event, EquipmentSlotGroup slot) {
         void add(Holder<Attribute> attribute, String name, double value, AttributeModifier.Operation operation) {
             if (value <= 0) return;
-            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID,
+            Identifier id = Identifier.fromNamespaceAndPath(GearForgeMod.MODID,
                     name + "/" + slot.getSerializedName());
             event.addModifier(attribute, new AttributeModifier(id, value, operation), slot);
         }
@@ -624,8 +624,10 @@ public class GearEventHandlers {
 
         applyDurabilityBoostRepair(player.getMainHandItem());
         applyDurabilityBoostRepair(player.getOffhandItem());
-        for (ItemStack armor : player.getInventory().armor) {
-            applyDurabilityBoostRepair(armor);
+        // 26.3：Inventory#armor 字段被移除，装备槽统一通过 getItemBySlot 访问。
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) continue;
+            applyDurabilityBoostRepair(player.getItemBySlot(slot));
         }
     }
 
@@ -655,7 +657,10 @@ public class GearEventHandlers {
 
     private static void applyHealthRegen(Player player) {
         double totalRegen = 0;
-        for (ItemStack armor : player.getInventory().armor) {
+        // 26.3：Inventory#armor 字段被移除，改为遍历四个盔甲槽（与原 armor 列表等价）。
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) continue;
+            ItemStack armor = player.getItemBySlot(slot);
             List<ModDataComponents.AffixEntry> affixes = armor.get(ModDataComponents.AFFIXES.get());
             if (affixes != null) {
                 totalRegen += GearHelper.getAffixTotalValueDirect(affixes, "health_regen");
@@ -712,7 +717,7 @@ public class GearEventHandlers {
             List<Component> tooltip = event.getToolTip();
 
             // Check if this item is a raw gem (show effects)
-            ResourceLocation itemRl = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            Identifier itemRl = BuiltInRegistries.ITEM.getKey(stack.getItem());
             String itemIdStr = itemRl.toString();
             GemConfig gemConfig = ModConfigs.getGemConfig();
             boolean isRawGem = false;

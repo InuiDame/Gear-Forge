@@ -1,9 +1,9 @@
 # Gear Forge
 
-Minecraft 1.21.1 / NeoForge 模组。在原版锻造台上给装备做强化、随机词条、宝石镶嵌和转生，另外提供 7 个附魔和 2 个 Curios 饰品。
+Minecraft 26.3 / NeoForge 模组（26.3 分支）。在原版锻造台上给装备做强化、随机词条、宝石镶嵌和转生，另外提供 7 个附魔和 2 个 Curios 饰品。
 
 - Mod ID：`gear_forge`
-- 依赖：NeoForge 21.1.228+，[Curios API](https://github.com/TheIllusiveC4/Curios) 9.4+（必需）
+- 依赖：Java 25、NeoForge 26.3.0.103+，[Curios API](https://github.com/TheIllusiveC4/Curios) 17.0+（必需）
 - 许可证：MIT（见 [LICENSE](LICENSE)）
 
 ## 玩法速览

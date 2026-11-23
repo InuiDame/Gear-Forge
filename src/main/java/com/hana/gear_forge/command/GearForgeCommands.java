@@ -12,10 +12,12 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -30,7 +32,7 @@ public class GearForgeCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("gear_forge")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> ((LevelBasedPermissionSet) source.permissions()).level().id() >= 2)
                 .then(Commands.literal("test")
                         .then(Commands.literal("spawnmob")
                                 // 用 string() 而不是 word()：word() 的 readUnquotedString 不允许冒号，
@@ -70,7 +72,7 @@ public class GearForgeCommands {
         RandomSource random = level.getRandom();
 
         String entityTypeStr = StringArgumentType.getString(ctx, "entityType");
-        ResourceLocation entityTypeId = ResourceLocation.tryParse(entityTypeStr);
+        Identifier entityTypeId = Identifier.tryParse(entityTypeStr);
         if (entityTypeId == null) {
             source.sendFailure(Component.literal("无效的实体类型: " + entityTypeStr));
             return 0;
@@ -95,7 +97,7 @@ public class GearForgeCommands {
 
         // 如果指定了参数但解析为空（例如空字符串），视为合法（全部默认0）
         for (int i = 0; i < count; i++) {
-            var entity = entityType.create(level);
+            var entity = entityType.create(level, EntitySpawnReason.COMMAND);
             if (entity == null) continue;
 
             if (entity instanceof LivingEntity livingEntity) {

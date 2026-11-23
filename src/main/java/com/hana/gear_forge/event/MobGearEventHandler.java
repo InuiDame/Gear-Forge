@@ -31,7 +31,7 @@ public class MobGearEventHandler {
         if (!(event.getEntity() instanceof Monster entity)) return;
 
         // 防止重复强化（例如跨维度传送时会再次加入世界）
-        if (entity.getPersistentData().getBoolean(GEARED_TAG)) return;
+        if (entity.getPersistentData().getBooleanOr(GEARED_TAG, false)) return;
 
         MobGearConfig config = ModConfigs.getMobGearConfig();
         Difficulty difficulty = event.getLevel().getDifficulty();

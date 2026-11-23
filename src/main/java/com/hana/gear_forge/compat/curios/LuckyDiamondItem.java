@@ -3,7 +3,7 @@ package com.hana.gear_forge.compat.curios;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -19,10 +19,10 @@ public class LuckyDiamondItem extends Item implements ICurioItem {
     }
 
     @Override
-    public Multimap<Holder<Attribute>, AttributeModifier> getAttributeModifiers(SlotContext slotContext, ResourceLocation id, ItemStack stack) {
+    public Multimap<Holder<Attribute>, AttributeModifier> getAttributeModifiers(SlotContext slotContext, Identifier id, ItemStack stack) {
         Multimap<Holder<Attribute>, AttributeModifier> multimap = ArrayListMultimap.create();
 
-        ResourceLocation modifierId = ResourceLocation.fromNamespaceAndPath("gear_forge", "lucky_diamond_luck");
+        Identifier modifierId = Identifier.fromNamespaceAndPath("gear_forge", "lucky_diamond_luck");
 
         multimap.put(Attributes.LUCK,
                 new AttributeModifier(

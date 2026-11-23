@@ -23,7 +23,7 @@ public final class ModBlocks {
     public static final DeferredBlock<ForgeTableBlock> FORGE_TABLE =
             BLOCKS.registerBlock("forge_table",
                     ForgeTableBlock::new,
-                    BlockBehaviour.Properties.of()
+                    () -> BlockBehaviour.Properties.of()
                             .mapColor(MapColor.METAL)
                             .strength(2.5F, 6.0F)
                             .sound(SoundType.METAL));

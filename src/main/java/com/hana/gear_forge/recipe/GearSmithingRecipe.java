@@ -8,12 +8,12 @@ import com.hana.gear_forge.config.UpgradeConfig;
 import com.hana.gear_forge.item.ModItems;
 import com.hana.gear_forge.util.GearHelper;
 import net.minecraft.core.Holder;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
@@ -168,7 +168,7 @@ public class GearSmithingRecipe implements SmithingRecipe {
     // ===================== 装配 =====================
 
     @Override
-    public ItemStack assemble(SmithingRecipeInput input, HolderLookup.Provider registries) {
+    public ItemStack assemble(SmithingRecipeInput input) {
         // 装配前复核分派逻辑：assemble 可能被配方书预览、机器方块或其它 mod 直接调用，
         // 不能假设调用方已经走过 matches()。
         if (!canApply(input)) return ItemStack.EMPTY;
@@ -308,8 +308,7 @@ public class GearSmithingRecipe implements SmithingRecipe {
         return true;
     }
 
-    @Override
-    public ItemStack getResultItem(HolderLookup.Provider registries) {
+    public ItemStack getResultItem() {
         return ItemStack.EMPTY;
     }
 
@@ -317,7 +316,6 @@ public class GearSmithingRecipe implements SmithingRecipe {
      * 必须显式返回 false：默认实现会因为 {@link #getIngredients()} 为空而判定为 incomplete，
      * 从而让配方被配方管理器过滤掉。
      */
-    @Override
     public boolean isIncomplete() {
         return false;
     }
@@ -330,7 +328,6 @@ public class GearSmithingRecipe implements SmithingRecipe {
      * 否则会出现"配方要求材料、但槽位不允许放入"的死锁——强化需要钻石、
      * 转生需要下界合金块，两者都必须能放进这一格。
      */
-    @Override
     public boolean isTemplateIngredient(ItemStack stack) {
         if (stack.isEmpty()) return false;
         UpgradeConfig config = ModConfigs.getUpgradeConfig();
@@ -345,12 +342,10 @@ public class GearSmithingRecipe implements SmithingRecipe {
                 && isItemMatchingId(stack, config.getReincarnationCostMaterial());
     }
 
-    @Override
     public boolean isBaseIngredient(ItemStack stack) {
         return GearHelper.isGearItem(stack) || isGemBaseItem(stack);
     }
 
-    @Override
     public boolean isAdditionIngredient(ItemStack stack) {
         return stack.is(ModItems.FORGE_HAMMER.get())
                 || stack.is(ModItems.REROLL_STONE.get())
@@ -366,8 +361,39 @@ public class GearSmithingRecipe implements SmithingRecipe {
                 || isGemItem(stack);
     }
 
+    // ---- 26.3 SmithingRecipe 接口：本配方是运行时分派型，Ingredient 仅作占位 ----
     @Override
-    public RecipeSerializer<?> getSerializer() {
+    public java.util.Optional<net.minecraft.world.item.crafting.Ingredient> templateIngredient() {
+        return java.util.Optional.empty();
+    }
+
+    @Override
+    public net.minecraft.world.item.crafting.Ingredient baseIngredient() {
+        return net.minecraft.world.item.crafting.Ingredient.of(net.minecraft.world.item.Items.AIR);
+    }
+
+    @Override
+    public java.util.Optional<net.minecraft.world.item.crafting.Ingredient> additionIngredient() {
+        return java.util.Optional.empty();
+    }
+
+    @Override
+    public boolean showNotification() {
+        return false;
+    }
+
+    @Override
+    public String group() {
+        return "";
+    }
+
+    @Override
+    public net.minecraft.world.item.crafting.PlacementInfo placementInfo() {
+        return net.minecraft.world.item.crafting.PlacementInfo.NOT_PLACEABLE;
+    }
+
+    @Override
+    public RecipeSerializer<? extends SmithingRecipe> getSerializer() {
         return ModRecipeSerializers.GEAR_SMITHING.get();
     }
 
@@ -413,7 +439,7 @@ public class GearSmithingRecipe implements SmithingRecipe {
     private static boolean isSwordLike(ItemStack stack) {
         if (stack.isEmpty()) return false;
         if (isCurvedBlade(stack)) return false;
-        return stack.getItem() instanceof net.minecraft.world.item.SwordItem;
+        return stack.has(DataComponents.WEAPON) && stack.is(net.minecraft.tags.ItemTags.SWORDS);
     }
 
     /** 是否已经是弧刀（避免"弧刀 → 弧刀"的无意义转换）。 */
@@ -480,7 +506,7 @@ public class GearSmithingRecipe implements SmithingRecipe {
 
     public static boolean isItemMatchingId(ItemStack stack, String itemId) {
         if (itemId == null || itemId.isEmpty()) return false;
-        ResourceLocation id = ResourceLocation.tryParse(itemId);
+        Identifier id = Identifier.tryParse(itemId);
         if (id == null) return false;
         return BuiltInRegistries.ITEM.getOptional(id).map(stack::is).orElse(false);
     }

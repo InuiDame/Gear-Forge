@@ -8,12 +8,13 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -62,7 +63,7 @@ public class ModEnchantmentEvents {
 
     @SubscribeEvent
     public static void onArrowHit(ProjectileImpactEvent event) {
-        if (!(event.getProjectile() instanceof AbstractArrow arrow) || arrow.level().isClientSide) return;
+        if (!(event.getProjectile() instanceof AbstractArrow arrow) || arrow.level().isClientSide()) return;
         if (!(arrow.getOwner() instanceof LivingEntity shooter)) return;
         if (event.getRayTraceResult().getType() == net.minecraft.world.phys.HitResult.Type.MISS) return;
 
@@ -74,9 +75,11 @@ public class ModEnchantmentEvents {
         // 闪电箭：在命中点召唤闪电（伤害由原版闪电结算，本类不再重复加成）。
         int lightning = getEnchantLevel(weapon, ModEnchantments.LIGHTNING_ARROW, level);
         if (lightning > 0) {
-            LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+            // 26.3：闪电实体常量移到 EntityTypes，create 需要 EntitySpawnReason；
+            // Entity#moveTo(Vec3) 被移除，定位改用 snapTo(Vec3)。
+            LightningBolt bolt = EntityTypes.LIGHTNING_BOLT.create(level, EntitySpawnReason.EVENT);
             if (bolt != null) {
-                bolt.moveTo(arrow.position());
+                bolt.snapTo(arrow.position());
                 if (shooter instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                     bolt.setCause(serverPlayer);
                 }
@@ -115,7 +118,7 @@ public class ModEnchantmentEvents {
         int frost = getEnchantLevel(weapon, ModEnchantments.FROST_ARROW, level);
         if (frost > 0) {
             amount += 0.5F * frost;
-            victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
+            victim.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,
                     (3 + frost) * 20, Math.min(frost - 1, 4)));
         }
 
@@ -158,8 +161,10 @@ public class ModEnchantmentEvents {
     private static int getEnchantLevel(ItemStack stack, net.minecraft.resources.ResourceKey<Enchantment> key,
                                        Level level) {
         if (stack.isEmpty()) return 0;
-        return level.registryAccess().registryOrThrow(Registries.ENCHANTMENT)
-                .getHolder(key)
+        // 26.3：RegistryAccess#registryOrThrow 改名为 lookupOrThrow；
+        // Registry#getHolder(ResourceKey) 改为继承的 HolderLookup.RegistryLookup#get(ResourceKey)。
+        return level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+                .get(key)
                 .map(holder -> stack.getEnchantmentLevel(holder))
                 .orElse(0);
     }
@@ -235,17 +240,17 @@ public class ModEnchantmentEvents {
     private static ItemStack getRandomOre(ServerLevel level) {
         record WeightedOre(ItemStack stack, int weight) {}
         List<WeightedOre> ores = List.of(
-                new WeightedOre(new ItemStack(Items.COAL, 1 + level.random.nextInt(2)), 30),
+                new WeightedOre(new ItemStack(Items.COAL, 1 + level.getRandom().nextInt(2)), 30),
                 new WeightedOre(new ItemStack(Items.COPPER_ORE, 1), 20),
                 new WeightedOre(new ItemStack(Items.IRON_ORE, 1), 20),
                 new WeightedOre(new ItemStack(Items.GOLD_ORE, 1), 10),
-                new WeightedOre(new ItemStack(Items.LAPIS_LAZULI, 2 + level.random.nextInt(4)), 8),
-                new WeightedOre(new ItemStack(Items.REDSTONE, 2 + level.random.nextInt(3)), 7),
+                new WeightedOre(new ItemStack(Items.LAPIS_LAZULI, 2 + level.getRandom().nextInt(4)), 8),
+                new WeightedOre(new ItemStack(Items.REDSTONE, 2 + level.getRandom().nextInt(3)), 7),
                 new WeightedOre(new ItemStack(Items.DIAMOND, 1), 3),
                 new WeightedOre(new ItemStack(Items.EMERALD, 1), 2)
         );
         int totalWeight = ores.stream().mapToInt(WeightedOre::weight).sum();
-        int roll = level.random.nextInt(totalWeight);
+        int roll = level.getRandom().nextInt(totalWeight);
         int cumulative = 0;
         for (WeightedOre ore : ores) {
             cumulative += ore.weight;

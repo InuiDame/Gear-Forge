@@ -4,9 +4,9 @@
 
 ## 1. 环境准备
 
-- JDK 21。Gradle toolchain 会固定用 21 编译，本机没有时 foojay 插件会尝试自动下载。
+- JDK 25。Gradle toolchain 会固定用 25 编译，本机没有时 foojay 插件会尝试自动下载。
 - 不需要单独安装 Gradle。`gradlew` / `gradlew.bat` 会按 `gradle/wrapper/gradle-wrapper.properties` 从阿里云镜像下载 Gradle 9.2.0。
-- 首次构建需要联网，要访问：NeoForge Maven（NeoForge、NeoForm、Parchment）、`maven.theillusivec4.top`（Curios）、Gradle 插件门户。之后可以加 `--offline`。
+- 首次构建需要联网，要访问：NeoForge Maven（NeoForge、NeoForm）、`maven.theillusivec4.top`（Curios）、Gradle 插件门户。之后可以加 `--offline`。
 - 之前的 AI 日志里记录过 Gradle 证书校验失败的问题。遇到时先检查代理和系统时间，不要在 `gradle.properties` 里关闭 SSL 校验。
 
 ### IntelliJ IDEA
@@ -37,7 +37,7 @@
   两边不应该有同路径文件。
 - 模组元数据只改 `gradle.properties`（版本、名称、作者、描述、依赖版本范围），模板 `src/main/templates/META-INF/neoforge.mods.toml` 一般不用动。注意模板里的注释也会被当成 Groovy 模板解析，不能出现 `${`。
 - JEI 只做编译期依赖：API jar 放在 `libs/` 并随仓库提交（Maven 下载会被 TLS 层拦截）。开发客户端默认**不带**完整 JEI，想看 JEI 界面需要自己把 JEI 放进 `run/mods/`；玩家侧 JEI 是可选依赖，没装时插件类不会被扫描。
-- 新增 mixin 时同步登记到 `gear_forge.mixins.json`。注入目标用 Mojang 名（NeoForge 1.21.1 运行时就是 Mojang 映射，不需要 refmap），并且**写全方法描述符**，避免将来出现同名重载时注入到错误目标。
+- 新增 mixin 时同步登记到 `gear_forge.mixins.json`。注入目标用 Mojang 名（26.x 已移除混淆，官方参数名即 Mojang 名，不需要 refmap），并且**写全方法描述符**，避免将来出现同名重载时注入到错误目标。
 - 游戏内配置在 `run/config/gear_forge/*.json`，服务端启动时读取。登录时会把服务端快照下发给客户端（ADR-0007），所以联机时以服务端文件为准；改完要重启服务端。
 - 附魔的 `supported_items` / `primary_items` 如果要同时覆盖弓和弩，**不能写成数组**——`HolderSet` 的数组写法不接受带 `#` 的标签条目，会直接让服务器启动失败（`Not a valid resource location: #minecraft:...`）。正确做法是新建一个物品标签（参考 `data/gear_forge/tags/item/enchantable/arrow_weapons.json`）再整体引用。
 - 附魔等级一律用 `registry.getHolder(key)` 而不是 `getHolderOrThrow`，这样数据包删掉某条附魔时返回 0 而不是每次命中/破坏都抛异常。

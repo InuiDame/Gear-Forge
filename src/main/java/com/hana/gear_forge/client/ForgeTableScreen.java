@@ -3,10 +3,11 @@ package com.hana.gear_forge.client;
 import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.menu.ForgeTableMenu;
 import com.hana.gear_forge.menu.ModMenus;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.ItemCombinerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -35,8 +36,8 @@ public final class ForgeTableScreen {
     /** 只保留背景与错误图标的极简界面。 */
     public static class Screen extends ItemCombinerScreen<ForgeTableMenu> {
 
-        private static final ResourceLocation ERROR_SPRITE =
-                ResourceLocation.withDefaultNamespace("container/smithing/error");
+        private static final Identifier ERROR_SPRITE =
+                Identifier.withDefaultNamespace("container/smithing/error");
 
         public Screen(ForgeTableMenu menu, Inventory playerInventory, Component title) {
             super(menu, playerInventory, title, ForgeTableMenu.GUI_TEXTURE);
@@ -45,9 +46,9 @@ public final class ForgeTableScreen {
         }
 
         @Override
-        protected void renderErrorIcon(GuiGraphics graphics, int x, int y) {
+        protected void extractErrorIcon(GuiGraphicsExtractor graphics, int x, int y) {
             if (this.menu.hasRecipeError()) {
-                graphics.blitSprite(ERROR_SPRITE, x + 65, y + 46, 28, 21);
+                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, ERROR_SPRITE, x + 65, y + 46, 28, 21);
             }
         }
     }

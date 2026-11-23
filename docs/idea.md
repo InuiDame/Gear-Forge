@@ -5,5 +5,5 @@
 ## Project target
 
 - Loader: neoforge
-- Minecraft: 1.21.1
+- Minecraft: 26.3（26.3 分支）
 - Namespace: Gear_Forge

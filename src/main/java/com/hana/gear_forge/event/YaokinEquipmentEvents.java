@@ -4,7 +4,7 @@ import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.compat.curios.YaokinCoinItem;
 import com.hana.gear_forge.content.ModMobEffects;
 import com.hana.gear_forge.item.ModItems;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -36,8 +36,8 @@ import top.theillusivec4.curios.api.CuriosApi;
 @EventBusSubscriber(modid = GearForgeMod.MODID)
 public final class YaokinEquipmentEvents {
 
-    private static final ResourceLocation COIN_DIAMOND_DOUBLE_ID =
-            ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "yaokin_coin_diamond_double");
+    private static final Identifier COIN_DIAMOND_DOUBLE_ID =
+            Identifier.fromNamespaceAndPath(GearForgeMod.MODID, "yaokin_coin_diamond_double");
 
     private static final int GILDED_REFRESH_TICKS = 60;
     private static final int COIN_MIDAS_TICKS = 20 * 30;

@@ -5,6 +5,7 @@ import com.hana.gear_forge.config.ModConfigs;
 import com.hana.gear_forge.config.UpgradeConfig;
 import com.hana.gear_forge.item.ModItems;
 import com.hana.gear_forge.util.GearHelper;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerLevelAccess;
@@ -13,7 +14,9 @@ import net.minecraft.world.inventory.ItemCombinerMenuSlotDefinition;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.inventory.SmithingMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeAccess;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipePropertySet;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
@@ -22,6 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 
 /**
@@ -44,7 +48,9 @@ public class ForgeTableMenu extends ItemCombinerMenu {
     public static final int RESULT_SLOT = 3;
 
     private final Level level;
-    private final List<RecipeHolder<SmithingRecipe>> recipes;
+    private final RecipePropertySet templateItemTest;
+    private final RecipePropertySet baseItemTest;
+    private final RecipePropertySet additionItemTest;
     @Nullable
     private RecipeHolder<SmithingRecipe> selectedRecipe;
 
@@ -53,20 +59,27 @@ public class ForgeTableMenu extends ItemCombinerMenu {
     }
 
     public ForgeTableMenu(int containerId, Inventory playerInventory, ContainerLevelAccess access) {
-        super(ModMenus.FORGE_TABLE.get(), containerId, playerInventory, access);
-        this.level = playerInventory.player.level();
-        this.recipes = this.level.getRecipeManager().getAllRecipesFor(RecipeType.SMITHING);
+        this(containerId, playerInventory, access, playerInventory.player.level());
     }
 
-    @Override
-    protected ItemCombinerMenuSlotDefinition createInputSlotDefinitions() {
+    private ForgeTableMenu(int containerId, Inventory playerInventory, ContainerLevelAccess access, Level level) {
+        super(ModMenus.FORGE_TABLE.get(), containerId, playerInventory, access,
+                createInputSlotDefinitions(level.recipeAccess()));
+        this.level = level;
+        this.templateItemTest = level.recipeAccess().propertySet(RecipePropertySet.SMITHING_TEMPLATE);
+        this.baseItemTest = level.recipeAccess().propertySet(RecipePropertySet.SMITHING_BASE);
+        this.additionItemTest = level.recipeAccess().propertySet(RecipePropertySet.SMITHING_ADDITION);
+    }
+
+    /** 26.3 中原版通过配方属性集判断物品能否放入三个槽，替代已移除的 isXxxIngredient。 */
+    private static ItemCombinerMenuSlotDefinition createInputSlotDefinitions(RecipeAccess recipes) {
+        RecipePropertySet templateItemTest = recipes.propertySet(RecipePropertySet.SMITHING_TEMPLATE);
+        RecipePropertySet baseItemTest = recipes.propertySet(RecipePropertySet.SMITHING_BASE);
+        RecipePropertySet additionItemTest = recipes.propertySet(RecipePropertySet.SMITHING_ADDITION);
         return ItemCombinerMenuSlotDefinition.create()
-                .withSlot(TEMPLATE_SLOT, 8, 48,
-                        stack -> this.recipes.stream().anyMatch(r -> r.value().isTemplateIngredient(stack)))
-                .withSlot(BASE_SLOT, 26, 48,
-                        stack -> this.recipes.stream().anyMatch(r -> r.value().isBaseIngredient(stack)))
-                .withSlot(ADDITIONAL_SLOT, 44, 48,
-                        stack -> this.recipes.stream().anyMatch(r -> r.value().isAdditionIngredient(stack)))
+                .withSlot(TEMPLATE_SLOT, 8, 48, templateItemTest::test)
+                .withSlot(BASE_SLOT, 26, 48, baseItemTest::test)
+                .withSlot(ADDITIONAL_SLOT, 44, 48, additionItemTest::test)
                 .withResultSlot(RESULT_SLOT, 98, 48)
                 .build();
     }
@@ -85,25 +98,34 @@ public class ForgeTableMenu extends ItemCombinerMenu {
     @Override
     public void createResult() {
         SmithingRecipeInput input = this.createRecipeInput();
-        List<RecipeHolder<SmithingRecipe>> matches =
-                this.level.getRecipeManager().getRecipesFor(RecipeType.SMITHING, input, this.level);
-        if (matches.isEmpty()) {
-            this.resultSlots.setItem(0, ItemStack.EMPTY);
+        Optional<RecipeHolder<SmithingRecipe>> foundRecipe;
+        if (this.level instanceof ServerLevel serverLevel) {
+            foundRecipe = serverLevel.recipeAccess().getRecipeFor(RecipeType.SMITHING, input, serverLevel);
+        } else {
+            // 26.3 客户端只同步配方属性集，不持有完整配方，和原版 SmithingMenu 一样交给服务端计算结果。
+            foundRecipe = Optional.empty();
+        }
+        foundRecipe.ifPresentOrElse(holder -> {
+            ItemStack result = holder.value().assemble(input);
+            if (result.isItemEnabled(this.level.enabledFeatures())) {
+                this.selectedRecipe = holder;
+                this.resultSlots.setRecipeUsed(holder);
+                this.resultSlots.setItem(0, result);
+                return;
+            }
             this.selectedRecipe = null;
-            return;
-        }
-        RecipeHolder<SmithingRecipe> holder = matches.get(0);
-        ItemStack result = holder.value().assemble(input, this.level.registryAccess());
-        if (result.isItemEnabled(this.level.enabledFeatures())) {
-            this.selectedRecipe = holder;
-            this.resultSlots.setRecipeUsed(holder);
-            this.resultSlots.setItem(0, result);
-        }
+            this.resultSlots.setRecipeUsed(null);
+            this.resultSlots.setItem(0, ItemStack.EMPTY);
+        }, () -> {
+            this.selectedRecipe = null;
+            this.resultSlots.setRecipeUsed(null);
+            this.resultSlots.setItem(0, ItemStack.EMPTY);
+        });
     }
 
     @Override
     protected void onTake(Player player, ItemStack result) {
-        result.onCraftedBy(player.level(), player, result.getCount());
+        result.onCraftedBy(player, result.getCount());
         this.resultSlots.awardUsedRecipes(player, this.getRelevantItems());
 
         // 客户端只做预测，真正的材料扣除与掷骰都在服务端。
@@ -173,22 +195,16 @@ public class ForgeTableMenu extends ItemCombinerMenu {
         return this.findSlotToQuickMoveTo(stack).isPresent();
     }
 
-    @Override
-    public int getSlotToQuickMoveTo(ItemStack stack) {
-        return this.findSlotToQuickMoveTo(stack).orElse(TEMPLATE_SLOT);
-    }
-
+    /** 用 26.3 的配方属性集判断物品能放入哪个输入槽（原 isXxxIngredient 已移除）。 */
     private OptionalInt findSlotToQuickMoveTo(ItemStack stack) {
-        return this.recipes.stream()
-                .flatMapToInt(holder -> findSlotMatchingIngredient(holder.value(), stack).stream())
-                .filter(slot -> !this.getSlot(slot).hasItem())
-                .findFirst();
-    }
-
-    private static OptionalInt findSlotMatchingIngredient(SmithingRecipe recipe, ItemStack stack) {
-        if (recipe.isTemplateIngredient(stack)) return OptionalInt.of(TEMPLATE_SLOT);
-        if (recipe.isBaseIngredient(stack)) return OptionalInt.of(BASE_SLOT);
-        return recipe.isAdditionIngredient(stack) ? OptionalInt.of(ADDITIONAL_SLOT) : OptionalInt.empty();
+        if (!this.getSlot(TEMPLATE_SLOT).hasItem() && this.templateItemTest.test(stack)) {
+            return OptionalInt.of(TEMPLATE_SLOT);
+        }
+        if (!this.getSlot(BASE_SLOT).hasItem() && this.baseItemTest.test(stack)) {
+            return OptionalInt.of(BASE_SLOT);
+        }
+        return !this.getSlot(ADDITIONAL_SLOT).hasItem() && this.additionItemTest.test(stack)
+                ? OptionalInt.of(ADDITIONAL_SLOT) : OptionalInt.empty();
     }
 
     /** 供客户端界面判断是否显示"缺材料"提示。 */
@@ -200,6 +216,6 @@ public class ForgeTableMenu extends ItemCombinerMenu {
     }
 
     /** 界面贴图沿用原版锻造台。 */
-    public static final net.minecraft.resources.ResourceLocation GUI_TEXTURE =
-            net.minecraft.resources.ResourceLocation.withDefaultNamespace("textures/gui/container/smithing.png");
+    public static final net.minecraft.resources.Identifier GUI_TEXTURE =
+            net.minecraft.resources.Identifier.withDefaultNamespace("textures/gui/container/smithing.png");
 }

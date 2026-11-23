@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * 服务端 → 客户端的配置快照。
@@ -21,7 +21,7 @@ public record ConfigSyncPayload(String affixes, String upgrades, String gems, St
         implements CustomPacketPayload {
 
     public static final Type<ConfigSyncPayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "config_sync"));
+            new Type<>(Identifier.fromNamespaceAndPath(GearForgeMod.MODID, "config_sync"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ConfigSyncPayload> STREAM_CODEC =
             StreamCodec.composite(

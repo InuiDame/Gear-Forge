@@ -35,7 +35,7 @@ public class YaokinAppleItem extends Item {
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         ItemStack result = super.finishUsingItem(stack, level, entity);
-        if (!level.isClientSide && entity instanceof ServerPlayer player) {
+        if (!level.isClientSide() && entity instanceof ServerPlayer player) {
             player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, ABSORPTION_TICKS, 0));
             player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, REGENERATION_TICKS, 1));
             MidasTouchHandler.add(player, MidasTouchHandler.Source.APPLE, 2, MIDAS_TICKS);

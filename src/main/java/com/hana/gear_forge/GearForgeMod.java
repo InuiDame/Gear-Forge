@@ -29,7 +29,6 @@ public class GearForgeMod {
         ModRecipeSerializers.RECIPE_SERIALIZERS.register(modEventBus);
         ModBlocks.BLOCKS.register(modEventBus);
         ModMenus.MENU_TYPES.register(modEventBus);
-        YaokinMaterial.ARMOR_MATERIALS.register(modEventBus);
         ModMobEffects.MOB_EFFECTS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         ModGlobalLootModifiers.GLM_SERIALIZERS.register(modEventBus);

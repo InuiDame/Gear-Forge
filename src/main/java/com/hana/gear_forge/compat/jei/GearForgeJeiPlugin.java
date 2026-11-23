@@ -11,7 +11,7 @@ import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -38,15 +38,15 @@ import java.util.List;
 @JeiPlugin
 public class GearForgeJeiPlugin implements IModPlugin {
 
-    public static final ResourceLocation UID =
-            ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "jei_plugin");
+    public static final Identifier UID =
+            Identifier.fromNamespaceAndPath(GearForgeMod.MODID, "jei_plugin");
 
     /** 自定义的"锻造台操作"配方类型。 */
     public static final RecipeType<SmithingDisplay> FORGE_SMITHING =
             RecipeType.create(GearForgeMod.MODID, "forge_smithing", SmithingDisplay.class);
 
     @Override
-    public ResourceLocation getPluginUid() {
+    public Identifier getPluginUid() {
         return UID;
     }
 
@@ -183,15 +183,18 @@ public class GearForgeJeiPlugin implements IModPlugin {
             net.minecraft.world.item.Item base,
             net.minecraft.world.item.Item result) {
         var recipe = new net.minecraft.world.item.crafting.SmithingTransformRecipe(
-                template,
+                new net.minecraft.world.item.crafting.Recipe.CommonInfo(true),
+                java.util.Optional.of(template),
                 net.minecraft.world.item.crafting.Ingredient.of(base),
-                material,
-                new ItemStack(result));
-        out.add(new RecipeHolder<>(
-                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID,
-                        "jei_yaokin_" + net.minecraft.core.registries.BuiltInRegistries.ITEM
-                                .getKey(result).getPath()),
-                recipe));
+                java.util.Optional.of(material),
+                net.minecraft.world.item.ItemStackTemplate.fromStack(new ItemStack(result)));
+        net.minecraft.resources.ResourceKey<net.minecraft.world.item.crafting.Recipe<?>> recipeKey =
+                net.minecraft.resources.ResourceKey.create(
+                        net.minecraft.core.registries.Registries.RECIPE,
+                        Identifier.fromNamespaceAndPath(GearForgeMod.MODID,
+                                "jei_yaokin_" + net.minecraft.core.registries.BuiltInRegistries.ITEM
+                                        .getKey(result).getPath()));
+        out.add(new RecipeHolder<>(recipeKey, recipe));
     }
 
     /** 让编译器知道 ModEnchantments 的 import 有意义（附魔书在 JEI 里也走锻造分类）。 */

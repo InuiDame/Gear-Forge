@@ -32,7 +32,7 @@ public final class EnchantmentTooltips {
         ItemStack stack = event.getItemStack();
         if (stack.isEmpty() || event.getEntity() == null) return;
 
-        var lookup = event.getEntity().level().registryAccess().registry(Registries.ENCHANTMENT);
+        var lookup = event.getEntity().level().registryAccess().lookup(Registries.ENCHANTMENT);
         if (lookup.isEmpty()) return;
         Registry<Enchantment> registry = lookup.get();
 
@@ -47,10 +47,10 @@ public final class EnchantmentTooltips {
 
     private static void addDesc(ItemStack stack, Registry<Enchantment> registry,
                                ResourceKey<Enchantment> key, List<Component> tooltips) {
-        registry.getHolder(key).ifPresent(holder -> {
+        registry.get(key).ifPresent(holder -> {
             if (stack.getEnchantmentLevel(holder) > 0) {
-                tooltips.add(Component.translatable("enchantment." + key.location().getNamespace()
-                        + "." + key.location().getPath() + ".desc").withStyle(ChatFormatting.GRAY));
+                tooltips.add(Component.translatable("enchantment." + key.identifier().getNamespace()
+                        + "." + key.identifier().getPath() + ".desc").withStyle(ChatFormatting.GRAY));
             }
         });
     }

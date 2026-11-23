@@ -47,7 +47,7 @@ public class ForgeTableBlock extends SmithingTableBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                Player player, BlockHitResult hitResult) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
         player.openMenu(state.getMenuProvider(level, pos));

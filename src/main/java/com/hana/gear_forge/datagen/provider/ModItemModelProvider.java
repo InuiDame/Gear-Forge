@@ -2,55 +2,68 @@ package com.hana.gear_forge.datagen.provider;
 
 import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.item.ModItems;
+import net.minecraft.client.data.models.BlockModelGenerators;
+import net.minecraft.client.data.models.ItemModelGenerators;
+import net.minecraft.client.data.models.ModelProvider;
+import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.data.PackOutput;
-import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
-public class ModItemModelProvider extends ItemModelProvider {
+/**
+ * 26.3 起 NeoForge 的 ItemModelProvider 被删除，改用原版 {@link ModelProvider} +
+ * {@link ItemModelGenerators}。
+ *
+ * <p>注意：原版 ModelProvider 会按 modId 自动为所有本模组的 BlockItem 生成模型（指向方块模型），
+ * 所以 forge_table 无需手动注册；其余非方块物品必须逐个注册，否则校验会失败。
+ */
+public class ModItemModelProvider extends ModelProvider {
 
-    public ModItemModelProvider(PackOutput output, ExistingFileHelper existingFileHelper) {
-        super(output, GearForgeMod.MODID, existingFileHelper);
+    public ModItemModelProvider(PackOutput output) {
+        super(output, GearForgeMod.MODID);
     }
 
     @Override
-    protected void registerModels() {
-        basicItem(ModItems.REROLL_STONE.get());
-        handheldItem(ModItems.FORGE_HAMMER.get());
-        basicItem(ModItems.UPGRADE_CRYSTAL.get());
-        basicItem(ModItems.RUBY.get());
-        basicItem(ModItems.SAPPHIRE.get());
-        basicItem(ModItems.EMERALD_GEM.get());
-        basicItem(ModItems.TOPAZ.get());
-        basicItem(ModItems.JADE.get());
-        basicItem(ModItems.ONYX.get());
-        basicItem(ModItems.TRANSFER_ORB.get());
-        basicItem(ModItems.GEM_REMOVER.get());
-        basicItem(ModItems.REINCARNATION_STONE.get());
-        // 这两个此前是手写在 src/main/resources 里的模型，与 ADR-0006「generated 是唯一来源」冲突，
-        // 也让“重跑 runData 即可完整重建资源”不成立。
-        basicItem(ModItems.LUCKY_DIAMOND.get());
-        basicItem(ModItems.CURSED_ANVIL.get());
-        // 方块物品的模型继承方块模型，用原版锻造台的贴图拼出紫色版本。
-        withExistingParent("forge_table", modLoc("block/forge_table"));
+    protected void registerModels(BlockModelGenerators blockModels, ItemModelGenerators itemModels) {
+        // ===================== 原有材料 =====================
+        flat(itemModels, ModItems.REROLL_STONE.get());
+        handheld(itemModels, ModItems.FORGE_HAMMER.get());
+        flat(itemModels, ModItems.UPGRADE_CRYSTAL.get());
+        flat(itemModels, ModItems.RUBY.get());
+        flat(itemModels, ModItems.SAPPHIRE.get());
+        flat(itemModels, ModItems.EMERALD_GEM.get());
+        flat(itemModels, ModItems.TOPAZ.get());
+        flat(itemModels, ModItems.JADE.get());
+        flat(itemModels, ModItems.ONYX.get());
+        flat(itemModels, ModItems.TRANSFER_ORB.get());
+        flat(itemModels, ModItems.GEM_REMOVER.get());
+        flat(itemModels, ModItems.REINCARNATION_STONE.get());
+        flat(itemModels, ModItems.LUCKY_DIAMOND.get());
+        flat(itemModels, ModItems.CURSED_ANVIL.get());
+        // FORGE_TABLE 是 BlockItem，由 ModelProvider 自动指向 gear_forge:block/forge_table。
 
-        // 耀金系列
-        basicItem(ModItems.YAOKIN_INGOT.get());
-        basicItem(ModItems.YAOKIN_APPLE.get());
-        basicItem(ModItems.YAOKIN_COIN.get());
-        handheldItem(ModItems.YAOKIN_HAMMER.get());
-        handheldItem(ModItems.YAOKIN_SWORD.get());
-        handheldItem(ModItems.YAOKIN_PICKAXE.get());
-        handheldItem(ModItems.YAOKIN_AXE.get());
-        handheldItem(ModItems.YAOKIN_SHOVEL.get());
-        handheldItem(ModItems.YAOKIN_HOE.get());
-        handheldItem(ModItems.DIAMOND_CURVED_BLADE.get());
-        handheldItem(ModItems.NETHERITE_CURVED_BLADE.get());
-        handheldItem(ModItems.YAOKIN_CURVED_BLADE.get());
-        basicItem(ModItems.YAOKIN_HELMET.get());
-        basicItem(ModItems.YAOKIN_CHESTPLATE.get());
-        basicItem(ModItems.YAOKIN_LEGGINGS.get());
-        basicItem(ModItems.YAOKIN_BOOTS.get());
-
+        // ===================== 耀金系列 =====================
+        flat(itemModels, ModItems.YAOKIN_INGOT.get());
+        flat(itemModels, ModItems.YAOKIN_APPLE.get());
+        flat(itemModels, ModItems.YAOKIN_COIN.get());
+        handheld(itemModels, ModItems.YAOKIN_HAMMER.get());
+        handheld(itemModels, ModItems.YAOKIN_SWORD.get());
+        handheld(itemModels, ModItems.YAOKIN_PICKAXE.get());
+        handheld(itemModels, ModItems.YAOKIN_AXE.get());
+        handheld(itemModels, ModItems.YAOKIN_SHOVEL.get());
+        handheld(itemModels, ModItems.YAOKIN_HOE.get());
+        handheld(itemModels, ModItems.DIAMOND_CURVED_BLADE.get());
+        handheld(itemModels, ModItems.NETHERITE_CURVED_BLADE.get());
+        handheld(itemModels, ModItems.YAOKIN_CURVED_BLADE.get());
+        flat(itemModels, ModItems.YAOKIN_HELMET.get());
+        flat(itemModels, ModItems.YAOKIN_CHESTPLATE.get());
+        flat(itemModels, ModItems.YAOKIN_LEGGINGS.get());
+        flat(itemModels, ModItems.YAOKIN_BOOTS.get());
     }
 
+    private static void flat(ItemModelGenerators itemModels, net.minecraft.world.item.Item item) {
+        itemModels.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
+    }
+
+    private static void handheld(ItemModelGenerators itemModels, net.minecraft.world.item.Item item) {
+        itemModels.generateFlatItem(item, ModelTemplates.FLAT_HANDHELD_ITEM);
+    }
 }

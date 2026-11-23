@@ -5,17 +5,18 @@ import com.google.common.collect.Multimap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
+import java.util.function.Consumer;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.type.capability.ICurioItem;
 
-import java.util.List;
 
 /**
  * 耀金硬币：小饰品。
@@ -25,8 +26,8 @@ import java.util.List;
  */
 public class YaokinCoinItem extends Item implements ICurioItem {
 
-    public static final ResourceLocation LUCK_MODIFIER_ID =
-            ResourceLocation.fromNamespaceAndPath("gear_forge", "yaokin_coin_luck");
+    public static final Identifier LUCK_MODIFIER_ID =
+            Identifier.fromNamespaceAndPath("gear_forge", "yaokin_coin_luck");
 
     /** 与幸运钻石的 +20 对齐，同时装备时额外补同样的数值。 */
     public static final double LUCKY_DIAMOND_BONUS = 20.0D;
@@ -37,7 +38,7 @@ public class YaokinCoinItem extends Item implements ICurioItem {
 
     @Override
     public Multimap<Holder<Attribute>, AttributeModifier> getAttributeModifiers(
-            SlotContext slotContext, ResourceLocation id, ItemStack stack) {
+            SlotContext slotContext, Identifier id, ItemStack stack) {
         Multimap<Holder<Attribute>, AttributeModifier> multimap = ArrayListMultimap.create();
         multimap.put(Attributes.LUCK, new AttributeModifier(
                 LUCK_MODIFIER_ID, 1.0D, AttributeModifier.Operation.ADD_VALUE));
@@ -45,9 +46,9 @@ public class YaokinCoinItem extends Item implements ICurioItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context,
-                                List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("tooltip.gear_forge.yaokin_coin").withStyle(ChatFormatting.GOLD));
-        super.appendHoverText(stack, context, tooltip, flag);
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display,
+                                Consumer<Component> tooltip, TooltipFlag flag) {
+        tooltip.accept(Component.translatable("tooltip.gear_forge.yaokin_coin").withStyle(ChatFormatting.GOLD));
+        super.appendHoverText(stack, context, display, tooltip, flag);
     }
 }

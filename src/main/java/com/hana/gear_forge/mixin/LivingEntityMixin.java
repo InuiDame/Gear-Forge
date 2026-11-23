@@ -42,7 +42,12 @@ public abstract class LivingEntityMixin {
         if (!item.is(Items.BOW) && !item.is(Items.CROSSBOW)) return;
 
         double total = GearHelper.getBowChargeSpeed(item);
-        for (ItemStack armor : player.getArmorSlots()) {
+        for (net.minecraft.world.entity.EquipmentSlot slot : new net.minecraft.world.entity.EquipmentSlot[]{
+                net.minecraft.world.entity.EquipmentSlot.HEAD,
+                net.minecraft.world.entity.EquipmentSlot.CHEST,
+                net.minecraft.world.entity.EquipmentSlot.LEGS,
+                net.minecraft.world.entity.EquipmentSlot.FEET}) {
+            ItemStack armor = player.getItemBySlot(slot);
             if (!armor.isEmpty()) {
                 total += GearHelper.getBowChargeSpeed(armor);
             }
@@ -55,7 +60,7 @@ public abstract class LivingEntityMixin {
         }
 
         // 累加小数部分，攒够 1 tick 才真正推进，保证长期推进速率与配置值一致。
-        double acc = data.getDouble(GEAR_FORGE_CHARGE_ACC) + total;
+        double acc = data.getDoubleOr(GEAR_FORGE_CHARGE_ACC, 0.0) + total;
         int decrease = (int) acc;
         acc -= decrease;
         if (acc <= 1.0E-6) {
