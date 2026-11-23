@@ -12,10 +12,16 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.EnchantedBookItem;
+import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.ShovelItem;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -102,15 +108,61 @@ public class ModItems {
                             java.util.List.of(
                                     ResourceLocation.withDefaultNamespace("item/empty_slot_ingot"))));
 
-    /** 耀金铁锤：把剑重新锻打成弧刀。 */
+    /** 耀金铁锤：把剑重新锻打成对应材质的弧刀。 */
     public static final DeferredItem<Item> YAOKIN_HAMMER = registerItem("yaokin_hammer",
             () -> new YaokinHammerItem(new Item.Properties().stacksTo(1).fireResistant()));
 
-    /** 耀金弧刀。 */
-    public static final DeferredItem<Item> YAOKIN_CURVED_BLADE = registerItem("yaokin_curved_blade",
-            () -> new YaokinCurvedBladeItem(new Item.Properties()
+    /** 耀金剑：标准剑属性，8 点伤害、1.6 攻速。 */
+    public static final DeferredItem<SwordItem> YAOKIN_SWORD = registerTyped("yaokin_sword",
+            () -> new SwordItem(YaokinMaterial.TIER, new Item.Properties()
                     .fireResistant()
-                    .attributes(YaokinCurvedBladeItem.createBladeAttributes())));
+                    .attributes(SwordItem.createAttributes(YaokinMaterial.TIER, 3, -2.4F))));
+
+    /** 耀金镐。 */
+    public static final DeferredItem<PickaxeItem> YAOKIN_PICKAXE = registerTyped("yaokin_pickaxe",
+            () -> new PickaxeItem(YaokinMaterial.TIER, new Item.Properties()
+                    .fireResistant()
+                    .attributes(PickaxeItem.createAttributes(YaokinMaterial.TIER, 1.0F, -2.8F))));
+
+    /** 耀金斧。 */
+    public static final DeferredItem<AxeItem> YAOKIN_AXE = registerTyped("yaokin_axe",
+            () -> new AxeItem(YaokinMaterial.TIER, new Item.Properties()
+                    .fireResistant()
+                    .attributes(AxeItem.createAttributes(YaokinMaterial.TIER, 5.0F, -3.0F))));
+
+    /** 耀金锹。 */
+    public static final DeferredItem<ShovelItem> YAOKIN_SHOVEL = registerTyped("yaokin_shovel",
+            () -> new ShovelItem(YaokinMaterial.TIER, new Item.Properties()
+                    .fireResistant()
+                    .attributes(ShovelItem.createAttributes(YaokinMaterial.TIER, 1.5F, -3.0F))));
+
+    /** 耀金锄。 */
+    public static final DeferredItem<HoeItem> YAOKIN_HOE = registerTyped("yaokin_hoe",
+            () -> new HoeItem(YaokinMaterial.TIER, new Item.Properties()
+                    .fireResistant()
+                    .attributes(HoeItem.createAttributes(YaokinMaterial.TIER, -4.0F, 0.0F))));
+
+    // ===================== 弧刀 =====================
+
+    /** 钻石弧刀：钻石剑用耀金铁锤重锻而成。 */
+    public static final DeferredItem<CurvedBladeItem> DIAMOND_CURVED_BLADE =
+            registerTyped("diamond_curved_blade",
+                    () -> new CurvedBladeItem(Tiers.DIAMOND, new Item.Properties()
+                            .attributes(CurvedBladeItem.createBladeAttributes(Tiers.DIAMOND))));
+
+    /** 下界合金弧刀：下界合金剑用耀金铁锤重锻而成。 */
+    public static final DeferredItem<CurvedBladeItem> NETHERITE_CURVED_BLADE =
+            registerTyped("netherite_curved_blade",
+                    () -> new CurvedBladeItem(Tiers.NETHERITE, new Item.Properties()
+                            .fireResistant()
+                            .attributes(CurvedBladeItem.createBladeAttributes(Tiers.NETHERITE))));
+
+    /** 耀金弧刀：耀金剑（或其它剑）用耀金铁锤重锻而成。 */
+    public static final DeferredItem<CurvedBladeItem> YAOKIN_CURVED_BLADE =
+            registerTyped("yaokin_curved_blade",
+                    () -> new CurvedBladeItem(YaokinMaterial.TIER, new Item.Properties()
+                            .fireResistant()
+                            .attributes(CurvedBladeItem.createBladeAttributes(YaokinMaterial.TIER))));
 
     // ===================== 耀金套装 =====================
 

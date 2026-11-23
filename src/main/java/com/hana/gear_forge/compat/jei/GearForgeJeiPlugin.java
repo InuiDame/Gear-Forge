@@ -131,10 +131,22 @@ public class GearForgeJeiPlugin implements IModPlugin {
                 new ItemStack(ModItems.REINCARNATION_STONE.get()),
                 new ItemStack(Items.DIAMOND_SWORD),
                 "jei.gear_forge.reincarnate"));
-        // 耀金铁锤：剑 → 弧刀
+        // 耀金铁锤：剑 → 同材质弧刀
+        list.add(new SmithingDisplay(
+                ItemStack.EMPTY,
+                new ItemStack(Items.DIAMOND_SWORD),
+                new ItemStack(ModItems.YAOKIN_HAMMER.get()),
+                new ItemStack(ModItems.DIAMOND_CURVED_BLADE.get()),
+                "jei.gear_forge.curved_blade"));
         list.add(new SmithingDisplay(
                 ItemStack.EMPTY,
                 new ItemStack(Items.NETHERITE_SWORD),
+                new ItemStack(ModItems.YAOKIN_HAMMER.get()),
+                new ItemStack(ModItems.NETHERITE_CURVED_BLADE.get()),
+                "jei.gear_forge.curved_blade"));
+        list.add(new SmithingDisplay(
+                ItemStack.EMPTY,
+                new ItemStack(ModItems.YAOKIN_SWORD.get()),
                 new ItemStack(ModItems.YAOKIN_HAMMER.get()),
                 new ItemStack(ModItems.YAOKIN_CURVED_BLADE.get()),
                 "jei.gear_forge.curved_blade"));

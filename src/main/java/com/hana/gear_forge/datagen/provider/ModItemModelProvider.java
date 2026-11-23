@@ -37,6 +37,13 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.YAOKIN_INGOT.get());
         basicItem(ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get());
         handheldItem(ModItems.YAOKIN_HAMMER.get());
+        handheldItem(ModItems.YAOKIN_SWORD.get());
+        handheldItem(ModItems.YAOKIN_PICKAXE.get());
+        handheldItem(ModItems.YAOKIN_AXE.get());
+        handheldItem(ModItems.YAOKIN_SHOVEL.get());
+        handheldItem(ModItems.YAOKIN_HOE.get());
+        handheldItem(ModItems.DIAMOND_CURVED_BLADE.get());
+        handheldItem(ModItems.NETHERITE_CURVED_BLADE.get());
         handheldItem(ModItems.YAOKIN_CURVED_BLADE.get());
         basicItem(ModItems.YAOKIN_HELMET.get());
         basicItem(ModItems.YAOKIN_CHESTPLATE.get());

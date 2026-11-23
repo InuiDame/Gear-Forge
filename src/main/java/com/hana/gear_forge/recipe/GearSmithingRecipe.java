@@ -253,9 +253,9 @@ public class GearSmithingRecipe implements SmithingRecipe {
         }
 
         if (addition.is(ModItems.YAOKIN_HAMMER.get())) {
-            // 重新锻打：产出一把空的耀金弧刀，保留原剑的附魔与自定义名称。
+            // 重新锻打：按底材剑的材质产出对应弧刀，保留原剑的附魔与自定义名称。
             // 强化等级、词条、宝石都不保留——这是"重铸成另一件武器"，不是升级。
-            ItemStack blade = new ItemStack(ModItems.YAOKIN_CURVED_BLADE.get());
+            ItemStack blade = curvedBladeFor(result);
             var enchantments = EnchantmentHelper.getEnchantmentsForCrafting(result);
             if (!enchantments.isEmpty()) {
                 EnchantmentHelper.setEnchantments(blade, enchantments);
@@ -412,8 +412,29 @@ public class GearSmithingRecipe implements SmithingRecipe {
      */
     private static boolean isSwordLike(ItemStack stack) {
         if (stack.isEmpty()) return false;
-        if (stack.is(ModItems.YAOKIN_CURVED_BLADE.get())) return false;
+        if (isCurvedBlade(stack)) return false;
         return stack.getItem() instanceof net.minecraft.world.item.SwordItem;
+    }
+
+    /** 是否已经是弧刀（避免"弧刀 → 弧刀"的无意义转换）。 */
+    private static boolean isCurvedBlade(ItemStack stack) {
+        return stack.is(ModItems.DIAMOND_CURVED_BLADE.get())
+                || stack.is(ModItems.NETHERITE_CURVED_BLADE.get())
+                || stack.is(ModItems.YAOKIN_CURVED_BLADE.get());
+    }
+
+    /**
+     * 底材剑对应的弧刀：钻石剑 → 钻石弧刀，下界合金剑 → 下界合金弧刀，
+     * 其余剑（含耀金剑与其它模组的剑）→ 耀金弧刀。
+     */
+    private static ItemStack curvedBladeFor(ItemStack base) {
+        if (base.is(Items.DIAMOND_SWORD)) {
+            return new ItemStack(ModItems.DIAMOND_CURVED_BLADE.get());
+        }
+        if (base.is(Items.NETHERITE_SWORD)) {
+            return new ItemStack(ModItems.NETHERITE_CURVED_BLADE.get());
+        }
+        return new ItemStack(ModItems.YAOKIN_CURVED_BLADE.get());
     }
 
     private static boolean isModGem(ItemStack stack) {

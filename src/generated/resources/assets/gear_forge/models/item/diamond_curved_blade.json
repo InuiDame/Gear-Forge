@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "gear_forge:item/diamond_curved_blade"
+  }
+}

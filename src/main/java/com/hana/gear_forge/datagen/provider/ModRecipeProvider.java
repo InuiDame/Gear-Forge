@@ -157,6 +157,53 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
                 .save(output);
 
+        // 耀金剑
+        ShapedRecipeBuilder.shaped(RecipeCategory.COMBAT, ModItems.YAOKIN_SWORD.get())
+                .pattern(" X ")
+                .pattern(" X ")
+                .pattern(" S ")
+                .define('X', ModItems.YAOKIN_INGOT.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
+                .save(output);
+
+        // 耀金工具组
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.YAOKIN_PICKAXE.get())
+                .pattern("XXX")
+                .pattern(" S ")
+                .pattern(" S ")
+                .define('X', ModItems.YAOKIN_INGOT.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
+                .save(output);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.YAOKIN_AXE.get())
+                .pattern("XX ")
+                .pattern("XS ")
+                .pattern(" S ")
+                .define('X', ModItems.YAOKIN_INGOT.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
+                .save(output);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.YAOKIN_SHOVEL.get())
+                .pattern(" X ")
+                .pattern(" S ")
+                .pattern(" S ")
+                .define('X', ModItems.YAOKIN_INGOT.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
+                .save(output);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.YAOKIN_HOE.get())
+                .pattern("XX ")
+                .pattern(" S ")
+                .pattern(" S ")
+                .define('X', ModItems.YAOKIN_INGOT.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
+                .save(output);
+
         // 耀金升级模板复制：原版下界合金升级模板 + 耀金锭 → 1 个耀金升级模板。
         // 这样模板本身可再生，玩家不会因为用错一次就永久失去升级途径。
         SmithingTransformRecipeBuilder.smithing(

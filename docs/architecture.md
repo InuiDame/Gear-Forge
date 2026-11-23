@@ -23,7 +23,7 @@ com.hana.gear_forge
 ├── recipe/                 GearSmithingRecipe（全部锻造操作）和它的序列化器
 ├── block/                  强化台方块（ForgeTableBlock）
 ├── menu/                   强化台菜单（ForgeTableMenu）与 MenuType
-├── item/                   物品、创造模式标签页；item/custom/ 是材料物品（提示文本 + 右键提示去锻造台）
+├── item/                   物品、创造模式标签页；item/custom/ 是带自定义行为的物品（材料提示、耀金铁锤、按材质参数化的弧刀）
 ├── compat/curios/          两个饰品物品（实现 ICurioItem）
 ├── compat/jei/             JEI 插件：强化台配方分类 + 耀金升级展示（可选依赖）
 ├── content/                ModEnchantments：7 个附魔的 ResourceKey；YaokinMaterial：耀金工具/盔甲材质
@@ -42,7 +42,7 @@ com.hana.gear_forge
 资源分两处：
 
 - `src/main/resources/`：手写资源（语言、贴图、附魔定义、物品标签、战利品修改器、Curios 实体槽位与物品标签、mixin 配置）。
-- `src/generated/resources/`：`runData` 生成的资源（23 个物品模型、16 个合成配方与进度、Curios 槽位）。不要手改，也不要在 `src/main/resources` 放同路径文件（ADR-0006）。
+- `src/generated/resources/`：`runData` 生成的资源（30 个物品模型、21 个合成配方与进度、Curios 槽位）。不要手改，也不要在 `src/main/resources` 放同路径文件（ADR-0006）。
 
 `src/main/templates/META-INF/neoforge.mods.toml` 是模组元数据模板，构建时由 `generateModMetadata` 用 `gradle.properties` 里的值展开。
 
@@ -139,7 +139,9 @@ flowchart LR
 
 耀金升级没有写成数据包配方，而是在 `YaokinUpgradeRecipe` 里维护「下界合金盔甲 → 耀金盔甲」的映射，由 `GearSmithingRecipe` 在运行时判定。这样强化台和原版锻造台共用同一份逻辑，也避免为四件盔甲各写一份 `smithing_transform` JSON。升级保留附魔、自定义名称和耐久比例，不继承强化等级/词条/宝石。
 
-耀金铁锤（`YaokinHammerItem`）本身没有逻辑，分派在 `GearSmithingRecipe` 的 `YAOKIN_HAMMER` 分支：只接受 `SwordItem`（排除已是弧刀的物品），产出一把新的 `YaokinCurvedBladeItem`，保留原剑附魔与名称。弧刀属性由 `createBladeAttributes()` 定义（攻击距离 +1、攻速 2.0、伤害 6），每第 3 次命中由 `ArcSlashHandler` 做扇形额外伤害与粒子/音效，计数存在 `arc_slash_charges` 数据组件里，随物品持久化并同步。
+耀金铁锤（`YaokinHammerItem`）本身没有逻辑，分派在 `GearSmithingRecipe` 的 `YAOKIN_HAMMER` 分支：只接受 `SwordItem`（排除已是弧刀的物品），按底材材质产出对应弧刀——钻石剑 → 钻石弧刀、下界合金剑 → 下界合金弧刀、其余剑 → 耀金弧刀，保留原剑附魔与名称。三种弧刀共用 `CurvedBladeItem`，只是构造时传入不同 `Tier`；属性由 `createBladeAttributes(tier)` 定义（攻击距离 +1、最终攻速 2.0、伤害比同级剑低 1），每第 3 次命中由 `ArcSlashHandler` 做扇形额外伤害与粒子/音效，计数存在 `arc_slash_charges` 数据组件里，随物品持久化并同步。
+
+耀金剑与镐/斧/锹/锄是普通原版工具类（`SwordItem`/`PickaxeItem`/…），共用 `YaokinMaterial.TIER`；它们的物品标签在 `src/main/resources/data/minecraft/tags/item/` 下补齐（`swords`、`pickaxes`、`enchantable/*` 等），否则无法被附魔台和部分配方识别。
 
 ### JEI
 
@@ -201,4 +203,4 @@ flowchart LR
 
 ## 11. 数据生成
 
-`DataGenerators` 注册三个 provider：物品模型（客户端，23 个）、配方（服务端，16 个）、Curios 槽位（服务端）。运行 `./gradlew runData` 输出到 `src/generated/resources`，并通过 `--existing src/main/resources` 校验引用的贴图存在。
+`DataGenerators` 注册三个 provider：物品模型（客户端，30 个）、配方（服务端，21 个）、Curios 槽位（服务端）。运行 `./gradlew runData` 输出到 `src/generated/resources`，并通过 `--existing src/main/resources` 校验引用的贴图存在。

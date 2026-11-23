@@ -2,7 +2,7 @@ package com.hana.gear_forge.event;
 
 import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.component.ModDataComponents;
-import com.hana.gear_forge.item.custom.YaokinCurvedBladeItem;
+import com.hana.gear_forge.item.custom.CurvedBladeItem;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -42,7 +42,7 @@ public final class ArcSlashHandler {
     private ArcSlashHandler() {}
 
     /**
-     * 由 {@link YaokinCurvedBladeItem#hurtEnemy} 在服务端调用。
+     * 由 {@link CurvedBladeItem#hurtEnemy} 在服务端调用。
      *
      * @param player 攻击者
      * @param blade  手上的弧刀
@@ -50,7 +50,7 @@ public final class ArcSlashHandler {
      */
     public static void onBladeHit(Player player, ItemStack blade, LivingEntity primary) {
         int charges = ModDataComponents.arcSlashCharges(blade) + 1;
-        if (charges < YaokinCurvedBladeItem.SLASH_EVERY) {
+        if (charges < CurvedBladeItem.SLASH_EVERY) {
             ModDataComponents.setArcSlashCharges(blade, charges);
             return;
         }

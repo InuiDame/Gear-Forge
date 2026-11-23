@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "gear_forge:yaokin_sword",
+    "gear_forge:diamond_curved_blade",
+    "gear_forge:netherite_curved_blade",
+    "gear_forge:yaokin_curved_blade",
+    "gear_forge:yaokin_pickaxe",
+    "gear_forge:yaokin_axe",
+    "gear_forge:yaokin_shovel",
+    "gear_forge:yaokin_hoe",
+    "gear_forge:yaokin_helmet",
+    "gear_forge:yaokin_chestplate",
+    "gear_forge:yaokin_leggings",
+    "gear_forge:yaokin_boots"
+  ]
+}

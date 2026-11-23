@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "gear_forge:yaokin_sword",
+    "gear_forge:diamond_curved_blade",
+    "gear_forge:netherite_curved_blade",
+    "gear_forge:yaokin_curved_blade"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "gear_forge:yaokin_pickaxe",
+    "gear_forge:yaokin_axe",
+    "gear_forge:yaokin_shovel",
+    "gear_forge:yaokin_hoe"
+  ]
+}

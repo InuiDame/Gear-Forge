@@ -42,10 +42,17 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TRANSFER_ORB.get());
                         output.accept(ModItems.GEM_REMOVER.get());
                         output.accept(ModItems.REINCARNATION_STONE.get());
-                        // 耀金系列：材料 → 模板 → 工具 → 套装
+                        // 耀金系列：材料 → 模板 → 工具 → 弧刀 → 套装
                         output.accept(ModItems.YAOKIN_INGOT.get());
                         output.accept(ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get());
                         output.accept(ModItems.YAOKIN_HAMMER.get());
+                        output.accept(ModItems.YAOKIN_SWORD.get());
+                        output.accept(ModItems.YAOKIN_PICKAXE.get());
+                        output.accept(ModItems.YAOKIN_AXE.get());
+                        output.accept(ModItems.YAOKIN_SHOVEL.get());
+                        output.accept(ModItems.YAOKIN_HOE.get());
+                        output.accept(ModItems.DIAMOND_CURVED_BLADE.get());
+                        output.accept(ModItems.NETHERITE_CURVED_BLADE.get());
                         output.accept(ModItems.YAOKIN_CURVED_BLADE.get());
                         output.accept(ModItems.YAOKIN_HELMET.get());
                         output.accept(ModItems.YAOKIN_CHESTPLATE.get());
