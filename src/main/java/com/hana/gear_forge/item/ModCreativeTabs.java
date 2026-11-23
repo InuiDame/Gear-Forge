@@ -56,6 +56,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.YAOKIN_INGOT.get());
                         output.accept(ModItems.YAOKIN_APPLE.get());
                         output.accept(ModItems.YAOKIN_SWORD.get());
+                        output.accept(ModItems.YAOKIN_SPEAR.get());
                         output.accept(ModItems.YAOKIN_PICKAXE.get());
                         output.accept(ModItems.YAOKIN_AXE.get());
                         output.accept(ModItems.YAOKIN_SHOVEL.get());

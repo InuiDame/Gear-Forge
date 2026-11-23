@@ -99,6 +99,15 @@ public class ModItems {
     public static final DeferredItem<Item> YAOKIN_SWORD = registerItem("yaokin_sword",
             Item::new, () -> new Item.Properties().sword(YaokinMaterial.TOOL, 3.0F, -2.4F).fireResistant());
 
+    /**
+     * 耀金长矛：26.3 原版矛体系的顶级材质版本，参数照下界合金矛略提升。
+     * 九个 float 依次是近战/远距伤害倍率、攻速、蓄力相关、交互范围等，见原版 spear() 定义。
+     */
+    public static final DeferredItem<Item> YAOKIN_SPEAR = registerItem("yaokin_spear",
+            Item::new, () -> new Item.Properties()
+                    .spear(YaokinMaterial.TOOL, 1.2F, 1.25F, 0.4F, 2.5F, 9.0F, 5.5F, 5.1F, 8.75F, 4.6F)
+                    .fireResistant());
+
     /** 耀金镐。 */
     public static final DeferredItem<Item> YAOKIN_PICKAXE = registerItem("yaokin_pickaxe",
             Item::new, () -> new Item.Properties().pickaxe(YaokinMaterial.TOOL, 1.0F, -2.8F).fireResistant());

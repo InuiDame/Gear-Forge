@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/spear_in_hand",
+  "textures": {
+    "layer0": "gear_forge:item/yaokin_spear_in_hand"
+  }
+}

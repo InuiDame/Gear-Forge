@@ -20,8 +20,8 @@ public final class YaokinUpgradeRecipe {
     /**
      * 下界合金装备 → 耀金装备 的映射。
      *
-     * <p>包含四件盔甲、剑和四种工具。耀金装备不再有工作台配方，唯一来源就是用
-     * 原版下界合金升级模板在锻造台上升级。
+     * <p>包含四件盔甲、剑、长矛（26.3）和四种工具。耀金装备不再有工作台配方，
+     * 唯一来源就是用原版下界合金升级模板在锻造台上升级。
      *
      * <p>剑升级成耀金剑，不是弧刀；弧刀仍然由耀金铁锤把剑重锻得到（见
      * {@code GearSmithingRecipe} 的耀金铁锤分支）。两条路径产物不同，不会混淆。
@@ -32,6 +32,7 @@ public final class YaokinUpgradeRecipe {
             Map.entry(Items.NETHERITE_LEGGINGS, ModItems.YAOKIN_LEGGINGS.get()),
             Map.entry(Items.NETHERITE_BOOTS, ModItems.YAOKIN_BOOTS.get()),
             Map.entry(Items.NETHERITE_SWORD, ModItems.YAOKIN_SWORD.get()),
+            Map.entry(Items.NETHERITE_SPEAR, ModItems.YAOKIN_SPEAR.get()),
             Map.entry(Items.NETHERITE_PICKAXE, ModItems.YAOKIN_PICKAXE.get()),
             Map.entry(Items.NETHERITE_AXE, ModItems.YAOKIN_AXE.get()),
             Map.entry(Items.NETHERITE_SHOVEL, ModItems.YAOKIN_SHOVEL.get()),
