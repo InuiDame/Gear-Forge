@@ -338,8 +338,8 @@ public class GearSmithingRecipe implements SmithingRecipe {
         if (config.consumesMaterial() && isItemMatchingId(stack, config.getConsumeMaterial())) {
             return true;
         }
-        // 耀金升级模板
-        if (stack.is(ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get())) return true;
+        // 耀金升级复用原版下界合金升级模板
+        if (stack.is(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE)) return true;
         // 转生材料
         return config.isReincarnationEnabled()
                 && isItemMatchingId(stack, config.getReincarnationCostMaterial());

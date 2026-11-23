@@ -1,13 +1,10 @@
 package com.hana.gear_forge.datagen.provider;
 
-import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.item.ModItems;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.common.conditions.IConditionBuilder;
 
 import java.util.concurrent.CompletableFuture;
@@ -15,12 +12,14 @@ import java.util.concurrent.CompletableFuture;
 /**
  * 全部合成配方。
  *
- * <p>耀金相关的三条链：
+ * <p>耀金相关的配方：
  * <ol>
  *   <li>耀金锭：3 金锭 + 3 钻石（固定配方）。</li>
- *   <li>耀金升级模板：用下界合金升级模板 + 耀金锭复制，保证模板可再生。</li>
- *   <li>耀金套装：<b>不在这里</b>——它是锻造台配方（下界合金装备 + 耀金锭 + 模板），
- *       由 {@code GearSmithingRecipe} 在运行时判定，见 {@link com.hana.gear_forge.recipe.YaokinUpgradeRecipe}。</li>
+ *   <li>耀金苹果：4 耀金锭 + 1 苹果。</li>
+ *   <li>耀金硬币：4 金锭围 1 耀金锭。</li>
+ *   <li>耀金装备：<b>不在这里</b>——它是锻造台配方（下界合金装备 + 耀金锭 + 原版下界合金升级模板），
+ *       由 {@code GearSmithingRecipe} 在运行时判定，见 {@link com.hana.gear_forge.recipe.YaokinUpgradeRecipe}。
+ *       没有工作台直接合成配方。</li>
  * </ol>
  */
 public class ModRecipeProvider extends RecipeProvider implements IConditionBuilder {
@@ -157,63 +156,23 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
                 .save(output);
 
-        // 耀金剑
-        ShapedRecipeBuilder.shaped(RecipeCategory.COMBAT, ModItems.YAOKIN_SWORD.get())
-                .pattern(" X ")
-                .pattern(" X ")
-                .pattern(" S ")
-                .define('X', ModItems.YAOKIN_INGOT.get())
-                .define('S', Items.STICK)
+        // 耀金苹果：4 个耀金锭 + 1 个苹果。金苹果的强化版，附点金 II。
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.FOOD, ModItems.YAOKIN_APPLE.get())
+                .requires(ModItems.YAOKIN_INGOT.get(), 4)
+                .requires(Items.APPLE)
                 .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
                 .save(output);
 
-        // 耀金工具组
-        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.YAOKIN_PICKAXE.get())
-                .pattern("XXX")
-                .pattern(" S ")
-                .pattern(" S ")
-                .define('X', ModItems.YAOKIN_INGOT.get())
-                .define('S', Items.STICK)
+        // 耀金硬币：4 个金锭围 1 个耀金锭。小饰品，幸运 +1。
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.YAOKIN_COIN.get())
+                .pattern(" G ")
+                .pattern("GYG")
+                .pattern(" G ")
+                .define('G', Items.GOLD_INGOT)
+                .define('Y', ModItems.YAOKIN_INGOT.get())
                 .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
                 .save(output);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.YAOKIN_AXE.get())
-                .pattern("XX ")
-                .pattern("XS ")
-                .pattern(" S ")
-                .define('X', ModItems.YAOKIN_INGOT.get())
-                .define('S', Items.STICK)
-                .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
-                .save(output);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.YAOKIN_SHOVEL.get())
-                .pattern(" X ")
-                .pattern(" S ")
-                .pattern(" S ")
-                .define('X', ModItems.YAOKIN_INGOT.get())
-                .define('S', Items.STICK)
-                .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
-                .save(output);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.YAOKIN_HOE.get())
-                .pattern("XX ")
-                .pattern(" S ")
-                .pattern(" S ")
-                .define('X', ModItems.YAOKIN_INGOT.get())
-                .define('S', Items.STICK)
-                .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
-                .save(output);
-
-        // 耀金升级模板复制：原版下界合金升级模板 + 耀金锭 → 1 个耀金升级模板。
-        // 这样模板本身可再生，玩家不会因为用错一次就永久失去升级途径。
-        SmithingTransformRecipeBuilder.smithing(
-                        Ingredient.of(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE),
-                        Ingredient.of(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE),
-                        Ingredient.of(ModItems.YAOKIN_INGOT.get()),
-                        RecipeCategory.MISC,
-                        ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get())
-                .unlocks("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
-                .save(output, ResourceLocation.fromNamespaceAndPath(
-                        GearForgeMod.MODID, "yaokin_upgrade_smithing_template"));
+        // 耀金剑/工具/盔甲不再有工作台配方：只能在锻造台用原版下界合金升级模板升级。
     }
 }

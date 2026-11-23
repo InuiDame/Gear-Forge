@@ -35,7 +35,8 @@ public class ModItemModelProvider extends ItemModelProvider {
 
         // 耀金系列
         basicItem(ModItems.YAOKIN_INGOT.get());
-        basicItem(ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get());
+        basicItem(ModItems.YAOKIN_APPLE.get());
+        basicItem(ModItems.YAOKIN_COIN.get());
         handheldItem(ModItems.YAOKIN_HAMMER.get());
         handheldItem(ModItems.YAOKIN_SWORD.get());
         handheldItem(ModItems.YAOKIN_PICKAXE.get());

@@ -1,21 +1,21 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "equipment",
+  "category": "misc",
   "key": {
-    "S": {
-      "item": "minecraft:stick"
+    "G": {
+      "item": "minecraft:gold_ingot"
     },
-    "X": {
+    "Y": {
       "item": "gear_forge:yaokin_ingot"
     }
   },
   "pattern": [
-    " X ",
-    " X ",
-    " S "
+    " G ",
+    "GYG",
+    " G "
   ],
   "result": {
     "count": 1,
-    "id": "gear_forge:yaokin_sword"
+    "id": "gear_forge:yaokin_coin"
   }
 }

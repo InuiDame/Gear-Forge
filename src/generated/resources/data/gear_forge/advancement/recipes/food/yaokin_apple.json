@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:yaokin_sword"
+        "recipe": "gear_forge:yaokin_apple"
       },
       "trigger": "minecraft:recipe_unlocked"
     },
@@ -26,7 +26,7 @@
   ],
   "rewards": {
     "recipes": [
-      "gear_forge:yaokin_sword"
+      "gear_forge:yaokin_apple"
     ]
   }
 }

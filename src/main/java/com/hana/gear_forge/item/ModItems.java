@@ -3,14 +3,12 @@ package com.hana.gear_forge.item;
 import com.hana.gear_forge.block.ModBlocks;
 import com.hana.gear_forge.compat.curios.CursedAnvilItem;
 import com.hana.gear_forge.compat.curios.LuckyDiamondItem;
+import com.hana.gear_forge.compat.curios.YaokinCoinItem;
 import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.content.YaokinMaterial;
 import com.hana.gear_forge.item.custom.*;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.BlockItem;
@@ -77,6 +75,11 @@ public class ModItems {
             "cursed_anvil",
             CursedAnvilItem::new);
 
+    /** 耀金硬币：小饰品，幸运 +1，并强化幸运钻石、击杀时给点金。 */
+    public static final DeferredItem<YaokinCoinItem> YAOKIN_COIN = registerTyped(
+            "yaokin_coin",
+            YaokinCoinItem::new);
+
     /** 强化台的方块物品。 */
     public static final DeferredItem<BlockItem> FORGE_TABLE = ITEMS.registerSimpleBlockItem(
             ModBlocks.FORGE_TABLE);
@@ -87,30 +90,13 @@ public class ModItems {
     public static final DeferredItem<Item> YAOKIN_INGOT = registerItem("yaokin_ingot",
             () -> new Item(new Item.Properties().fireResistant()));
 
-    /** 耀金升级锻造模板：下界合金装备 + 耀金锭 + 本模板 → 耀金装备。 */
-    public static final DeferredItem<Item> YAOKIN_UPGRADE_SMITHING_TEMPLATE =
-            registerItem("yaokin_upgrade_smithing_template",
-                    () -> new net.minecraft.world.item.SmithingTemplateItem(
-                            // appliesTo / ingredients / 标题 / 两个槽位说明 / 两个槽位图标
-                            Component.translatable("item.gear_forge.yaokin_upgrade_smithing_template.applies_to")
-                                    .withStyle(ChatFormatting.BLUE),
-                            Component.translatable("item.gear_forge.yaokin_upgrade_smithing_template.ingredients")
-                                    .withStyle(ChatFormatting.BLUE),
-                            Component.translatable("upgrade.gear_forge.yaokin_upgrade")
-                                    .withStyle(ChatFormatting.GRAY),
-                            Component.translatable("item.gear_forge.yaokin_upgrade_smithing_template.base_slot_description"),
-                            Component.translatable("item.gear_forge.yaokin_upgrade_smithing_template.additions_slot_description"),
-                            java.util.List.of(
-                                    ResourceLocation.withDefaultNamespace("item/empty_armor_slot_helmet"),
-                                    ResourceLocation.withDefaultNamespace("item/empty_armor_slot_chestplate"),
-                                    ResourceLocation.withDefaultNamespace("item/empty_armor_slot_leggings"),
-                                    ResourceLocation.withDefaultNamespace("item/empty_armor_slot_boots")),
-                            java.util.List.of(
-                                    ResourceLocation.withDefaultNamespace("item/empty_slot_ingot"))));
-
     /** 耀金铁锤：把剑重新锻打成对应材质的弧刀。 */
     public static final DeferredItem<Item> YAOKIN_HAMMER = registerItem("yaokin_hammer",
             () -> new YaokinHammerItem(new Item.Properties().stacksTo(1).fireResistant()));
+
+    /** 耀金苹果：普通金苹果的强化版，附带点金 II。 */
+    public static final DeferredItem<YaokinAppleItem> YAOKIN_APPLE = registerTyped("yaokin_apple",
+            YaokinAppleItem::new);
 
     /** 耀金剑：标准剑属性，8 点伤害、1.6 攻速。 */
     public static final DeferredItem<SwordItem> YAOKIN_SWORD = registerTyped("yaokin_sword",

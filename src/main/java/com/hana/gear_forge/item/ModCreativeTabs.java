@@ -42,10 +42,19 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TRANSFER_ORB.get());
                         output.accept(ModItems.GEM_REMOVER.get());
                         output.accept(ModItems.REINCARNATION_STONE.get());
-                        // 耀金系列：材料 → 模板 → 工具 → 弧刀 → 套装
-                        output.accept(ModItems.YAOKIN_INGOT.get());
-                        output.accept(ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get());
+                        // 耀金铁锤是锻造工具，留在核心页；其余耀金装备移到「装备」页。
                         output.accept(ModItems.YAOKIN_HAMMER.get());
+                    }).build());
+
+    // 装备页：耀金套装、剑、工具、弧刀、苹果
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> GEAR_FORGE_EQUIPMENT_TAB =
+            CREATIVE_TABS.register("gear_forge_equipment", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup." + GearForgeMod.MODID + ".equipment"))
+                    .withTabsBefore(GEAR_FORGE_CORE_TAB.getKey())
+                    .icon(() -> ModItems.YAOKIN_CHESTPLATE.get().getDefaultInstance())
+                    .displayItems((params, output) -> {
+                        output.accept(ModItems.YAOKIN_INGOT.get());
+                        output.accept(ModItems.YAOKIN_APPLE.get());
                         output.accept(ModItems.YAOKIN_SWORD.get());
                         output.accept(ModItems.YAOKIN_PICKAXE.get());
                         output.accept(ModItems.YAOKIN_AXE.get());
@@ -64,10 +73,11 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> GEAR_FORGE_CURIOS_TAB =
             CREATIVE_TABS.register("gear_forge_curios", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + GearForgeMod.MODID + ".curios"))
-                    .withTabsBefore(GEAR_FORGE_CORE_TAB.getKey())
+                    .withTabsBefore(GEAR_FORGE_EQUIPMENT_TAB.getKey())
                     .icon(() -> ModItems.LUCKY_DIAMOND.get().getDefaultInstance())
                     .displayItems((params, output) -> {
                         output.accept(ModItems.LUCKY_DIAMOND.get());
+                        output.accept(ModItems.YAOKIN_COIN.get());
                         output.accept(ModItems.CURSED_ANVIL.get());
                     }).build());
 

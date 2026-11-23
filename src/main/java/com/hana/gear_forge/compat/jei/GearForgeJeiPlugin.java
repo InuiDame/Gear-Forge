@@ -154,13 +154,13 @@ public class GearForgeJeiPlugin implements IModPlugin {
         return list;
     }
 
-    /** 耀金升级：4 条（四件护甲），以原版锻造台配方形式展示。剑走耀金铁锤那条路径，见 FORGE_SMITHING。 */
+    /** 耀金升级：9 条（四件护甲 + 剑 + 四种工具），以原版锻造台配方形式展示。弧刀仍走耀金铁锤那条路径。 */
     private static List<RecipeHolder<net.minecraft.world.item.crafting.SmithingRecipe>>
     buildYaokinUpgradeRecipes() {
         List<RecipeHolder<net.minecraft.world.item.crafting.SmithingRecipe>> list = new ArrayList<>();
         net.minecraft.world.item.crafting.Ingredient template =
                 net.minecraft.world.item.crafting.Ingredient.of(
-                        ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get());
+                        Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
         net.minecraft.world.item.crafting.Ingredient material =
                 net.minecraft.world.item.crafting.Ingredient.of(ModItems.YAOKIN_INGOT.get());
 
@@ -168,6 +168,11 @@ public class GearForgeJeiPlugin implements IModPlugin {
         addUpgrade(list, template, material, Items.NETHERITE_CHESTPLATE, ModItems.YAOKIN_CHESTPLATE.get());
         addUpgrade(list, template, material, Items.NETHERITE_LEGGINGS, ModItems.YAOKIN_LEGGINGS.get());
         addUpgrade(list, template, material, Items.NETHERITE_BOOTS, ModItems.YAOKIN_BOOTS.get());
+        addUpgrade(list, template, material, Items.NETHERITE_SWORD, ModItems.YAOKIN_SWORD.get());
+        addUpgrade(list, template, material, Items.NETHERITE_PICKAXE, ModItems.YAOKIN_PICKAXE.get());
+        addUpgrade(list, template, material, Items.NETHERITE_AXE, ModItems.YAOKIN_AXE.get());
+        addUpgrade(list, template, material, Items.NETHERITE_SHOVEL, ModItems.YAOKIN_SHOVEL.get());
+        addUpgrade(list, template, material, Items.NETHERITE_HOE, ModItems.YAOKIN_HOE.get());
         return list;
     }
 
