@@ -1,5 +1,7 @@
 {
   "add_cosmetic": true,
   "drop_rule": "ALWAYS_KEEP",
+  "icon": "curios:slot/empty_custom_slot",
+  "order": 2000,
   "size": 4
 }

@@ -9,6 +9,8 @@ import com.hana.gear_forge.item.ModItems;
 import com.hana.gear_forge.util.GearHelper;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -57,14 +59,9 @@ public class GearSmithingRecipe implements SmithingRecipe {
             List<ModDataComponents.GemsEntry> currentGems = base.getOrDefault(ModDataComponents.GEMS.get(), List.of());
             int maxSockets = GearHelper.getMaxSockets(base);
             if (currentGems.size() >= maxSockets) return false;
-            //System.out.println("Gem item detected: " + addition.getItem().getDescriptionId());
             String gemItemId = getGemItemId(addition);
-            //System.out.println("gemItemId: " + gemItemId);
             if (gemItemId == null) return false;
             String socketType = GearHelper.getSocketTypeForItem(base);
-            //System.out.println("socketType: " + socketType);
-            boolean compatible = isGemCompatible(gemItemId, socketType);
-            //System.out.println("compatible: " + compatible);
             return isGemCompatible(gemItemId, socketType);
         }
 
@@ -115,7 +112,8 @@ public class GearSmithingRecipe implements SmithingRecipe {
     public ItemStack assemble(SmithingRecipeInput input, HolderLookup.Provider registries) {
         ItemStack base = input.base();
         ItemStack addition = input.addition();
-        ItemStack result = base.copy();
+        // 锻造台每次只消耗 1 个底材，产物也必须只有 1 个，否则整组木棍/宝石放进去会被复制
+        ItemStack result = base.copyWithCount(1);
 
         // Upgrade
         if (addition.is(ModItems.FORGE_HAMMER.get())) {
@@ -149,7 +147,6 @@ public class GearSmithingRecipe implements SmithingRecipe {
         if (addition.is(ModItems.UPGRADE_CRYSTAL.get()) && isGemBaseItem(base)) {
             int currentTier = result.getOrDefault(ModDataComponents.GEM_TIER.get(), 1);
             result.set(ModDataComponents.GEM_TIER.get(), currentTier + 1);
-            result.setCount(1);   // ← 关键修复：只产出 1 个升级后的宝石
             return result;
         }
 
@@ -308,7 +305,7 @@ public class GearSmithingRecipe implements SmithingRecipe {
     private static String findGemId(String itemId) {
         GemConfig config = ModConfigs.getGemConfig();
         for (GemDefinition gem : config.getGems()) {
-            if (gem.getItemId().equals(itemId)) return gem.getId();
+            if (itemId.equals(gem.getItemId())) return gem.getId();
         }
         return itemId;
     }
@@ -316,20 +313,17 @@ public class GearSmithingRecipe implements SmithingRecipe {
     private static boolean isGemCompatible(String gemItemId, String socketType) {
         GemConfig config = ModConfigs.getGemConfig();
         for (GemDefinition gem : config.getGems()) {
-            if (gem.getItemId().equals(gemItemId) && gem.getCompatibleSockets().contains(socketType)) {
-                //System.out.println("Found gem: " + gem.getId() + ", compatibleSockets: " + gem.getCompatibleSockets());
-                return gem.getCompatibleSockets().contains(socketType);
+            if (gemItemId.equals(gem.getItemId())) {
+                return gem.getCompatibleSockets() != null && gem.getCompatibleSockets().contains(socketType);
             }
         }
-        //System.out.println("Gem not found for itemId: " + gemItemId);
         return false;
     }
 
-    private static boolean isItemMatchingId(ItemStack stack, String itemId) {
+    public static boolean isItemMatchingId(ItemStack stack, String itemId) {
         if (itemId == null || itemId.isEmpty()) return false;
-        String[] parts = itemId.split(":");
-        if (parts.length != 2) return false;
-        return stack.is(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
-                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(parts[0], parts[1])));
+        ResourceLocation id = ResourceLocation.tryParse(itemId);
+        if (id == null) return false;
+        return BuiltInRegistries.ITEM.getOptional(id).map(stack::is).orElse(false);
     }
 }

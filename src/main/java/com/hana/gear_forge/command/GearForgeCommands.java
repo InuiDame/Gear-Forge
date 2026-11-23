@@ -1,6 +1,7 @@
 package com.hana.gear_forge.command;
 
 import com.hana.gear_forge.component.ModDataComponents;
+import com.hana.gear_forge.event.MobGearEventHandler;
 import com.hana.gear_forge.util.GearHelper;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -115,6 +116,8 @@ public class GearForgeCommands {
                     livingEntity.setItemSlot(slot, gear);
                 }
 
+                // 测试命令自己指定了装备，标记为已处理，避免加入世界时被随机怪物装备逻辑覆盖
+                livingEntity.getPersistentData().putBoolean(MobGearEventHandler.GEARED_TAG, true);
                 livingEntity.setPos(source.getPosition());
                 level.addFreshEntity(livingEntity);
             }

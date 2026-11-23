@@ -7,22 +7,25 @@ import com.hana.gear_forge.config.GemConfig;
 import com.hana.gear_forge.config.GemConfig.GemDefinition;
 import com.hana.gear_forge.config.GemConfig.GemEffect;
 import com.hana.gear_forge.config.ModConfigs;
-import com.hana.gear_forge.loot.AddItemModifier;
 import com.hana.gear_forge.util.GearHelper;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
@@ -36,9 +39,10 @@ import net.neoforged.neoforge.event.ItemAttributeModifierEvent;
 import net.neoforged.neoforge.event.entity.living.ArmorHurtEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
+import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -63,8 +67,8 @@ public class GearEventHandlers {
         if (!(attacker instanceof LivingEntity livingAttacker)) return;
 
         // Handle ranged weapon (bow/crossbow) projectile damage
-        if (source.getDirectEntity() instanceof AbstractArrow) {
-            handleRangedProjectileDamage(event, livingAttacker);
+        if (source.getDirectEntity() instanceof AbstractArrow arrow) {
+            handleRangedProjectileDamage(event, livingAttacker, arrow);
             return;
         }
 
@@ -74,8 +78,10 @@ public class GearEventHandlers {
 
         List<ModDataComponents.AffixEntry> affixes = weapon.get(ModDataComponents.AFFIXES.get());
         List<ModDataComponents.GemsEntry> gems = weapon.get(ModDataComponents.GEMS.get());
-        int upgradeLevel = weapon.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
         List<ModDataComponents.StoredBonus> stored = weapon.get(ModDataComponents.STORED_BONUSES.get());
+
+        // 注意：强化等级的攻击力、转生保留的 attack_power / upgrade_attack_damage 已经通过
+        // onItemAttributeModifiers 挂成 ATTACK_DAMAGE 属性，原版伤害里已经包含，这里不能再加一次。
 
         if (affixes != null) {
             double critChance = GearHelper.getAffixTotalValue(affixes, "crit_chance");
@@ -105,9 +111,6 @@ public class GearEventHandlers {
             }
         }
 
-        double upgradeDamage = GearHelper.getUpgradedStatBonus("attack_damage", upgradeLevel);
-        damage += upgradeDamage;
-
         if (gems != null) {
             double gemAttackBonus = 0;
             for (ModDataComponents.GemsEntry gem : gems) {
@@ -122,7 +125,7 @@ public class GearEventHandlers {
                 double gemFrost = GearHelper.getGemStatBonus(gem.id(), "frost_damage", gem.tier());
                 damage += gemFrost;
                 if (gemFrost > 0) {
-                    target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, Math.min((int) gemFrost - 1, 2)));
+                    target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, slownessAmplifier(gemFrost, 2)));
                 }
                 double gemEnchantBoost = GearHelper.getGemStatBonus(gem.id(), "enchant_boost", gem.tier());
                 if (gemEnchantBoost > 0) {
@@ -134,11 +137,9 @@ public class GearEventHandlers {
 
         // Stored bonuses from reincarnation
         if (stored != null) {
-            damage += (float) GearHelper.getStoredBonusValue(stored, "attack_power");
             damage += (float) GearHelper.getStoredBonusValue(stored, "fire_damage");
             damage += (float) GearHelper.getStoredBonusValue(stored, "frost_damage");
             damage += (float) GearHelper.getStoredBonusValue(stored, "enchantment_boost");
-            damage += (float) GearHelper.getStoredBonusValue(stored, "upgrade_attack_damage");
             damage += (float) GearHelper.getStoredBonusValue(stored, "attack_damage");
             damage += (float) GearHelper.getStoredBonusValue(stored, "all_stats");
             damage += (float) GearHelper.getStoredBonusValue(stored, "lightning_damage");
@@ -155,10 +156,21 @@ public class GearEventHandlers {
             }
             double storedFrost = GearHelper.getStoredBonusValue(stored, "frost_damage");
             if (storedFrost > 0) {
-                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, Math.min((int) storedFrost - 1, 3)));
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, slownessAmplifier(storedFrost, 3)));
             }
             double storedLightning = GearHelper.getStoredBonusValue(stored, "lightning_damage");
             if (storedLightning > 0 && target.getRandom().nextDouble() < 0.25) {
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
+                if (target.level().isThundering()) {
+                    damage *= 1.15f;
+                }
+            }
+        }
+
+        if (affixes != null) {
+            // 雷暴加成必须在 setNewDamage 之前算，否则改的只是局部变量
+            double lightningValue = GearHelper.getAffixTotalValue(affixes, "lightning_damage");
+            if (lightningValue > 0 && target.getRandom().nextDouble() < 0.25) {
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
                 if (target.level().isThundering()) {
                     damage *= 1.15f;
@@ -181,15 +193,7 @@ public class GearEventHandlers {
 
             double frostValue = GearHelper.getAffixTotalValue(affixes, "frost_damage");
             if (frostValue > 0) {
-                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, Math.min((int) frostValue - 1, 3)));
-            }
-
-            double lightningValue = GearHelper.getAffixTotalValue(affixes, "lightning_damage");
-            if (lightningValue > 0 && target.getRandom().nextDouble() < 0.25) {
-                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
-                if (target.level().isThundering()) {
-                    damage *= 1.15f;
-                }
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, slownessAmplifier(frostValue, 3)));
             }
         }
 
@@ -214,12 +218,26 @@ public class GearEventHandlers {
         return ItemStack.EMPTY;
     }
 
-    private static void handleRangedProjectileDamage(LivingDamageEvent.Pre event, LivingEntity attacker) {
-        ItemStack bow = attacker.getMainHandItem();
-        if (!bow.is(Items.BOW) && !bow.is(Items.CROSSBOW)) {
-            bow = attacker.getOffhandItem();
+    private static int slownessAmplifier(double value, int max) {
+        return Math.max(0, Math.min((int) value - 1, max));
+    }
+
+    /** 射出这支箭的弓/弩。优先用箭记录的发射武器，射出后切换手持物品不会影响结果。 */
+    public static ItemStack resolveLauncher(AbstractArrow arrow, LivingEntity shooter) {
+        ItemStack fired = arrow.getWeaponItem();
+        if (fired != null && (fired.is(Items.BOW) || fired.is(Items.CROSSBOW))) {
+            return fired;
         }
-        if (!bow.is(Items.BOW) && !bow.is(Items.CROSSBOW)) return;
+        ItemStack main = shooter.getMainHandItem();
+        if (main.is(Items.BOW) || main.is(Items.CROSSBOW)) return main;
+        ItemStack off = shooter.getOffhandItem();
+        if (off.is(Items.BOW) || off.is(Items.CROSSBOW)) return off;
+        return ItemStack.EMPTY;
+    }
+
+    private static void handleRangedProjectileDamage(LivingDamageEvent.Pre event, LivingEntity attacker, AbstractArrow arrow) {
+        ItemStack bow = resolveLauncher(arrow, attacker);
+        if (bow.isEmpty()) return;
 
         float damage = event.getNewDamage();
 
@@ -279,6 +297,10 @@ public class GearEventHandlers {
         LivingEntity entity = event.getEntity();
         if (entity.level().isClientSide()) return;
 
+        DamageSource source = event.getSource();
+        // 虚空、/kill 这类伤害不能被装备的固定减伤抵消，否则高强化装备会让玩家在虚空里死不掉
+        if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+
         float amount = event.getAmount();
 
         for (EquipmentSlot slot : EquipmentSlot.values()) {
@@ -288,12 +310,9 @@ public class GearEventHandlers {
 
                 List<ModDataComponents.AffixEntry> affixes = armor.get(ModDataComponents.AFFIXES.get());
                 List<ModDataComponents.GemsEntry> gems = armor.get(ModDataComponents.GEMS.get());
-                int upgradeLevel = armor.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
 
-                double upgradeDefense = GearHelper.getUpgradedStatBonus("defense", upgradeLevel);
-                amount -= upgradeDefense;
-                double upgradeToughness = GearHelper.getUpgradedStatBonus("toughness", upgradeLevel);
-                amount -= upgradeToughness;
+                // 强化等级的 defense / toughness 以及转生保留的 upgrade_defense / upgrade_toughness / defense_power
+                // 已经通过 onItemAttributeModifiers 变成 ARMOR / ARMOR_TOUGHNESS 属性，这里不再重复做固定减伤。
 
                 if (gems != null) {
                     double gemDefense = 0;
@@ -311,9 +330,6 @@ public class GearEventHandlers {
 
                 List<ModDataComponents.StoredBonus> stored = armor.get(ModDataComponents.STORED_BONUSES.get());
                 if (stored != null) {
-                    amount -= (float) GearHelper.getStoredBonusValue(stored, "upgrade_defense");
-                    amount -= (float) GearHelper.getStoredBonusValue(stored, "upgrade_toughness");
-                    amount -= (float) GearHelper.getStoredBonusValue(stored, "defense_power");
                     amount -= (float) GearHelper.getStoredBonusValue(stored, "defense");
                     amount -= (float) GearHelper.getStoredBonusValue(stored, "all_stats");
                 }
@@ -332,9 +348,10 @@ public class GearEventHandlers {
             }
         }
 
-        // Thorns: reflect damage to attacker
-        Entity attacker = event.getSource().getEntity();
-        if (attacker instanceof LivingEntity livingAttacker) {
+        // Thorns: reflect damage to attacker.
+        // 反弹出去的伤害本身就是荆棘伤害，不能再次触发反弹，否则两个都带荆棘词条的实体会无限互相反弹。
+        Entity attacker = source.getEntity();
+        if (attacker instanceof LivingEntity livingAttacker && attacker != entity && !source.is(DamageTypes.THORNS)) {
             double totalThorns = 0;
             for (EquipmentSlot slot : EquipmentSlot.values()) {
                 if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR || slot == EquipmentSlot.BODY) {
@@ -392,219 +409,104 @@ public class GearEventHandlers {
         ItemStack stack = event.getItemStack();
         List<ModDataComponents.AffixEntry> affixes = stack.get(ModDataComponents.AFFIXES.get());
         int upgradeLevel = stack.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
-        boolean offhand = Boolean.TRUE.equals(stack.get(ModDataComponents.OFFHAND_MODE.get()));
-        boolean isArmor = stack.getItem() instanceof ArmorItem;
+        List<ModDataComponents.GemsEntry> gems = stack.get(ModDataComponents.GEMS.get());
+        List<ModDataComponents.StoredBonus> storedBonuses = stack.get(ModDataComponents.STORED_BONUSES.get());
 
-        // 武器类（非护甲）：攻击属性挂载到主手或副手；防御/移速等其他属性挂载到 ANY
-        // 护甲类：所有属性统一挂载到 ANY（穿戴效果）
-        EquipmentSlotGroup weaponSlot = offhand ? EquipmentSlotGroup.OFFHAND : EquipmentSlotGroup.MAINHAND;
-        EquipmentSlotGroup attackSlot = isArmor ? EquipmentSlotGroup.ANY : weaponSlot;   // 攻击、攻速
-        EquipmentSlotGroup otherSlot = isArmor ? EquipmentSlotGroup.ANY : weaponSlot;                          // 防御、移速等
+        boolean hasGearData = (affixes != null && !affixes.isEmpty())
+                || upgradeLevel > 0
+                || (gems != null && !gems.isEmpty())
+                || (storedBonuses != null && !storedBonuses.isEmpty());
+        if (!hasGearData) return;
+
+        // 护甲只在自己的护甲槽生效（拿在手里不生效）；武器/工具在主手生效，开启副手模式后在副手生效。
+        EquipmentSlotGroup slot;
+        if (stack.getItem() instanceof ArmorItem armorItem) {
+            slot = EquipmentSlotGroup.bySlot(armorItem.getEquipmentSlot());
+        } else if (Boolean.TRUE.equals(stack.get(ModDataComponents.OFFHAND_MODE.get()))) {
+            slot = EquipmentSlotGroup.OFFHAND;
+        } else {
+            slot = EquipmentSlotGroup.MAINHAND;
+        }
+        ModifierSink sink = new ModifierSink(event, slot);
 
         // 词条属性
         if (affixes != null && !affixes.isEmpty()) {
-            double attackPower = GearHelper.getAffixTotalValue(affixes, "attack_power");
-            if (attackPower > 0) {
-                event.addModifier(Attributes.ATTACK_DAMAGE,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_attack_power"),
-                                attackPower, AttributeModifier.Operation.ADD_VALUE),
-                        attackSlot);
-            }
-
-            double attackSpeed = GearHelper.getAffixTotalValue(affixes, "attack_speed");
-            if (attackSpeed > 0) {
-                event.addModifier(Attributes.ATTACK_SPEED,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_attack_speed"),
-                                attackSpeed, AttributeModifier.Operation.ADD_VALUE),
-                        attackSlot);
-            }
-
-            double defensePower = GearHelper.getAffixTotalValue(affixes, "defense_power");
-            if (defensePower > 0) {
-                event.addModifier(Attributes.ARMOR,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_defense_power"),
-                                defensePower, AttributeModifier.Operation.ADD_VALUE),
-                        otherSlot);
-            }
-
-            double moveSpeed = GearHelper.getAffixTotalValue(affixes, "movement_speed");
-            if (moveSpeed > 0) {
-                event.addModifier(Attributes.MOVEMENT_SPEED,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_movement_speed"),
-                                moveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
-                        otherSlot);
-            }
-
-            double maxHealth = GearHelper.getAffixTotalValue(affixes, "max_health");
-            if (maxHealth > 0) {
-                event.addModifier(Attributes.MAX_HEALTH,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_max_health"),
-                                maxHealth * 2.0, AttributeModifier.Operation.ADD_VALUE),
-                        otherSlot);
-            }
-
-            double knockback = GearHelper.getAffixTotalValue(affixes, "knockback_boost");
-            if (knockback > 0) {
-                event.addModifier(Attributes.ATTACK_KNOCKBACK,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_knockback"),
-                                knockback, AttributeModifier.Operation.ADD_VALUE),
-                        attackSlot);
-            }
-
-            double luck = GearHelper.getAffixTotalValue(affixes, "luck");
-            if (luck > 0) {
-                event.addModifier(Attributes.LUCK,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "affix_luck"),
-                                luck, AttributeModifier.Operation.ADD_VALUE),
-                        otherSlot);
-            }
+            sink.add(Attributes.ATTACK_DAMAGE, "affix_attack_power",
+                    GearHelper.getAffixTotalValue(affixes, "attack_power"), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.ATTACK_SPEED, "affix_attack_speed",
+                    GearHelper.getAffixTotalValue(affixes, "attack_speed"), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.ARMOR, "affix_defense_power",
+                    GearHelper.getAffixTotalValue(affixes, "defense_power"), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.MOVEMENT_SPEED, "affix_movement_speed",
+                    GearHelper.getAffixTotalValue(affixes, "movement_speed"), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+            sink.add(Attributes.MAX_HEALTH, "affix_max_health",
+                    GearHelper.getAffixTotalValue(affixes, "max_health") * 2.0, AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.ATTACK_KNOCKBACK, "affix_knockback",
+                    GearHelper.getAffixTotalValue(affixes, "knockback_boost"), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.LUCK, "affix_luck",
+                    GearHelper.getAffixTotalValue(affixes, "luck"), AttributeModifier.Operation.ADD_VALUE);
         }
 
         // 升级属性
         if (upgradeLevel > 0) {
-            double upgradeAttack = GearHelper.getUpgradedStatBonus("attack_damage", upgradeLevel);
-            if (upgradeAttack > 0) {
-                event.addModifier(Attributes.ATTACK_DAMAGE,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "upgrade_attack_damage"),
-                                upgradeAttack, AttributeModifier.Operation.ADD_VALUE),
-                        attackSlot);   // 盔甲上的攻击升级也作为穿戴效果
-            }
-            double upgradeDefense = GearHelper.getUpgradedStatBonus("defense", upgradeLevel);
-            if (upgradeDefense > 0) {
-                event.addModifier(Attributes.ARMOR,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "upgrade_defense"),
-                                upgradeDefense, AttributeModifier.Operation.ADD_VALUE),
-                        otherSlot);
-            }
-            double upgradeToughness = GearHelper.getUpgradedStatBonus("toughness", upgradeLevel);
-            if (upgradeToughness > 0) {
-                event.addModifier(Attributes.ARMOR_TOUGHNESS,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "upgrade_toughness"),
-                                upgradeToughness, AttributeModifier.Operation.ADD_VALUE),
-                        otherSlot);
-            }
+            sink.add(Attributes.ATTACK_DAMAGE, "upgrade_attack_damage",
+                    GearHelper.getUpgradedStatBonus("attack_damage", upgradeLevel), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.ARMOR, "upgrade_defense",
+                    GearHelper.getUpgradedStatBonus("defense", upgradeLevel), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.ARMOR_TOUGHNESS, "upgrade_toughness",
+                    GearHelper.getUpgradedStatBonus("toughness", upgradeLevel), AttributeModifier.Operation.ADD_VALUE);
         }
 
-        // 宝石属性（已有逻辑不动，但这里也加上统一槽位）
+        // 宝石属性：同一个修饰符 ID 只能加一次，所以多颗宝石的数值先累加
         double totalAllStats = 0;
-        List<ModDataComponents.GemsEntry> gems = stack.get(ModDataComponents.GEMS.get());
         if (gems != null && !gems.isEmpty()) {
+            double gemMoveSpeed = 0;
             for (ModDataComponents.GemsEntry gem : gems) {
                 totalAllStats += GearHelper.getGemStatBonus(gem.id(), "all_stats", gem.tier());
-                double gemMoveSpeed = GearHelper.getGemStatBonus(gem.id(), "movement_speed", gem.tier());
-                if (gemMoveSpeed > 0) {
-                    event.addModifier(Attributes.MOVEMENT_SPEED,
-                            new AttributeModifier(
-                                    ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "gem_movement_speed"),
-                                    gemMoveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
-                            otherSlot);
-                }
+                gemMoveSpeed += GearHelper.getGemStatBonus(gem.id(), "movement_speed", gem.tier());
             }
+            sink.add(Attributes.MOVEMENT_SPEED, "gem_movement_speed", gemMoveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }
 
         // 转生保留奖励
-        List<ModDataComponents.StoredBonus> storedBonuses = stack.get(ModDataComponents.STORED_BONUSES.get());
         if (storedBonuses != null && !storedBonuses.isEmpty()) {
             totalAllStats += GearHelper.getStoredBonusValue(storedBonuses, "all_stats");
-            double storedAttackPower = GearHelper.getStoredBonusValue(storedBonuses, "attack_power");
-            if (storedAttackPower > 0) {
-                event.addModifier(Attributes.ATTACK_DAMAGE,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_attack_power"),
-                                storedAttackPower, AttributeModifier.Operation.ADD_VALUE),
-                        attackSlot);
-            }
-            double storedAttackSpeed = GearHelper.getStoredBonusValue(storedBonuses, "attack_speed");
-            if (storedAttackSpeed > 0) {
-                event.addModifier(Attributes.ATTACK_SPEED,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_attack_speed"),
-                                storedAttackSpeed, AttributeModifier.Operation.ADD_VALUE),
-                        attackSlot);
-            }
-            double storedDefensePower = GearHelper.getStoredBonusValue(storedBonuses, "defense_power");
-            if (storedDefensePower > 0) {
-                event.addModifier(Attributes.ARMOR,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_defense_power"),
-                                storedDefensePower, AttributeModifier.Operation.ADD_VALUE),
-                        otherSlot);
-            }
-            double storedMoveSpeed = GearHelper.getStoredBonusValue(storedBonuses, "movement_speed");
-            if (storedMoveSpeed > 0) {
-                event.addModifier(Attributes.MOVEMENT_SPEED,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_movement_speed"),
-                                storedMoveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
-                        otherSlot);
-            }
-            double storedUpgradeAttack = GearHelper.getStoredBonusValue(storedBonuses, "upgrade_attack_damage");
-            if (storedUpgradeAttack > 0) {
-                event.addModifier(Attributes.ATTACK_DAMAGE,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_upgrade_attack"),
-                                storedUpgradeAttack, AttributeModifier.Operation.ADD_VALUE),
-                        attackSlot);
-            }
-            double storedUpgradeDefense = GearHelper.getStoredBonusValue(storedBonuses, "upgrade_defense");
-            if (storedUpgradeDefense > 0) {
-                event.addModifier(Attributes.ARMOR,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_upgrade_defense"),
-                                storedUpgradeDefense, AttributeModifier.Operation.ADD_VALUE),
-                        otherSlot);
-            }
-            double storedUpgradeToughness = GearHelper.getStoredBonusValue(storedBonuses, "upgrade_toughness");
-            if (storedUpgradeToughness > 0) {
-                event.addModifier(Attributes.ARMOR_TOUGHNESS,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_upgrade_toughness"),
-                                storedUpgradeToughness, AttributeModifier.Operation.ADD_VALUE),
-                        otherSlot);
-            }
-            double storedGemMoveSpeed = GearHelper.getStoredBonusValue(storedBonuses, "gem_movement_speed");
-            if (storedGemMoveSpeed > 0) {
-                event.addModifier(Attributes.MOVEMENT_SPEED,
-                        new AttributeModifier(
-                                ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "stored_gem_movement"),
-                                storedGemMoveSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
-                        otherSlot);
-            }
+            sink.add(Attributes.ATTACK_DAMAGE, "stored_attack_power",
+                    GearHelper.getStoredBonusValue(storedBonuses, "attack_power"), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.ATTACK_SPEED, "stored_attack_speed",
+                    GearHelper.getStoredBonusValue(storedBonuses, "attack_speed"), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.ARMOR, "stored_defense_power",
+                    GearHelper.getStoredBonusValue(storedBonuses, "defense_power"), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.MOVEMENT_SPEED, "stored_movement_speed",
+                    GearHelper.getStoredBonusValue(storedBonuses, "movement_speed"), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+            sink.add(Attributes.ATTACK_DAMAGE, "stored_upgrade_attack",
+                    GearHelper.getStoredBonusValue(storedBonuses, "upgrade_attack_damage"), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.ARMOR, "stored_upgrade_defense",
+                    GearHelper.getStoredBonusValue(storedBonuses, "upgrade_defense"), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.ARMOR_TOUGHNESS, "stored_upgrade_toughness",
+                    GearHelper.getStoredBonusValue(storedBonuses, "upgrade_toughness"), AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.MOVEMENT_SPEED, "stored_gem_movement",
+                    GearHelper.getStoredBonusValue(storedBonuses, "gem_movement_speed"), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }
-        // --- 应用 all_stats 的多重加成 ---
+
+        // all_stats：1 点全属性 = 1 护甲 + 1 幸运 + 2 生命
         if (totalAllStats > 0) {
-            // 1. 增加护甲值 (Armor)
-            event.addModifier(Attributes.ARMOR,
-                    new AttributeModifier(
-                            ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "all_stats_armor"),
-                            totalAllStats, AttributeModifier.Operation.ADD_VALUE),
-                    otherSlot);
+            sink.add(Attributes.ARMOR, "all_stats_armor", totalAllStats, AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.LUCK, "all_stats_luck", totalAllStats, AttributeModifier.Operation.ADD_VALUE);
+            sink.add(Attributes.MAX_HEALTH, "all_stats_health", totalAllStats * 2, AttributeModifier.Operation.ADD_VALUE);
+        }
+    }
 
-            // 2. 增加幸运值 (Luck)
-            event.addModifier(Attributes.LUCK,
-                    new AttributeModifier(
-                            ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "all_stats_luck"),
-                            totalAllStats, AttributeModifier.Operation.ADD_VALUE),
-                    otherSlot);
-
-            // 3. 增加生命值 (Max Health)
-            // 注意：生命值加成通常只在护甲上生效比较平衡，如果你希望武器也加血，保持 otherSlot 即可
-            event.addModifier(Attributes.MAX_HEALTH,
-                    new AttributeModifier(
-                            ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID, "all_stats_health"),
-                            totalAllStats * 2, // 比如 1点全属性 = 2点生命值(1颗心)
-                            AttributeModifier.Operation.ADD_VALUE),
-                    otherSlot);
+    /**
+     * 往物品上挂属性修饰符。修饰符 ID 带上槽位后缀（例如 gear_forge:upgrade_defense/head），
+     * 原版按 ID 合并修饰符，四件盔甲用同一个 ID 时只有一件生效，脱下一件还会把其它件的也移除。
+     */
+    private record ModifierSink(ItemAttributeModifierEvent event, EquipmentSlotGroup slot) {
+        void add(Holder<Attribute> attribute, String name, double value, AttributeModifier.Operation operation) {
+            if (value <= 0) return;
+            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(GearForgeMod.MODID,
+                    name + "/" + slot.getSerializedName());
+            event.addModifier(attribute, new AttributeModifier(id, value, operation), slot);
         }
     }
 
@@ -612,79 +514,94 @@ public class GearEventHandlers {
     public static void onLivingDrops(LivingDropsEvent event) {
         LivingEntity entity = event.getEntity();
         if (entity.level().isClientSide()) return;
+        // 玩家死亡的掉落是整个背包，不能参与掠夺复制
+        if (entity instanceof Player) return;
 
-        var source = event.getSource();
-        Entity killer = source.getEntity();
+        Entity killer = event.getSource().getEntity();
         if (!(killer instanceof LivingEntity livingKiller)) return;
 
         ItemStack weapon = resolveActiveWeapon(livingKiller);
         if (weapon.isEmpty()) return;
 
-        List<ModDataComponents.AffixEntry> affixes = weapon.get(ModDataComponents.AFFIXES.get());
-        List<ModDataComponents.GemsEntry> gems = weapon.get(ModDataComponents.GEMS.get());
-        List<ModDataComponents.StoredBonus> stored = weapon.get(ModDataComponents.STORED_BONUSES.get());
+        double lootingBonus = getLootingBonus(weapon);
+        if (lootingBonus <= 0) return;
 
-        double lootingBonus = 0;
-
-        if (affixes != null) {
-            double affixLooting = GearHelper.getAffixTotalValueDirect(affixes, "looting_bonus");
-            lootingBonus += affixLooting;
+        int extraRolls = (int) lootingBonus;
+        double fraction = lootingBonus - extraRolls;
+        if (entity.getRandom().nextDouble() < fraction) {
+            extraRolls++;
         }
 
+        // 只复制普通战利品，不复制怪物身上掉下来的装备（带词条/强化的装备会被整件复制）
+        List<ItemEntity> originalDrops = new ArrayList<>();
+        for (ItemEntity drop : event.getDrops()) {
+            if (!drop.getItem().isDamageableItem()) {
+                originalDrops.add(drop);
+            }
+        }
+        for (int i = 0; i < extraRolls && !originalDrops.isEmpty(); i++) {
+            for (ItemEntity drop : originalDrops) {
+                ItemStack dropStack = drop.getItem().copyWithCount(1);
+                event.getDrops().add(new ItemEntity(entity.level(),
+                        drop.getX(), drop.getY(), drop.getZ(), dropStack));
+            }
+        }
+    }
+
+    private static double getLootingBonus(ItemStack weapon) {
+        double lootingBonus = 0;
+
+        List<ModDataComponents.AffixEntry> affixes = weapon.get(ModDataComponents.AFFIXES.get());
+        if (affixes != null) {
+            lootingBonus += GearHelper.getAffixTotalValueDirect(affixes, "looting_bonus");
+        }
+
+        List<ModDataComponents.GemsEntry> gems = weapon.get(ModDataComponents.GEMS.get());
         if (gems != null) {
             for (ModDataComponents.GemsEntry gem : gems) {
                 lootingBonus += GearHelper.getGemStatBonus(gem.id(), "looting", gem.tier());
             }
         }
 
+        List<ModDataComponents.StoredBonus> stored = weapon.get(ModDataComponents.STORED_BONUSES.get());
         if (stored != null) {
             lootingBonus += GearHelper.getStoredBonusValue(stored, "looting_bonus");
             lootingBonus += GearHelper.getStoredBonusValue(stored, "looting");
         }
+        return lootingBonus;
+    }
 
-        if (lootingBonus > 0 && event.getDrops() != null) {
-            int extraRolls = (int) lootingBonus;
-            double fraction = lootingBonus - extraRolls;
-            if (entity.getRandom().nextDouble() < fraction) {
-                extraRolls++;
-            }
-            List<ItemEntity> originalDrops = new ArrayList<>(event.getDrops());
-            for (int i = 0; i < extraRolls && !originalDrops.isEmpty(); i++) {
-                for (ItemEntity drop : originalDrops) {
-                    ItemStack dropStack = drop.getItem().copy();
-                    dropStack.setCount(1);
-                    event.getDrops().add(new ItemEntity(entity.level(),
-                            drop.getX(), drop.getY(), drop.getZ(), dropStack));
-                }
-            }
-        }
+    /** xp_bonus 词条：按百分比提高击杀掉落的经验。 */
+    @SubscribeEvent
+    public static void onLivingExperienceDrop(LivingExperienceDropEvent event) {
+        Player player = event.getAttackingPlayer();
+        if (player == null || event.getDroppedExperience() <= 0) return;
 
+        ItemStack weapon = resolveActiveWeapon(player);
+        if (weapon.isEmpty()) return;
+
+        double xpBonus = 0;
+        List<ModDataComponents.AffixEntry> affixes = weapon.get(ModDataComponents.AFFIXES.get());
         if (affixes != null) {
-            double xpBonus = GearHelper.getAffixTotalValueDirect(affixes, "xp_bonus");
-            if (xpBonus > 0) {
-                int extraXp = (int) (event.getDrops().size() * xpBonus);
-                if (extraXp > 0) {
-                    entity.level().addFreshEntity(new ExperienceOrb(entity.level(),
-                            entity.getX(), entity.getY(), entity.getZ(), extraXp));
-                }
-            }
+            xpBonus += GearHelper.getAffixTotalValueDirect(affixes, "xp_bonus");
         }
-
+        List<ModDataComponents.StoredBonus> stored = weapon.get(ModDataComponents.STORED_BONUSES.get());
         if (stored != null) {
-            double storedXp = GearHelper.getStoredBonusValue(stored, "xp_bonus");
-            if (storedXp > 0) {
-                int extraXp = (int) (event.getDrops().size() * storedXp);
-                if (extraXp > 0) {
-                    entity.level().addFreshEntity(new ExperienceOrb(entity.level(),
-                            entity.getX(), entity.getY(), entity.getZ(), extraXp));
-                }
-            }
+            xpBonus += GearHelper.getStoredBonusValue(stored, "xp_bonus");
         }
+        if (xpBonus <= 0) return;
+
+        double bonus = event.getDroppedExperience() * xpBonus;
+        int extra = (int) bonus;
+        if (player.getRandom().nextDouble() < bonus - extra) {
+            extra++;
+        }
+        event.setDroppedExperience(event.getDroppedExperience() + extra);
     }
 
     @SubscribeEvent
-    public static void onEntityTickPost(EntityTickEvent.Post event) {
-        if (!(event.getEntity() instanceof Player player)) return;
+    public static void onPlayerTickPost(PlayerTickEvent.Post event) {
+        Player player = event.getEntity();
         if (player.level().isClientSide()) return;
 
         if (player.tickCount % 20 != 0) return;
@@ -805,6 +722,9 @@ public class GearEventHandlers {
                     entry.newDamage = (float) (entry.newDamage * (1.0 - storedDurabilityBoost * 0.5));
                 }
             }
+
+            // 高阶翡翠（耐久 +50% × 阶级）叠加后系数可能小于 0，负数耐久损耗会变成修复
+            entry.newDamage = Math.max(0, entry.newDamage);
         });
     }
 
@@ -822,11 +742,11 @@ public class GearEventHandlers {
             GemConfig gemConfig = ModConfigs.getGemConfig();
             boolean isRawGem = false;
             for (GemDefinition gem : gemConfig.getGems()) {
-                if (gem.getItemId().equals(itemIdStr)) {
+                if (itemIdStr.equals(gem.getItemId()) && gem.getEffects() != null) {
                     isRawGem = true;
                     tooltip.add(Component.empty());
 
-                    ChatFormatting gemColor = switch (gem.getRarity()) {
+                    ChatFormatting gemColor = switch (gem.getRarity() == null ? "" : gem.getRarity()) {
                         case "rare" -> ChatFormatting.BLUE;
                         case "epic" -> ChatFormatting.LIGHT_PURPLE;
                         default -> ChatFormatting.GREEN;
@@ -896,34 +816,18 @@ public class GearEventHandlers {
                 tooltip.add(Component.translatable("tooltip.gear_forge.affixes_header")
                         .withStyle(ChatFormatting.GRAY));
 
-                // 合并同名（同显示名）的词条数值
+                // 合并同名（同显示名）的词条数值，累加原始值，输出时按第一个词条的类型格式化
                 Map<String, Double> mergedAffixes = new LinkedHashMap<>();
+                Map<String, String> firstIdByName = new LinkedHashMap<>();
                 for (ModDataComponents.AffixEntry entry : affixes) {
                     String displayName = getAffixDisplayName(entry.id());
-                    String formattedValue = formatAffixValue(entry.id(), entry.value());
-                    // 由于 formattedValue 可能带百分号，我们需要还原原始数值进行累加
-                    double val = entry.value();
-                    if (formattedValue.endsWith("%")) {
-                        // 百分比格式的数值已经被乘以100，累加时用原始值
-                        val = entry.value();
-                    }
-                    mergedAffixes.merge(displayName, val, Double::sum);
+                    mergedAffixes.merge(displayName, entry.value(), Double::sum);
+                    firstIdByName.putIfAbsent(displayName, entry.id());
                 }
 
-                // 输出合并后的行（保留百分比格式需要根据id判断，简单起见统一用数值和名称，格式由formatAffixValue对单个条目处理）
-                // 这里直接显示总和，格式需要重新生成，将每个显示名对应的总和重新格式化。
                 for (var entry : mergedAffixes.entrySet()) {
                     String displayName = entry.getKey();
-                    double totalValue = entry.getValue();
-                    // 查找第一个匹配的id以获取格式类型（假设同名的id类型相同，简单取第一个）
-                    String firstId = null;
-                    for (ModDataComponents.AffixEntry affix : affixes) {
-                        if (getAffixDisplayName(affix.id()).equals(displayName)) {
-                            firstId = affix.id();
-                            break;
-                        }
-                    }
-                    String formattedValue = formatAffixValue(firstId != null ? firstId : displayName, totalValue);
+                    String formattedValue = formatAffixValue(firstIdByName.get(displayName), entry.getValue());
                     tooltip.add(Component.literal(" ").append(Component.literal(displayName + ": " + formattedValue))
                             .withStyle(ChatFormatting.DARK_AQUA));
                 }

@@ -1,6 +1,0 @@
-﻿{
-  "parent": "item/generated",
-  "textures": {
-    "layer0":"gear_forge:item/upgrade_crystal"
-  }
-}
