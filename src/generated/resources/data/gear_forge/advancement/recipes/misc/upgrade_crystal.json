@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:upgrade_crystal"
+        "recipes": "gear_forge:upgrade_crystal"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

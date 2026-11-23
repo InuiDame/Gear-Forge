@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:forge_hammer"
+        "recipes": "gear_forge:forge_hammer"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

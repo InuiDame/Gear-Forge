@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:yaokin_hammer"
+        "recipes": "gear_forge:yaokin_hammer"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

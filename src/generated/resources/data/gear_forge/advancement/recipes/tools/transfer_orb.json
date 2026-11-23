@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:transfer_orb"
+        "recipes": "gear_forge:transfer_orb"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

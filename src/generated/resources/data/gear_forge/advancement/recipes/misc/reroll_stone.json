@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:reroll_stone"
+        "recipes": "gear_forge:reroll_stone"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

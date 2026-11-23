@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:ruby"
+        "recipes": "gear_forge:ruby"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

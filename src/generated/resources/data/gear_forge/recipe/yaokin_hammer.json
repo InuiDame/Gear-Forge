@@ -2,15 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "D": {
-      "item": "gear_forge:yaokin_ingot"
-    },
-    "I": {
-      "item": "gear_forge:yaokin_ingot"
-    },
-    "S": {
-      "item": "minecraft:stick"
-    }
+    "D": "gear_forge:yaokin_ingot",
+    "I": "gear_forge:yaokin_ingot",
+    "S": "minecraft:stick"
   },
   "pattern": [
     " ID",

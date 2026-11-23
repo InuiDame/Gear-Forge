@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:onyx"
+        "recipes": "gear_forge:onyx"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

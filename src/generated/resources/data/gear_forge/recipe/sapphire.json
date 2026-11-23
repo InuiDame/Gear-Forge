@@ -2,21 +2,11 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "minecraft:lapis_block"
-    },
-    {
-      "item": "minecraft:lapis_block"
-    },
-    {
-      "item": "minecraft:amethyst_shard"
-    },
-    {
-      "item": "minecraft:amethyst_shard"
-    },
-    {
-      "item": "minecraft:popped_chorus_fruit"
-    }
+    "minecraft:lapis_block",
+    "minecraft:lapis_block",
+    "minecraft:amethyst_shard",
+    "minecraft:amethyst_shard",
+    "minecraft:popped_chorus_fruit"
   ],
   "result": {
     "count": 1,

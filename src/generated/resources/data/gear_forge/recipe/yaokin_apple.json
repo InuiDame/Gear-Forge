@@ -2,21 +2,11 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "gear_forge:yaokin_ingot"
-    },
-    {
-      "item": "gear_forge:yaokin_ingot"
-    },
-    {
-      "item": "gear_forge:yaokin_ingot"
-    },
-    {
-      "item": "gear_forge:yaokin_ingot"
-    },
-    {
-      "item": "minecraft:apple"
-    }
+    "gear_forge:yaokin_ingot",
+    "gear_forge:yaokin_ingot",
+    "gear_forge:yaokin_ingot",
+    "gear_forge:yaokin_ingot",
+    "minecraft:apple"
   ],
   "result": {
     "count": 1,

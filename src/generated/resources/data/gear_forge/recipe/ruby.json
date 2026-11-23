@@ -2,21 +2,11 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "minecraft:redstone_block"
-    },
-    {
-      "item": "minecraft:redstone_block"
-    },
-    {
-      "item": "minecraft:amethyst_shard"
-    },
-    {
-      "item": "minecraft:amethyst_shard"
-    },
-    {
-      "item": "minecraft:popped_chorus_fruit"
-    }
+    "minecraft:redstone_block",
+    "minecraft:redstone_block",
+    "minecraft:amethyst_shard",
+    "minecraft:amethyst_shard",
+    "minecraft:popped_chorus_fruit"
   ],
   "result": {
     "count": 1,

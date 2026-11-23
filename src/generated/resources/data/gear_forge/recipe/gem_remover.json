@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "D": {
-      "item": "minecraft:diamond"
-    },
-    "R": {
-      "item": "minecraft:redstone_block"
-    }
+    "D": "minecraft:diamond",
+    "R": "minecraft:redstone_block"
   },
   "pattern": [
     "D D",

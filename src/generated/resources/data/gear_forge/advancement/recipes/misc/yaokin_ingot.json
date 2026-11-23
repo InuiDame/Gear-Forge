@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:yaokin_ingot"
+        "recipes": "gear_forge:yaokin_ingot"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:gem_remover"
+        "recipes": "gear_forge:gem_remover"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

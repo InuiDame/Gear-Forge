@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "gear_forge:emerald_gem"
+        "recipes": "gear_forge:emerald_gem"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
