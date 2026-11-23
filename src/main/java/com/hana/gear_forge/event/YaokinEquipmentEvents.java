@@ -12,16 +12,11 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.level.BlockDropsEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import top.theillusivec4.curios.api.CuriosApi;
 
@@ -100,27 +95,8 @@ public final class YaokinEquipmentEvents {
         }
     }
 
-    /** 点金：掉落金锭数等于点金等级（N 级掉 N 个）。 */
-    @SubscribeEvent
-    public static void onBlockDrops(BlockDropsEvent event) {
-        if (!(event.getBreaker() instanceof ServerPlayer player)) return;
-        if (!isStone(event.getState())) return;
-
-        int level = MidasTouchHandler.currentLevel(player);
-        if (level <= 0) return;
-
-        event.getDrops().clear();
-        int count = level;
-        var pos = event.getPos();
-        event.getDrops().add(new ItemEntity(event.getLevel(),
-                pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D,
-                new ItemStack(Items.GOLD_INGOT, count)));
-    }
-
-    private static boolean isStone(BlockState state) {
-        return state.is(Blocks.STONE) || state.is(Blocks.COBBLESTONE)
-                || state.is(Blocks.DEEPSLATE) || state.is(Blocks.COBBLED_DEEPSLATE);
-    }
+    // 点金的掉落结算已并入 ModEnchantmentEvents.onBlockDrops，避免多个 BlockDropsEvent
+    // 监听器互相 clear() 覆盖；等级来源仍由本类的 MidasTouchHandler 管理。
 
     /** 携带耀金硬币击杀怪物 → 30 秒点金 I。 */
     @SubscribeEvent
