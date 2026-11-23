@@ -2,6 +2,7 @@ package com.hana.gear_forge;
 
 import com.hana.gear_forge.block.ModBlocks;
 import com.hana.gear_forge.component.ModDataComponents;
+import com.hana.gear_forge.content.YaokinMaterial;
 import com.hana.gear_forge.config.ModConfigs;
 import com.hana.gear_forge.item.ModCreativeTabs;
 import com.hana.gear_forge.item.ModItems;
@@ -27,6 +28,7 @@ public class GearForgeMod {
         ModRecipeSerializers.RECIPE_SERIALIZERS.register(modEventBus);
         ModBlocks.BLOCKS.register(modEventBus);
         ModMenus.MENU_TYPES.register(modEventBus);
+        YaokinMaterial.ARMOR_MATERIALS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         ModGlobalLootModifiers.GLM_SERIALIZERS.register(modEventBus);
 

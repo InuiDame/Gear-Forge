@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "gear_forge:item/yaokin_hammer"
+  }
+}

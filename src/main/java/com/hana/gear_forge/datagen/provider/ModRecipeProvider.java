@@ -1,14 +1,28 @@
 package com.hana.gear_forge.datagen.provider;
 
+import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.item.ModItems;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.common.conditions.IConditionBuilder;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * 全部合成配方。
+ *
+ * <p>耀金相关的三条链：
+ * <ol>
+ *   <li>耀金锭：3 金锭 + 3 钻石（固定配方）。</li>
+ *   <li>耀金升级模板：用下界合金升级模板 + 耀金锭复制，保证模板可再生。</li>
+ *   <li>耀金套装：<b>不在这里</b>——它是锻造台配方（下界合金装备 + 耀金锭 + 模板），
+ *       由 {@code GearSmithingRecipe} 在运行时判定，见 {@link com.hana.gear_forge.recipe.YaokinUpgradeRecipe}。</li>
+ * </ol>
+ */
 public class ModRecipeProvider extends RecipeProvider implements IConditionBuilder {
 
     public ModRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
@@ -17,6 +31,8 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
 
     @Override
     protected void buildRecipes(RecipeOutput output) {
+        // ===================== 原有材料 =====================
+
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.UPGRADE_CRYSTAL.get())
                 .requires(Items.DIAMOND, 3)
                 .requires(Items.NETHERITE_SCRAP)
@@ -109,5 +125,48 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_netherite", has(Items.NETHERITE_INGOT))
                 .save(output);
 
+        // ===================== 强化台 =====================
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModItems.FORGE_TABLE.get())
+                .pattern("@X@")
+                .pattern("###")
+                .pattern("###")
+                .define('@', Items.IRON_INGOT)
+                .define('X', Items.SMITHING_TABLE)
+                .define('#', net.minecraft.tags.ItemTags.PLANKS)
+                .unlockedBy("has_smithing_table", has(Items.SMITHING_TABLE))
+                .save(output);
+
+        // ===================== 耀金 =====================
+
+        // 耀金锭：3 金锭 + 3 钻石，固定配方（作者指定）。
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.YAOKIN_INGOT.get())
+                .requires(Items.GOLD_INGOT, 3)
+                .requires(Items.DIAMOND, 3)
+                .unlockedBy("has_gold_ingot", has(Items.GOLD_INGOT))
+                .save(output);
+
+        // 耀金铁锤：耀金锭 + 木棍，形状沿用锻造锤但更重。
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.YAOKIN_HAMMER.get())
+                .pattern(" ID")
+                .pattern(" SI")
+                .pattern("S  ")
+                .define('I', ModItems.YAOKIN_INGOT.get())
+                .define('D', ModItems.YAOKIN_INGOT.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
+                .save(output);
+
+        // 耀金升级模板复制：原版下界合金升级模板 + 耀金锭 → 1 个耀金升级模板。
+        // 这样模板本身可再生，玩家不会因为用错一次就永久失去升级途径。
+        SmithingTransformRecipeBuilder.smithing(
+                        Ingredient.of(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE),
+                        Ingredient.of(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE),
+                        Ingredient.of(ModItems.YAOKIN_INGOT.get()),
+                        RecipeCategory.MISC,
+                        ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get())
+                .unlocks("has_yaokin_ingot", has(ModItems.YAOKIN_INGOT.get()))
+                .save(output, ResourceLocation.fromNamespaceAndPath(
+                        GearForgeMod.MODID, "yaokin_upgrade_smithing_template"));
     }
 }

@@ -25,8 +25,9 @@ com.hana.gear_forge
 ├── menu/                   强化台菜单（ForgeTableMenu）与 MenuType
 ├── item/                   物品、创造模式标签页；item/custom/ 是材料物品（提示文本 + 右键提示去锻造台）
 ├── compat/curios/          两个饰品物品（实现 ICurioItem）
-├── content/                ModEnchantments：7 个附魔的 ResourceKey 常量
-├── event/                  游戏事件处理：属性、伤害、掉落、经验、附魔行为、饰品、怪物装备、命令注册
+├── compat/jei/             JEI 插件：强化台配方分类 + 耀金升级展示（可选依赖）
+├── content/                ModEnchantments：7 个附魔的 ResourceKey；YaokinMaterial：耀金工具/盔甲材质
+├── event/                  游戏事件处理：属性、伤害、掉落、经验、附魔行为、饰品、怪物装备、命令注册、弧刀斩击
 ├── client/                 仅客户端的监听器：tip 文本、附魔说明、断线恢复本地配置
 ├── network/                配置同步 payload 与登录时下发
 ├── mixin/                  LivingEntityMixin（弓蓄力）、SmithingMenuMixin（转生材料扣除）
@@ -41,7 +42,7 @@ com.hana.gear_forge
 资源分两处：
 
 - `src/main/resources/`：手写资源（语言、贴图、附魔定义、物品标签、战利品修改器、Curios 实体槽位与物品标签、mixin 配置）。
-- `src/generated/resources/`：`runData` 生成的资源（14 个物品模型、12 个合成配方与进度、Curios 槽位）。不要手改，也不要在 `src/main/resources` 放同路径文件（ADR-0006）。
+- `src/generated/resources/`：`runData` 生成的资源（23 个物品模型、16 个合成配方与进度、Curios 槽位）。不要手改，也不要在 `src/main/resources` 放同路径文件（ADR-0006）。
 
 `src/main/templates/META-INF/neoforge.mods.toml` 是模组元数据模板，构建时由 `generateModMetadata` 用 `gradle.properties` 里的值展开。
 
@@ -123,16 +124,26 @@ flowchart LR
 
 `canApply` 是分派逻辑的**唯一真源**：`matches` 和 `assemble` 都调用它。`assemble` 不再依赖"调用方已经走过 `matches`"，任何直接调用（配方书预览、其它 mod 的机器方块、脚本）都会得到合法结果或空产物，而不是越界加成或原样复制底材。
 
-分派顺序：锻造锤 → 重铸石 → 宝石镶嵌 → 宝石升阶 → 副手切换 → 附魔书 → 宝石摘除 → 转生石。
+分派顺序：耀金升级 → 锻造锤 → 重铸石 → 宝石镶嵌 → 宝石升阶 → 副手切换 → 附魔书 → 宝石摘除 → 耀金铁锤（剑→弧刀）→ 转生石。
 
 几个由"借用原版锻造台"带来的约束：
 
 - 原版取出时三个输入格各只扣 1 个，所以 `assemble` 必须只产出 1 个（否则整组底材会被复制），需要多个材料的操作（转生）要靠 `SmithingMenuMixin` 补扣。补扣的条件是"产物上的 `reincarnation_count` 比底材多 1"，不看材料槽，因此不会被别的操作误触发。
-- **除转生外，所有操作的模板槽必须为空**。原版无条件扣模板槽，如果允许在模板槽放钻石/下界合金块，每次操作都会白吞一个。
+- **除转生和耀金升级外，所有操作的模板槽必须为空**。原版无条件扣模板槽，如果允许在模板槽放钻石/下界合金块，每次操作都会白吞一个。耀金升级是有意复用模板槽语义，因此也必须在 `GearSmithingRecipe.isTemplateIngredient`/`isAdditionIngredient` 中显式放行「耀金升级模板」和「耀金锭」，否则槽位会拒绝放入。
 - 结果在放入物品时就算出并显示。重铸用的是盐值派生的确定种子，反复放取不会得到不同结果（ADR-0008）。
 - 宝石镶嵌分支要求模板槽为空，否则会抢占原版"钻石纹饰"配方并吞掉纹饰模板。
 - 强化的成功率/降级/损毁/材料消耗全部由 `upgrades.json` 决定（ADR-0009）。预览固定显示 +1，真正的掷骰在取出时（`SmithingMenuMixin.onTake`）发生，所以预览不能刷、客户端也不参与结算。默认配置下 0→5 级必成（合计 15 钻石），6→15 级成功率 75%→30%、每级 5 钻石。
 - 配方标记为 `isSpecial() = true`，产物由输入动态决定，不进入配方书。
+
+### 耀金升级与弧刀
+
+耀金升级没有写成数据包配方，而是在 `YaokinUpgradeRecipe` 里维护「下界合金盔甲 → 耀金盔甲」的映射，由 `GearSmithingRecipe` 在运行时判定。这样强化台和原版锻造台共用同一份逻辑，也避免为四件盔甲各写一份 `smithing_transform` JSON。升级保留附魔、自定义名称和耐久比例，不继承强化等级/词条/宝石。
+
+耀金铁锤（`YaokinHammerItem`）本身没有逻辑，分派在 `GearSmithingRecipe` 的 `YAOKIN_HAMMER` 分支：只接受 `SwordItem`（排除已是弧刀的物品），产出一把新的 `YaokinCurvedBladeItem`，保留原剑附魔与名称。弧刀属性由 `createBladeAttributes()` 定义（攻击距离 +1、攻速 2.0、伤害 6），每第 3 次命中由 `ArcSlashHandler` 做扇形额外伤害与粒子/音效，计数存在 `arc_slash_charges` 数据组件里，随物品持久化并同步。
+
+### JEI
+
+`compat/jei/GearForgeJeiPlugin` 带 `@JeiPlugin`，只在 JEI 存在时加载，因此 JEI 是可选依赖。由于 `GearSmithingRecipe.isSpecial()` 为 true、产物无法反推，插件手工构造示例展示（强化、重铸、镶嵌、升阶、副手、附魔书、摘除、转生、剑→弧刀），耀金升级则借用原版 `SMITHING` 分类展示。开发环境只依赖 `libs/` 下的 JEI API jar，不带完整 JEI，需要在开发客户端手动安装 JEI 才能查看界面。
 
 ## 6. 效果结算
 
@@ -190,4 +201,4 @@ flowchart LR
 
 ## 11. 数据生成
 
-`DataGenerators` 注册三个 provider：物品模型（客户端，14 个）、配方（服务端）、Curios 槽位（服务端）。运行 `./gradlew runData` 输出到 `src/generated/resources`，并通过 `--existing src/main/resources` 校验引用的贴图存在。
+`DataGenerators` 注册三个 provider：物品模型（客户端，23 个）、配方（服务端，16 个）、Curios 槽位（服务端）。运行 `./gradlew runData` 输出到 `src/generated/resources`，并通过 `--existing src/main/resources` 校验引用的贴图存在。

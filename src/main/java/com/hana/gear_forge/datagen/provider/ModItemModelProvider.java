@@ -33,6 +33,16 @@ public class ModItemModelProvider extends ItemModelProvider {
         // 方块物品的模型继承方块模型，用原版锻造台的贴图拼出紫色版本。
         withExistingParent("forge_table", modLoc("block/forge_table"));
 
+        // 耀金系列
+        basicItem(ModItems.YAOKIN_INGOT.get());
+        basicItem(ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get());
+        handheldItem(ModItems.YAOKIN_HAMMER.get());
+        handheldItem(ModItems.YAOKIN_CURVED_BLADE.get());
+        basicItem(ModItems.YAOKIN_HELMET.get());
+        basicItem(ModItems.YAOKIN_CHESTPLATE.get());
+        basicItem(ModItems.YAOKIN_LEGGINGS.get());
+        basicItem(ModItems.YAOKIN_BOOTS.get());
+
     }
 
 }

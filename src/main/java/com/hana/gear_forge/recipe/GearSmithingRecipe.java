@@ -63,8 +63,17 @@ public class GearSmithingRecipe implements SmithingRecipe {
 
         if (base.isEmpty() || addition.isEmpty()) return false;
 
+        // 耀金升级：模板槽放耀金升级模板 + 材料槽放耀金锭 + 底材是下界合金装备。
+        // 放在最前面，因为它的模板槽语义与其它操作不同（要的是特定模板而不是材料）。
+        if (YaokinUpgradeRecipe.isUpgradeTemplate(template)
+                && YaokinUpgradeRecipe.isUpgradeMaterial(addition)
+                && YaokinUpgradeRecipe.isUpgradable(base)) {
+            return true;
+        }
+
         // 锻造锤：强化 +1，模板槽放消耗材料（可配置，默认钻石）。
         if (addition.is(ModItems.FORGE_HAMMER.get()) && GearHelper.isGearItem(base)) {
+
             UpgradeConfig upgrade = ModConfigs.getUpgradeConfig();
             int currentLevel = base.getOrDefault(ModDataComponents.UPGRADE_LEVEL.get(), 0);
             if (currentLevel >= upgrade.getMaxLevelSafe()) return false;
@@ -113,7 +122,14 @@ public class GearSmithingRecipe implements SmithingRecipe {
             return gems != null && !gems.isEmpty();
         }
 
+        // 耀金铁锤：把剑重新锻打成弧刀。模板槽必须为空（只消耗铁锤本身）。
+        if (addition.is(ModItems.YAOKIN_HAMMER.get())) {
+            if (!template.isEmpty()) return false;
+            return isSwordLike(base);
+        }
+
         // 转生石：装备满级 + 模板槽放下界合金块（可配置）。
+
         if (addition.is(ModItems.REINCARNATION_STONE.get()) && GearHelper.isGearItem(base)) {
             UpgradeConfig config = ModConfigs.getUpgradeConfig();
             if (!config.isReincarnationEnabled()) return false;
@@ -161,6 +177,13 @@ public class GearSmithingRecipe implements SmithingRecipe {
         ItemStack base = input.base();
         // 原版锻造台每次只消耗 1 个底材，产物也必须只有 1 个，否则整组底材放进去会被复制。
         ItemStack result = base.copyWithCount(1);
+
+        // 耀金升级：产出一件全新的耀金装备，不走 copyWithCount 的路径。
+        if (YaokinUpgradeRecipe.isUpgradeTemplate(input.template())
+                && YaokinUpgradeRecipe.isUpgradeMaterial(addition)
+                && YaokinUpgradeRecipe.isUpgradable(base)) {
+            return YaokinUpgradeRecipe.upgrade(base);
+        }
 
         if (addition.is(ModItems.FORGE_HAMMER.get())) {
             // 预览固定显示 +1：真正的成功/降级/损毁由 SmithingMenuMixin 在取出时掷骰决定。
@@ -227,6 +250,21 @@ public class GearSmithingRecipe implements SmithingRecipe {
                 result.set(ModDataComponents.GEMS.get(), List.copyOf(gems));
             }
             return result;
+        }
+
+        if (addition.is(ModItems.YAOKIN_HAMMER.get())) {
+            // 重新锻打：产出一把空的耀金弧刀，保留原剑的附魔与自定义名称。
+            // 强化等级、词条、宝石都不保留——这是"重铸成另一件武器"，不是升级。
+            ItemStack blade = new ItemStack(ModItems.YAOKIN_CURVED_BLADE.get());
+            var enchantments = EnchantmentHelper.getEnchantmentsForCrafting(result);
+            if (!enchantments.isEmpty()) {
+                EnchantmentHelper.setEnchantments(blade, enchantments);
+            }
+            var customName = result.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+            if (customName != null) {
+                blade.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
+            }
+            return blade;
         }
 
         if (addition.is(ModItems.REINCARNATION_STONE.get())) {
@@ -300,6 +338,8 @@ public class GearSmithingRecipe implements SmithingRecipe {
         if (config.consumesMaterial() && isItemMatchingId(stack, config.getConsumeMaterial())) {
             return true;
         }
+        // 耀金升级模板
+        if (stack.is(ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get())) return true;
         // 转生材料
         return config.isReincarnationEnabled()
                 && isItemMatchingId(stack, config.getReincarnationCostMaterial());
@@ -318,6 +358,10 @@ public class GearSmithingRecipe implements SmithingRecipe {
                 || stack.is(ModItems.TRANSFER_ORB.get())
                 || stack.is(ModItems.GEM_REMOVER.get())
                 || stack.is(ModItems.REINCARNATION_STONE.get())
+                || stack.is(ModItems.YAOKIN_HAMMER.get())
+                // 耀金锭：下界合金盔甲 → 耀金盔甲的材料槽也由本配方接管，
+                // 不加入这里会让原版锻造台/强化台直接拒绝放入，升级链整体不可用。
+                || stack.is(ModItems.YAOKIN_INGOT.get())
                 || stack.is(Items.ENCHANTED_BOOK)
                 || isGemItem(stack);
     }
@@ -358,6 +402,18 @@ public class GearSmithingRecipe implements SmithingRecipe {
         return isModGem(stack)
                 || stack.is(Items.DIAMOND) || stack.is(Items.NETHER_STAR)
                 || (stack.has(ModDataComponents.GEM_TIER.get()) && !GearHelper.isGearItem(stack));
+    }
+
+    /**
+     * 是否可以被耀金铁锤锻造成弧刀。
+     *
+     * <p>只接受剑类（{@link net.minecraft.world.item.SwordItem}）。弧刀本身就是剑的子类，
+     * 但已经是弧刀的物品不再参与，避免"弧刀 → 弧刀"这种无意义转换。
+     */
+    private static boolean isSwordLike(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        if (stack.is(ModItems.YAOKIN_CURVED_BLADE.get())) return false;
+        return stack.getItem() instanceof net.minecraft.world.item.SwordItem;
     }
 
     private static boolean isModGem(ItemStack stack) {

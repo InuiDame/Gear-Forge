@@ -42,6 +42,15 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TRANSFER_ORB.get());
                         output.accept(ModItems.GEM_REMOVER.get());
                         output.accept(ModItems.REINCARNATION_STONE.get());
+                        // 耀金系列：材料 → 模板 → 工具 → 套装
+                        output.accept(ModItems.YAOKIN_INGOT.get());
+                        output.accept(ModItems.YAOKIN_UPGRADE_SMITHING_TEMPLATE.get());
+                        output.accept(ModItems.YAOKIN_HAMMER.get());
+                        output.accept(ModItems.YAOKIN_CURVED_BLADE.get());
+                        output.accept(ModItems.YAOKIN_HELMET.get());
+                        output.accept(ModItems.YAOKIN_CHESTPLATE.get());
+                        output.accept(ModItems.YAOKIN_LEGGINGS.get());
+                        output.accept(ModItems.YAOKIN_BOOTS.get());
                     }).build());
 
     // 第二页：饰品

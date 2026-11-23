@@ -56,3 +56,6 @@ desktop.ini
 # Gradle wrapper jar must stay tracked even though *.jar is ignored above.
 # Must come AFTER *.jar: gitignore uses the LAST matching pattern.
 !gradle/wrapper/gradle-wrapper.jar
+
+# JEI API jars are vendored because Maven download is blocked by TLS in this environment.
+!libs/*.jar

@@ -11,6 +11,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import net.minecraft.world.item.ItemStack;
+
 import java.util.List;
 
 public class ModDataComponents {
@@ -101,6 +103,32 @@ public class ModDataComponents {
                     builder -> builder
                             .persistent(Codec.INT)
                             .networkSynchronized(ByteBufCodecs.INT));
+
+    /**
+     * 弧刀的斩击充能计数。
+     *
+     * <p>存在物品上而不是玩家上：换武器时计数跟着那把刀走，符合"这把刀蓄了几刀"的直觉，
+     * 也不会因为玩家有多个角色/NBT 迁移而丢失。
+     */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> ARC_SLASH_CHARGES =
+            DATA_COMPONENTS.registerComponentType("arc_slash_charges",
+                    builder -> builder
+                            .persistent(Codec.INT)
+                            .networkSynchronized(ByteBufCodecs.INT));
+
+    /** 读取斩击充能，缺失时视为 0。 */
+    public static int arcSlashCharges(ItemStack stack) {
+        return stack.getOrDefault(ARC_SLASH_CHARGES.get(), 0);
+    }
+
+    /** 写入斩击充能，0 时移除组件保持物品干净。 */
+    public static void setArcSlashCharges(ItemStack stack, int value) {
+        if (value <= 0) {
+            stack.remove(ARC_SLASH_CHARGES.get());
+        } else {
+            stack.set(ARC_SLASH_CHARGES.get(), value);
+        }
+    }
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<List<StoredBonus>>> STORED_BONUSES =
             DATA_COMPONENTS.registerComponentType("stored_bonuses",

@@ -35,6 +35,13 @@ repositories {
         name = 'Curios'
         url = uri('https://maven.theillusivec4.top/')
     }
+    // JEI 的 API jar 从 Maven 下载时会被 TLS 层拦截（证书吊销检查失败），
+    // 因此改为把 API jar 放在 libs/ 下当作平铺目录依赖。
+    // 完整 JEI 是运行期可选依赖，由玩家自行安装；开发客户端默认不带 JEI。
+    flatDir {
+        name = 'jeiApi'
+        dirs 'libs'
+    }
 }
 
 // Mojang ships Java 21 to end users in 1.21.1, so mods should target Java 21.
@@ -111,6 +118,12 @@ dependencies {
     // Curios: compile against the API, run the full mod in the dev environment.
     compileOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}:api"
     runtimeOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}"
+
+    // JEI: 只编译期依赖 API，运行期可选。玩家没装 JEI 时本模组照常工作——
+    // 插件类带 @JeiPlugin，只在 JEI 存在时才被它扫描到。
+    // API jar 走 libs/ 平铺目录（见 repositories 里的说明），运行时的完整 JEI 由玩家自己安装。
+    compileOnly files('libs/jei-1.21.1-neoforge-api-19.76.1.478.jar',
+                      'libs/jei-1.21.1-common-api-19.76.1.478.jar')
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
