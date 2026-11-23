@@ -21,58 +21,59 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.util.function.Supplier;
 
+
 public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(GearForgeMod.MODID);
 
     public static final DeferredItem<Item> REROLL_STONE = registerItem("reroll_stone",
-            () -> new RerollStoneItem(new Item.Properties().stacksTo(64)));
+            RerollStoneItem::new, () -> new Item.Properties().stacksTo(64));
 
     public static final DeferredItem<Item> FORGE_HAMMER = registerItem("forge_hammer",
-            () -> new ForgeHammerItem(new Item.Properties().stacksTo(64)));
+            ForgeHammerItem::new, () -> new Item.Properties().stacksTo(64));
 
     public static final DeferredItem<Item> RUBY = registerItem("ruby",
-            () -> new Item(new Item.Properties().stacksTo(64)));
+            Item::new, () -> new Item.Properties().stacksTo(64));
 
     public static final DeferredItem<Item> SAPPHIRE = registerItem("sapphire",
-            () -> new Item(new Item.Properties().stacksTo(64)));
+            Item::new, () -> new Item.Properties().stacksTo(64));
 
     public static final DeferredItem<Item> EMERALD_GEM = registerItem("emerald_gem",
-            () -> new Item(new Item.Properties().stacksTo(64)));
+            Item::new, () -> new Item.Properties().stacksTo(64));
 
     public static final DeferredItem<Item> UPGRADE_CRYSTAL = registerItem("upgrade_crystal",
-            () -> new UpgradeCrystalItem(new Item.Properties().stacksTo(64)));
+            UpgradeCrystalItem::new, () -> new Item.Properties().stacksTo(64));
 
 
     public static final DeferredItem<Item> TOPAZ = registerItem("topaz",
-            () -> new Item(new Item.Properties().stacksTo(64)));
+            Item::new, () -> new Item.Properties().stacksTo(64));
 
     public static final DeferredItem<Item> JADE = registerItem("jade",
-            () -> new Item(new Item.Properties().stacksTo(64)));
+            Item::new, () -> new Item.Properties().stacksTo(64));
 
     public static final DeferredItem<Item> ONYX = registerItem("onyx",
-            () -> new Item(new Item.Properties().stacksTo(64)));
+            Item::new, () -> new Item.Properties().stacksTo(64));
 
     public static final DeferredItem<Item> TRANSFER_ORB = registerItem("transfer_orb",
-            () -> new TransferOrbItem(new Item.Properties().stacksTo(64)));
+            TransferOrbItem::new, () -> new Item.Properties().stacksTo(64));
 
     public static final DeferredItem<Item> GEM_REMOVER = registerItem("gem_remover",
-            () -> new GemRemoverItem(new Item.Properties().stacksTo(64)));
+            GemRemoverItem::new, () -> new Item.Properties().stacksTo(64));
 
     public static final DeferredItem<Item> REINCARNATION_STONE = registerItem("reincarnation_stone",
-            () -> new ReincarnationStoneItem(new Item.Properties().fireResistant().stacksTo(64)));
+            ReincarnationStoneItem::new, () -> new Item.Properties().fireResistant().stacksTo(64));
 
     public static final DeferredItem<Item> LUCKY_DIAMOND = registerItem(
             "lucky_diamond",
-            LuckyDiamondItem::new);
+            LuckyDiamondItem::new, () -> new Item.Properties().stacksTo(1).fireResistant());
 
     public static final DeferredItem<Item> CURSED_ANVIL = registerItem(
             "cursed_anvil",
-            CursedAnvilItem::new);
+            CursedAnvilItem::new, () -> new Item.Properties().stacksTo(1).fireResistant());
 
     /** 耀金硬币：小饰品，幸运 +1，并强化幸运钻石、击杀时给点金。 */
     public static final DeferredItem<YaokinCoinItem> YAOKIN_COIN = registerTyped(
             "yaokin_coin",
-            YaokinCoinItem::new);
+            YaokinCoinItem::new, () -> new Item.Properties().stacksTo(1).fireResistant());
 
     /** 强化台的方块物品。 */
     public static final DeferredItem<BlockItem> FORGE_TABLE = ITEMS.registerSimpleBlockItem(
@@ -82,77 +83,84 @@ public class ModItems {
 
     /** 耀金锭：3 金锭 + 3 钻石合成，用于升级下界合金装备与修复耀金物品。 */
     public static final DeferredItem<Item> YAOKIN_INGOT = registerItem("yaokin_ingot",
-            () -> new Item(new Item.Properties().fireResistant()));
+            Item::new, () -> new Item.Properties().fireResistant());
 
     /** 耀金铁锤：把剑重新锻打成对应材质的弧刀。 */
     public static final DeferredItem<Item> YAOKIN_HAMMER = registerItem("yaokin_hammer",
-            () -> new YaokinHammerItem(new Item.Properties().stacksTo(1).fireResistant()));
+            YaokinHammerItem::new, () -> new Item.Properties().stacksTo(1).fireResistant());
 
     /** 耀金苹果：普通金苹果的强化版，附带点金 II。 */
     public static final DeferredItem<YaokinAppleItem> YAOKIN_APPLE = registerTyped("yaokin_apple",
-            YaokinAppleItem::new);
+            YaokinAppleItem::new, () -> new Item.Properties().stacksTo(16)
+                    .food(new net.minecraft.world.food.FoodProperties.Builder()
+                            .nutrition(6).saturationModifier(1.6F).alwaysEdible().build()));
 
     /** 耀金剑：标准剑属性，8 点伤害、1.6 攻速。 */
     public static final DeferredItem<Item> YAOKIN_SWORD = registerItem("yaokin_sword",
-            () -> new Item(new Item.Properties().sword(YaokinMaterial.TOOL, 3.0F, -2.4F).fireResistant()));
+            Item::new, () -> new Item.Properties().sword(YaokinMaterial.TOOL, 3.0F, -2.4F).fireResistant());
 
     /** 耀金镐。 */
     public static final DeferredItem<Item> YAOKIN_PICKAXE = registerItem("yaokin_pickaxe",
-            () -> new Item(new Item.Properties().pickaxe(YaokinMaterial.TOOL, 1.0F, -2.8F).fireResistant()));
+            Item::new, () -> new Item.Properties().pickaxe(YaokinMaterial.TOOL, 1.0F, -2.8F).fireResistant());
 
     /** 耀金斧。 */
     public static final DeferredItem<Item> YAOKIN_AXE = registerItem("yaokin_axe",
-            () -> new Item(new Item.Properties().axe(YaokinMaterial.TOOL, 5.0F, -3.0F).fireResistant()));
+            Item::new, () -> new Item.Properties().axe(YaokinMaterial.TOOL, 5.0F, -3.0F).fireResistant());
 
     /** 耀金锹。 */
     public static final DeferredItem<Item> YAOKIN_SHOVEL = registerItem("yaokin_shovel",
-            () -> new Item(new Item.Properties().shovel(YaokinMaterial.TOOL, 1.5F, -3.0F).fireResistant()));
+            Item::new, () -> new Item.Properties().shovel(YaokinMaterial.TOOL, 1.5F, -3.0F).fireResistant());
 
     /** 耀金锄。 */
     public static final DeferredItem<Item> YAOKIN_HOE = registerItem("yaokin_hoe",
-            () -> new Item(new Item.Properties().hoe(YaokinMaterial.TOOL, -4.0F, 0.0F).fireResistant()));
+            Item::new, () -> new Item.Properties().hoe(YaokinMaterial.TOOL, -4.0F, 0.0F).fireResistant());
 
     // ===================== 弧刀 =====================
 
     /** 钻石弧刀：钻石剑用耀金铁锤重锻而成。 */
     public static final DeferredItem<CurvedBladeItem> DIAMOND_CURVED_BLADE =
             registerTyped("diamond_curved_blade",
-                    () -> new CurvedBladeItem(CurvedBladeItem.createBladeProperties(ToolMaterial.DIAMOND)));
+                    CurvedBladeItem::new, () -> CurvedBladeItem.createBladeProperties(ToolMaterial.DIAMOND));
 
     /** 下界合金弧刀：下界合金剑用耀金铁锤重锻而成。 */
     public static final DeferredItem<CurvedBladeItem> NETHERITE_CURVED_BLADE =
             registerTyped("netherite_curved_blade",
-                    () -> new CurvedBladeItem(CurvedBladeItem.createBladeProperties(ToolMaterial.NETHERITE).fireResistant()));
+                    CurvedBladeItem::new, () -> CurvedBladeItem.createBladeProperties(ToolMaterial.NETHERITE).fireResistant());
 
     /** 耀金弧刀：耀金剑（或其它剑）用耀金铁锤重锻而成。 */
     public static final DeferredItem<CurvedBladeItem> YAOKIN_CURVED_BLADE =
             registerTyped("yaokin_curved_blade",
-                    () -> new CurvedBladeItem(CurvedBladeItem.createBladeProperties(YaokinMaterial.TOOL).fireResistant()));
+                    CurvedBladeItem::new, () -> CurvedBladeItem.createBladeProperties(YaokinMaterial.TOOL).fireResistant());
 
     // ===================== 耀金套装 =====================
 
     public static final DeferredItem<Item> YAOKIN_HELMET = registerItem("yaokin_helmet",
-            () -> new Item(new Item.Properties()
-                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.HELMET).fireResistant()));
+            Item::new, () -> new Item.Properties()
+                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.HELMET).fireResistant());
 
     public static final DeferredItem<Item> YAOKIN_CHESTPLATE = registerItem("yaokin_chestplate",
-            () -> new Item(new Item.Properties()
-                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.CHESTPLATE).fireResistant()));
+            Item::new, () -> new Item.Properties()
+                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.CHESTPLATE).fireResistant());
 
     public static final DeferredItem<Item> YAOKIN_LEGGINGS = registerItem("yaokin_leggings",
-            () -> new Item(new Item.Properties()
-                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.LEGGINGS).fireResistant()));
+            Item::new, () -> new Item.Properties()
+                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.LEGGINGS).fireResistant());
 
     public static final DeferredItem<Item> YAOKIN_BOOTS = registerItem("yaokin_boots",
-            () -> new Item(new Item.Properties()
-                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.BOOTS).fireResistant()));
+            Item::new, () -> new Item.Properties()
+                    .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.BOOTS).fireResistant());
 
-    private static DeferredItem<Item> registerItem(String name, Supplier<Item> itemSupplier) {
-        return ITEMS.register(name, itemSupplier);
+    // 26.3 起 Item.Properties 必须带 id，否则 Item 构造时抛 "Item id not set"。
+    // registerItem(name, factory, props) 由 NeoForge 自动给 props 注入 setId。
+    private static DeferredItem<Item> registerItem(String name,
+            java.util.function.Function<Item.Properties, Item> factory,
+            Supplier<Item.Properties> props) {
+        return ITEMS.registerItem(name, factory, props);
     }
 
-    /** 泛型重载：用于 需要保留具体类型的注册。 */
-    private static <T extends Item> DeferredItem<T> registerTyped(String name, Supplier<T> itemSupplier) {
-        return ITEMS.register(name, itemSupplier);
+    private static <T extends Item> DeferredItem<T> registerTyped(String name,
+            java.util.function.Function<Item.Properties, T> factory,
+            Supplier<Item.Properties> props) {
+        return ITEMS.registerItem(name, factory, props);
     }
 }

@@ -32,8 +32,8 @@ public class YaokinCoinItem extends Item implements ICurioItem {
     /** 与幸运钻石的 +20 对齐，同时装备时额外补同样的数值。 */
     public static final double LUCKY_DIAMOND_BONUS = 20.0D;
 
-    public YaokinCoinItem() {
-        super(new Properties().stacksTo(1).fireResistant());
+    public YaokinCoinItem(Properties properties) {
+        super(properties);
     }
 
     @Override

@@ -14,8 +14,8 @@ import top.theillusivec4.curios.api.type.capability.ICurioItem;
 
 public class LuckyDiamondItem extends Item implements ICurioItem {
 
-    public LuckyDiamondItem() {
-        super(new Properties().stacksTo(1).fireResistant());
+    public LuckyDiamondItem(Properties properties) {
+        super(properties);
     }
 
     @Override

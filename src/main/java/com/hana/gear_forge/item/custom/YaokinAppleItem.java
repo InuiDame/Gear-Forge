@@ -5,7 +5,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -22,14 +21,8 @@ public class YaokinAppleItem extends Item {
     private static final int REGENERATION_TICKS = 20 * 10;
     private static final int MIDAS_TICKS = 20 * 120;
 
-    public YaokinAppleItem() {
-        super(new Item.Properties()
-                .stacksTo(16)
-                .food(new FoodProperties.Builder()
-                        .nutrition(6)
-                        .saturationModifier(1.6F)
-                        .alwaysEdible()
-                        .build()));
+    public YaokinAppleItem(Properties properties) {
+        super(properties);
     }
 
     @Override

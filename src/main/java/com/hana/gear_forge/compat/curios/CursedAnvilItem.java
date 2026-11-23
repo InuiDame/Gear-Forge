@@ -34,8 +34,8 @@ public class CursedAnvilItem extends Item implements ICurioItem {
     /** 激怒半径（格）。 */
     private static final double PROVOKE_RADIUS = 10.0;
 
-    public CursedAnvilItem() {
-        super(new Properties().stacksTo(1).fireResistant());
+    public CursedAnvilItem(Properties properties) {
+        super(properties);
     }
 
     @Override

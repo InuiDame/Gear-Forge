@@ -11,14 +11,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /**
  * 金化：让带有金化效果的玩家对猪灵视为穿着金装。
  *
- * <p>原版 {@link PiglinAi#isWearingGold(LivingEntity)} 只遍历盔甲槽并调用
+ * <p>原版 {@link PiglinAi#isWearingSafeArmor(LivingEntity)}（26.3 起 isWearingGold 改名为此） 只遍历盔甲槽并调用
  * {@code ItemStack.makesPiglinsNeutral}；这里在方法头直接返回 true，
  * 不改变原版对普通金装的处理。
  */
 @Mixin(PiglinAi.class)
 public class PiglinAiMixin {
 
-    @Inject(method = "isWearingGold(Lnet/minecraft/world/entity/LivingEntity;)Z",
+    @Inject(method = "isWearingSafeArmor(Lnet/minecraft/world/entity/LivingEntity;)Z",
             at = @At("HEAD"), cancellable = true)
     private static void gearForge$gildedCountsAsGold(LivingEntity entity,
                                                      CallbackInfoReturnable<Boolean> cir) {
