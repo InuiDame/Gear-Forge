@@ -90,12 +90,13 @@ public final class YaokinEquipmentEvents {
 
         boolean both = hasCurio(player, ModItems.YAOKIN_COIN.get())
                 && hasCurio(player, ModItems.LUCKY_DIAMOND.get());
+        // 先无条件移除再按需添加：这个回调每 tick 都跑，直接 add 会在第二次触发
+        // "Modifier is already applied on this attribute!"（见 crash-2026-11-23_20.04.07）。
+        luck.removeModifier(COIN_DIAMOND_DOUBLE_ID);
         if (both) {
             luck.addTransientModifier(new AttributeModifier(
                     COIN_DIAMOND_DOUBLE_ID, YaokinCoinItem.LUCKY_DIAMOND_BONUS,
                     AttributeModifier.Operation.ADD_VALUE));
-        } else {
-            luck.removeModifier(COIN_DIAMOND_DOUBLE_ID);
         }
     }
 
