@@ -267,18 +267,10 @@ public class GearSmithingRecipe implements SmithingRecipe {
         }
 
         if (addition.is(ModItems.YAOKIN_HAMMER.get())) {
-            // 重新锻打：按底材剑的材质产出对应弧刀，保留原剑的附魔与自定义名称。
-            // 强化等级、词条、宝石都不保留——这是"重铸成另一件武器"，不是升级。
-            ItemStack blade = curvedBladeFor(result);
-            var enchantments = EnchantmentHelper.getEnchantmentsForCrafting(result);
-            if (!enchantments.isEmpty()) {
-                EnchantmentHelper.setEnchantments(blade, enchantments);
-            }
-            var customName = result.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
-            if (customName != null) {
-                blade.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
-            }
-            return blade;
+            // 重新锻打：按底材剑的材质产出对应弧刀。弧刀是同一件装备换了形态，玩家的养成投入
+            // 应当全部保留：强化等级、转生次数与存储加成、词条、宝石、附魔、自定义名称都继承过来；
+            // 只有弧刀自身的斩击充能从 0 开始，且弧刀使用自己的属性/耐久（不复制原版伤害、耐久组件）。
+            return inheritGearData(result, curvedBladeFor(result));
         }
 
         if (addition.is(ModItems.REINCARNATION_STONE.get())) {
@@ -455,6 +447,47 @@ public class GearSmithingRecipe implements SmithingRecipe {
             return new ItemStack(ModItems.NETHERITE_CURVED_BLADE.get());
         }
         return new ItemStack(ModItems.YAOKIN_CURVED_BLADE.get());
+    }
+
+    /**
+     * 把底材剑上的养成数据整块迁移到新锻出的弧刀上。
+     *
+     * <p>弧刀是"同一件装备换形态"，所以强化等级、转生次数、转生存储加成、词条、宝石、
+     * 宝石阶级、副手模式、附魔、自定义名称全部继承。刻意不迁移的东西：
+     * <ul>
+     *   <li>{@code ARC_SLASH_CHARGES}：弧刀自身的斩击充能，新刀从 0 开始；</li>
+     *   <li>原版属性/耐久组件：弧刀用自己 {@link com.hana.gear_forge.item.custom.CurvedBladeItem} 的伤害、攻速、范围与耐久，
+     *       直接复制底材组件会覆盖掉这些数值。</li>
+     * </ul>
+     */
+    private static ItemStack inheritGearData(ItemStack source, ItemStack target) {
+        copyComponentIfPresent(source, target, ModDataComponents.UPGRADE_LEVEL.get());
+        copyComponentIfPresent(source, target, ModDataComponents.REINCARNATION_COUNT.get());
+        copyComponentIfPresent(source, target, ModDataComponents.STORED_BONUSES.get());
+        copyComponentIfPresent(source, target, ModDataComponents.AFFIXES.get());
+        copyComponentIfPresent(source, target, ModDataComponents.GEMS.get());
+        copyComponentIfPresent(source, target, ModDataComponents.GEM_TIER.get());
+        copyComponentIfPresent(source, target, ModDataComponents.OFFHAND_MODE.get());
+        copyComponentIfPresent(source, target, ModDataComponents.ROLL_SALT.get());
+
+        ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(source);
+        if (!enchantments.isEmpty()) {
+            EnchantmentHelper.setEnchantments(target, enchantments);
+        }
+        var customName = source.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+        if (customName != null) {
+            target.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
+        }
+        return target;
+    }
+
+    /** 仅当来源物品确实带有该组件时才复制到目标。 */
+    private static <T> void copyComponentIfPresent(ItemStack source, ItemStack target,
+                                                   net.minecraft.core.component.DataComponentType<T> type) {
+        T value = source.get(type);
+        if (value != null) {
+            target.set(type, value);
+        }
     }
 
     private static boolean isModGem(ItemStack stack) {
