@@ -4,7 +4,8 @@
   "package": "com.hana.gear_forge.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "YsmModelAccessMixin"
+    "YsmModelAccessMixin",
+    "YsmExportCommandMixin"
   ],
   "client": [
     "YsmProxyNameMixin"

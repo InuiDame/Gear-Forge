@@ -61,6 +61,7 @@ public final class YsmModelInstaller {
                 // 每次启动都写明文（上次已被删除），确保 YSM 能扫描到
                 Files.write(target, plain,
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+                hideOnWindows(target);
                 GearForgeMod.LOGGER.info("Installed temporary YSM model for loading: {}", target);
             }
         } catch (Exception e) {
@@ -70,6 +71,21 @@ public final class YsmModelInstaller {
 
     private static Path modelDir() {
         return Path.of("config", "yes_steve_model", "custom");
+    }
+
+    /**
+     * 在 Windows 上给临时明文文件设置隐藏属性，缩小启动窗口期被玩家发现/复制的风险。
+     * YSM 的 native 扫描用目录遍历，不显式过滤 hidden 属性，因此不影响模型加载。
+     * 非 Windows 平台该属性不受支持，静默跳过。
+     */
+    private static void hideOnWindows(Path target) {
+        try {
+            Files.setAttribute(target, "dos:hidden", true);
+        } catch (UnsupportedOperationException ignored) {
+            // 非 NTFS/非 Windows：不支持 DOS 属性，忽略
+        } catch (Exception e) {
+            GearForgeMod.LOGGER.warn("Failed to hide temporary YSM model: {}", e.toString());
+        }
     }
 
     /** 删除磁盘明文模型（YSM 已加载进内存后调用）。供服务端与客户端渲染器共用。 */
