@@ -89,7 +89,9 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
             ysmRenderer.oOo0OO0O0o000OO0O000oo0o(proxy, entityYaw, partialTick,
                     poseStack, buffer, packedLight);
         } catch (Throwable t) {
-            GearForgeMod.LOGGER.warn("YSM proxy render failed, falling back: {}", t.toString());
+            // 打印完整堆栈：YSM 渲染异常会被兜底成默认 Steve，必须能看到根因。
+            GearForgeMod.LOGGER.warn("YSM proxy render failed for {}, falling back to default skin",
+                    entity.getType().getDescriptionId(), t);
             super.render(entity, entityYaw, partialTick, poseStack, buffer, packedLight);
         }
     }
