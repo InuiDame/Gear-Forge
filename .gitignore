@@ -60,7 +60,18 @@ desktop.ini
 # JEI API jars are vendored because Maven download is blocked by TLS in this environment.
 !libs/*.jar
 
-# YSM model: only the AES-encrypted .enc is committed; plaintext .ysm must never be tracked.
-# The mod decrypts natsu.ysm.enc at runtime into the game config directory.
+# ===== YSM internal model (author requirement: private, never publish source) =====
+# The AES key/IV, decrypt routine, encrypted model and its protection mixins are
+# kept local only and must NEVER be committed. Plaintext .ysm/.enc and every
+# file that reveals the encryption scheme are excluded here.
 src/main/resources/assets/gear_forge/ysm/*.ysm
-!src/main/resources/assets/gear_forge/ysm/*.ysm.enc
+src/main/resources/assets/gear_forge/ysm/*.ysm.enc
+src/main/java/com/hana/gear_forge/entity/ysm/YsmModelInstaller.java
+src/main/java/com/hana/gear_forge/entity/ysm/YsmModelGuard.java
+src/main/java/com/hana/gear_forge/mixin/YsmModelAccessMixin.java
+src/main/java/com/hana/gear_forge/mixin/YsmModelSyncGuardMixin.java
+src/main/java/com/hana/gear_forge/mixin/YsmModelGuiHideMixin.java
+src/main/java/com/hana/gear_forge/mixin/YsmExportCommandMixin.java
+src/main/java/com/hana/gear_forge/mixin/YsmReloadMixin.java
+src/main/java/com/hana/gear_forge/mixin/YsmProxyNameMixin.java
+src/main/resources/gear_forge.ysm.mixins.json
