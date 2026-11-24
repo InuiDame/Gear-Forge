@@ -45,12 +45,11 @@ public class CompanionMenu extends AbstractContainerMenu {
         super(ModMenus.COMPANION.get(), containerId);
         this.companion = companion;
 
-        // 槽位以 x=8+col*18 的统一网格排布（原版玩家背包就是 x=8 起，之前用 x=84 导致错位）。
-        // 布局（9 列 × 7 行）：
-        //   第 0 行(y=18)     ：队友装备 6 槽（头/胸/腿/脚/主手/副手）
-        //   第 1-2 行(y=36,54)：队友背包 18 格
-        //   第 3-5 行(y=72..) ：玩家背包 27 格
-        //   第 6 行(y=126)    ：玩家快捷栏 9 格
+        // 两个背包分区显示（x=8+col*18 统一网格）：
+        //   【小夏区】第 0 行(y=18)装备 6 槽 + 第 1-2 行(y=36,54)队友背包 18 格
+        //   —— 分隔标签"我的背包"在 y≈76 ——
+        //   【我的区】第 3-5 行(y=90,108,126)玩家背包 27 格 + 第 6 行(y=150)快捷栏 9 格
+        // 背景由 CompanionScreen 自绘纯面板（槽位自身会画格子），不贴 generic_54 避免双重格子错位。
         int gridX = 8;
         int gridStep = 18;
 
@@ -82,16 +81,16 @@ public class CompanionMenu extends AbstractContainerMenu {
             }
         }
 
-        // 玩家背包 27 格（9x3）：第 3-5 行
+        // 玩家背包 27 格（9x3）：第 3-5 行，从 y=90 起（给分区标签留出 y=72~86 的空间）
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 this.addSlot(new Slot(playerInventory, col + row * 9 + 9,
-                        gridX + col * gridStep, 72 + row * gridStep));
+                        gridX + col * gridStep, 90 + row * gridStep));
             }
         }
-        // 玩家快捷栏 9 格：第 6 行
+        // 玩家快捷栏 9 格：第 6 行 y=150
         for (int col = 0; col < 9; col++) {
-            this.addSlot(new Slot(playerInventory, col, gridX + col * gridStep, 126));
+            this.addSlot(new Slot(playerInventory, col, gridX + col * gridStep, 150));
         }
     }
 
