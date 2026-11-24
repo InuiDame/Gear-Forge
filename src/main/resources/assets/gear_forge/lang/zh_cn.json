@@ -70,6 +70,7 @@
   "item.gear_forge.yaokin_apple": "耀金苹果",
   "item.gear_forge.yaokin_coin": "耀金硬币",
   "item.gear_forge.yaokin_sword": "耀金剑",
+  "item.gear_forge.natsu_shield": "夏之糖霜盾",
   "item.gear_forge.yaokin_pickaxe": "耀金镐",
   "item.gear_forge.yaokin_axe": "耀金斧",
   "item.gear_forge.yaokin_shovel": "耀金锹",
@@ -183,6 +184,8 @@
   "tooltip.gear_forge.natsu_summon": "右键地面召唤三阶段的柚鸟夏 Boss（需安装 YSM 及柚鸟夏模型）。",
   "tooltip.gear_forge.natsu_contract": "击败柚鸟夏后获得。右键生成队友小夏。",
   "tooltip.gear_forge.natsu_contract_2": "右键：打开背包添加装备  |  Shift+右键：切换跟随/游荡/站立",
+  "tooltip.gear_forge.natsu_shield": "举盾时可格挡正面的弹射物与近战攻击。",
+  "tooltip.gear_forge.natsu_shield.tacz": "安装 TaCZ 后，还能拦下其动能子弹。",
   "message.gear_forge.natsu_summon": "「老师，来一场浪漫的相遇吧！」——柚鸟夏登场！",
   "message.gear_forge.natsu_companion": "「那么，一起走吧！」",
   "message.gear_forge.natsu_defeated": "柚鸟夏：「今天就到这里吧……剩下的，是甜点的时间。」掉落了甜点部的契约。",
@@ -191,5 +194,5 @@
   "message.gear_forge.natsu_mode_0": "小夏：跟随模式。",
   "message.gear_forge.natsu_mode_1": "小夏：范围游荡模式。",
   "message.gear_forge.natsu_mode_2": "小夏：站立不动。",
-  "container.gear_forge.natsu_companion": "小夏的背包"
+  "container.gear_forge.natsu_companion": "小夏的装备与背包"
 }

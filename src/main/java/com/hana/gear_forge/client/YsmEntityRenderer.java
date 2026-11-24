@@ -119,7 +119,7 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
         proxy.setShiftKeyDown(entity.isShiftKeyDown());
         proxy.setOnGround(entity.onGround());
 
-        // 攻击/挥手/受伤动画：YSM 动画谓词读这些字段选 swing/attacked 动画
+        // 攻击/挥手/受伤动画：YSM 动画谓词读这些字段选 swing/use/attacked 动画
         proxy.swingTime = entity.swingTime;
         proxy.swinging = entity.swinging;
         proxy.swingingArm = entity.swingingArm;
@@ -127,10 +127,17 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
         proxy.hurtDuration = entity.hurtDuration;
         proxy.setSprinting(entity.isSprinting());
 
-        // 【关键】YSM 动画时间轴用的是 Entity.tickCount（动画帧 = tickCount + partialTick），
-        // 不是 walkAnimation.position。proxy 从不参与世界 tick，tickCount 恒为 0，
-        // 导致动画永远卡在第一帧（看似平移/站姿僵硬）。必须每帧同步真实体的 tickCount。
-        proxy.tickCount = entity.tickCount;
+        // 【装备同步】YSM 的装备/手持层读渲染目标(proxy)的 getItemBySlot()，
+        // 不是真实体。必须把真实体的装备复制到 proxy，否则模型上看不到盔甲和武器。
+        for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
+            proxy.setItemSlot(slot, entity.getItemBySlot(slot).copy());
+        }
+
+        // 【关键】YSM 动画时间轴 = Entity.tickCount + partialTick，逐帧累加成 accumulator。
+        // proxy 从不参与世界 tick，必须驱动它。用单调递增计数：多个实体/重新召唤时
+        // 新实体 tickCount 从 0 开始，直接赋值会让 animation accumulator 检测到时间倒退
+        // 而重置（表现为重新召唤后动画短暂消失），故取 max(上次+1, 实体tickCount)。
+        proxy.tickCount = Math.max(proxy.tickCount + 1, entity.tickCount);
 
         // 行走动画相位：walk 谓词读 abs(speed)>0.05 决定是否播放行走动画。
         copyWalkAnimation(entity.walkAnimation, proxy.walkAnimation);

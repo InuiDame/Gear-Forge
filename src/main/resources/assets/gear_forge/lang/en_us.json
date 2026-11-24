@@ -70,6 +70,7 @@
   "item.gear_forge.yaokin_apple": "Yaokin Apple",
   "item.gear_forge.yaokin_coin": "Yaokin Coin",
   "item.gear_forge.yaokin_sword": "Yaokin Sword",
+  "item.gear_forge.natsu_shield": "Natsu Sugar Shield",
   "item.gear_forge.yaokin_pickaxe": "Yaokin Pickaxe",
   "item.gear_forge.yaokin_axe": "Yaokin Axe",
   "item.gear_forge.yaokin_shovel": "Yaokin Shovel",
@@ -183,6 +184,8 @@
   "tooltip.gear_forge.natsu_summon": "Right-click to summon the 3-phase Natsu boss (requires YSM + Natsu model).",
   "tooltip.gear_forge.natsu_contract": "Dropped by Natsu. Right-click to summon Natsu as a companion.",
   "tooltip.gear_forge.natsu_contract_2": "Right-click: open bag  |  Shift+Right-click: Follow/Wander/Stand",
+  "tooltip.gear_forge.natsu_shield": "Blocks projectiles and melee attacks from the front.",
+  "tooltip.gear_forge.natsu_shield.tacz": "Also stops TaCZ kinetic bullets when TaCZ is installed.",
   "message.gear_forge.natsu_summon": "\"Sensei, let's have a romantic encounter!\" - Natsu appears!",
   "message.gear_forge.natsu_companion": "\"Let's go together!\"",
   "message.gear_forge.natsu_defeated": "Natsu drops the Tea Party Contract.",
@@ -191,5 +194,5 @@
   "message.gear_forge.natsu_mode_0": "Natsu: Follow mode.",
   "message.gear_forge.natsu_mode_1": "Natsu: Wander mode.",
   "message.gear_forge.natsu_mode_2": "Natsu: Standing still.",
-  "container.gear_forge.natsu_companion": "Natsu's Bag"
+  "container.gear_forge.natsu_companion": "Natsu's Equipment & Bag"
 }

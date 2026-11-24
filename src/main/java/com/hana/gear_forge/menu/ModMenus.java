@@ -1,6 +1,7 @@
 package com.hana.gear_forge.menu;
 
 import com.hana.gear_forge.GearForgeMod;
+import com.hana.gear_forge.entity.ysm.NatsuCompanionEntity;
 import net.minecraft.world.inventory.MenuType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -22,6 +23,13 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<ForgeTableMenu>> FORGE_TABLE =
             MENU_TYPES.register("forge_table",
                     () -> new MenuType<>(ForgeTableMenu::new,
+                            net.minecraft.world.flag.FeatureFlags.VANILLA_SET));
+
+    /** 队友装备 + 背包菜单：用 3 参 IContainerFactory 从 extraData 读实体 ID。 */
+    public static final DeferredHolder<MenuType<?>, MenuType<CompanionMenu>> COMPANION =
+            MENU_TYPES.register("companion",
+                    () -> new MenuType<>(
+                            (net.neoforged.neoforge.network.IContainerFactory<CompanionMenu>) CompanionMenu::new,
                             net.minecraft.world.flag.FeatureFlags.VANILLA_SET));
 
     private ModMenus() {}
