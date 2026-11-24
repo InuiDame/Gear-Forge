@@ -26,11 +26,11 @@ import java.util.UUID;
 public class YsmNpc extends ServerPlayer {
 
     /**
-     * YSM 模型 id：必须是去掉扩展名的模型 key。
-     * 磁盘文件名是 natsu.ysm（见 YsmModelInstaller.MODEL_FILE），但 YSM 加载器会把
-     * .ysm/.zip/.7z 后缀去掉作为注册表 key，故 attachment 与同步包里要用 "natsu"。
+     * YSM 模型 id：YSM 面板里显示的模型内部 name（见模型文件 metadata 的 &lt;name&gt;）。
+     * 磁盘文件名是 natsu.ysm（见 YsmModelInstaller.MODEL_FILE），但 YSM 注册表的 key
+     * 用的是模型内部 name，即面板上显示的 "BA_柚鸟夏：常服"。
      */
-    public static final String NATSU_MODEL_ID = "natsu";
+    public static final String NATSU_MODEL_ID = "BA_柚鸟夏：常服";
 
     private final MinecraftServer server;
     private final String modelId;
