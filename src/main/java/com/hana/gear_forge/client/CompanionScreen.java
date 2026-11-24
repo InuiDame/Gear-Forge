@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -42,15 +43,33 @@ public final class CompanionScreen extends AbstractContainerScreen<CompanionMenu
         this.inventoryLabelY = 78;
     }
 
+    // 原版槽位配色：外描边深灰、内底浅灰。装备槽用金棕色描边以区分。
+    private static final int SLOT_BORDER = 0xFF373737;
+    private static final int SLOT_BG = 0xFF8B8B8B;
+    private static final int EQUIP_BORDER = 0xFF704214;
+
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
-        // 仿原版 GUI 面板：深色外框 + 浅灰底。槽位自身会画格子，这里只画面板。
+        // 面板：深色外框 + 浅灰底
         graphics.fill(x - 2, y - 2, x + this.imageWidth + 2, y + this.imageHeight + 2, 0xFF373737);
         graphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xFFC6C6C6);
+
+        // 槽位格子：1.21.1 的格子图案原本烘焙在背景贴图里，纯色面板不会自带格子，
+        // 必须按每个 Slot 的坐标手动绘制。物品由 super.render 叠在格子上。
+        // Slot.x/y 是相对 GUI 左上角的左上角坐标；格子整体 18x18，内底 16x16 从 +1 起。
+        for (int i = 0; i < this.menu.slots.size(); i++) {
+            Slot slot = this.menu.slots.get(i);
+            int sx = x + slot.x;
+            int sy = y + slot.y;
+            int border = i < 6 ? EQUIP_BORDER : SLOT_BORDER; // 0-5 为队友装备槽
+            graphics.fill(sx, sy, sx + 18, sy + 18, border);       // 外框
+            graphics.fill(sx + 1, sy + 1, sx + 17, sy + 17, SLOT_BG); // 内底
+        }
+
         // 两区之间的分隔线（y≈78）
-        graphics.fill(x + 7, y + 78, x + this.imageWidth - 7, y + 79, 0xFF8B8B8B);
+        graphics.fill(x + 7, y + 76, x + this.imageWidth - 7, y + 77, 0xFF8B8B8B);
     }
 
     @Override
