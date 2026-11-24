@@ -1,28 +1,37 @@
 package com.hana.gear_forge.entity.ysm;
 
+import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.PacketSendListener;
-import net.minecraft.network.PacketListener;
-import net.minecraft.network.ProtocolInfo;
 import net.minecraft.network.protocol.Packet;
 
 /**
  * 吞掉所有发给假玩家 NPC 的数据包的空连接。
  *
- * <p>关键：ServerPlayerList.placeNewPlayer() 会调用 setupInboundProtocol()/setupOutboundProtocol()，
- * 这两个方法内部访问 {@code this.channel.writeAndFlush(...)}。本类没有真实 Netty channel，
- * 因此必须重写它们为空操作，否则 placeNewPlayer 会抛 NPE，导致右键召唤完全无反应。
+ * <p>关键：Connection 必须拥有一个真实的 Netty channel，否则两处 NPE：
+ * <ol>
+ *   <li>{@code PlayerList.placeNewPlayer()} 调用 {@code setupInboundProtocol()} 时
+ *       {@code this.channel.writeAndFlush(...)}；</li>
+ *   <li>NeoForge 的 {@code OnDatapackSyncEvent} → {@code hasChannel()} →
+ *       {@code connection.channel().attr(...)}，会直接中断 placeNewPlayer。</li>
+ * </ol>
+ * 用 {@link EmbeddedChannel} 注册本连接作为 handler，channelActive 回调会给 Connection.channel
+ * 赋值为内存 channel，之后所有 attr()/writeAndFlush() 都作用在内存 channel 上，不发真实网络数据。
  */
 public final class DummyConnection extends Connection {
 
+    private final EmbeddedChannel channel;
+
     public DummyConnection() {
         super(PacketFlow.SERVERBOUND);
+        // 把自身作为 handler 加入内存 channel；channelActive 会设置 Connection.channel
+        this.channel = new EmbeddedChannel(this);
     }
 
     @Override
     public void send(Packet<?> packet) {
-        // no-op
+        // no-op：吞掉发给假玩家的所有包
     }
 
     @Override
@@ -32,18 +41,6 @@ public final class DummyConnection extends Connection {
 
     @Override
     public void send(Packet<?> packet, PacketSendListener listener, boolean flush) {
-        // no-op
-    }
-
-    /** 假玩家不接收任何包，跳过 inbound 管线配置（原版实现会 NPE）。 */
-    @Override
-    public <T extends PacketListener> void setupInboundProtocol(ProtocolInfo<T> protocolInfo, T packetInfo) {
-        // no-op
-    }
-
-    /** 假玩家不发送任何包，跳过 outbound 管线配置（原版实现会 NPE）。 */
-    @Override
-    public void setupOutboundProtocol(ProtocolInfo<?> protocolInfo) {
         // no-op
     }
 
