@@ -174,5 +174,6 @@
   "tooltip.gear_forge.sakura_stone": "镶护甲：樱花之护佑 I（减免 10% 魔法伤害）；镶武器：攻击叠加樱花印记。",
   "tooltip.gear_forge.sakura_set": "穿齐四件获得樱花之护佑 V（减免 50% 魔法伤害）。",
   "tooltip.gear_forge.gem_effect.sakura_blessing": "镶护甲：樱花之护佑 I，减免10%魔法伤害",
-  "tooltip.gear_forge.gem_effect.sakura_mark": "镶武器：攻击叠加樱花印记"
+  "tooltip.gear_forge.gem_effect.sakura_mark": "镶武器：攻击叠加樱花印记",
+  "tooltip.gear_forge.yaokin_set": "穿齐四件：常驻点金 I + 金化（猪灵视作金装）"
 }

@@ -75,27 +75,61 @@ public final class SakuraEvents {
             }
         } else {
             SakuraHelper.setMarks(target, marks);
+            // 每次命中给目标周围撒一圈樱花粒子，让"印记在叠加"有可见反馈。
+            if (target.level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.CHERRY_LEAVES,
+                        target.getX(), target.getY() + target.getBbHeight() * 0.6, target.getZ(),
+                        6 + marks * 2, 0.3, 0.3, 0.3, 0.02);
+            }
         }
     }
 
-    /** 目标处种一棵樱花树并瞬间长大，同时对周围实体造成范围伤害。 */
+    /**
+     * 目标处瞬间长出一棵樱花树，并对周围实体造成范围伤害。
+     *
+     * <p>不再依赖树苗 + 骨粉催熟（树苗落在实体脚下的悬空位置时长不出来），改为直接放置
+     * 树干与树冠，保证"瞬间长大"在任何地形都可见。同时撒大量樱花飘落粒子。
+     */
     private static void blossom(ServerLevel level, LivingEntity target, Player attacker) {
-        BlockPos pos = target.blockPosition();
-        BlockPos ground = pos;
-        if (!level.getBlockState(ground).isAir() && !level.getBlockState(ground).canBeReplaced()) {
-            ground = pos.above();
+        BlockPos center = target.blockPosition();
+
+        // 从目标位置向下找第一个实心地面（最多 8 格），在它上方生成树。
+        BlockPos ground = center.below();
+        for (int i = 0; i < 8; i++) {
+            BlockState s = level.getBlockState(ground);
+            if (s.isSolidRender(level, ground)) break;
+            ground = ground.below();
         }
-        BlockState at = level.getBlockState(ground);
-        if (at.isAir() || at.canBeReplaced()) {
-            level.setBlock(ground, Blocks.CHERRY_SAPLING.defaultBlockState(), 3);
-            if (Blocks.CHERRY_SAPLING instanceof BonemealableBlock bonemealable) {
-                // SaplingBlock 的 performBonemeal 内部直接调用 TreeGrower，一次即长成整棵树。
-                bonemealable.performBonemeal(level, level.getRandom(), ground, level.getBlockState(ground));
+        BlockPos base = ground.above();
+
+        // 树干：5 格樱花原木 + 顶部 5×5×2 的樱花树叶树冠。
+        for (int i = 0; i < 5; i++) {
+            level.setBlock(base.above(i), Blocks.CHERRY_LOG.defaultBlockState(), 3);
+        }
+        BlockPos crown = base.above(4);
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                for (int dy = 0; dy <= 1; dy++) {
+                    if (Math.abs(dx) == 2 && Math.abs(dz) == 2) continue; // 削掉四角，树冠更圆
+                    BlockPos leaf = crown.offset(dx, dy, dz);
+                    if (level.getBlockState(leaf).isAir()) {
+                        level.setBlock(leaf, Blocks.CHERRY_LEAVES.defaultBlockState(), 3);
+                    }
+                }
             }
         }
 
+        // 樱花飘落粒子：树冠处一大团 + 目标处一小团。
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.CHERRY_LEAVES,
+                crown.getX() + 0.5, crown.getY() + 1.0, crown.getZ() + 0.5,
+                90, 2.5, 1.5, 2.5, 0.05);
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.CHERRY_LEAVES,
+                target.getX(), target.getY() + 1.0, target.getZ(),
+                40, 1.0, 1.0, 1.0, 0.08);
+
+        // 范围伤害：对目标周围（含目标）除攻击者外的实体造成魔法伤害。
         DamageSource dmg = attacker.damageSources().magic();
-        AABB area = new AABB(pos).inflate(BLOSSOM_RADIUS);
+        AABB area = new AABB(center).inflate(BLOSSOM_RADIUS);
         for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {
             if (victim == attacker) continue;
             victim.hurt(dmg, BLOSSOM_DAMAGE);
@@ -167,8 +201,9 @@ public final class SakuraEvents {
         ServerLevel level = event.getLevel();
         BlockPos pos = event.getPos();
 
-        // 去掉原木掉落，改为圆石（低概率矿物）。
-        event.getDrops().clear();
+        // 原木正常掉落（保留原版掉落，玩家能砍倒树），额外掉樱花原木与圆石。
+        // 只有樱花镐挖原木才触发，樱花斧等其它工具走原版规则。
+        Block.popResource(level, pos, new ItemStack(Items.CHERRY_LOG));
         Block.popResource(level, pos, new ItemStack(Items.COBBLESTONE));
         if (level.getRandom().nextFloat() < ORE_CHANCE) {
             List<net.minecraft.world.item.Item> ores = List.of(
@@ -177,11 +212,5 @@ public final class SakuraEvents {
             Block.popResource(level, pos,
                     new ItemStack(ores.get(level.getRandom().nextInt(ores.size()))));
         }
-
-        // 把挖掉的原木位置替换成樱花原木，保留轴向。
-        // BlockDropsEvent 触发时原方块已被移除，此处直接放置即可。
-        BlockState cherry = Blocks.CHERRY_LOG.defaultBlockState()
-                .setValue(BlockStateProperties.AXIS, state.getValue(BlockStateProperties.AXIS));
-        level.setBlock(pos, cherry, 3);
     }
 }
