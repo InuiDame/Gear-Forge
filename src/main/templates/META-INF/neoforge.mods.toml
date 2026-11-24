@@ -20,6 +20,14 @@ description='''${mod_description}'''
 [[mixins]]
 config="${mod_id}.mixins.json"
 
+# TaCZ bullet interception is applied only when TaCZ is installed.
+[[mixins]]
+config="${mod_id}.tacz.mixins.json"
+
+# YSM model access guard: restrict the bundled natsu model to our own NPCs only.
+[[mixins]]
+config="${mod_id}.ysm.mixins.json"
+
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"
@@ -39,6 +47,13 @@ config="${mod_id}.mixins.json"
     modId="curios"
     type="required"
     versionRange="${curios_version_range}"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="tacz"
+    type="optional"
+    versionRange="[1.1.8,)"
     ordering="AFTER"
     side="BOTH"
 
