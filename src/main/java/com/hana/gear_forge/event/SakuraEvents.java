@@ -97,7 +97,7 @@ public final class SakuraEvents {
         BlockPos ground = center.below();
         for (int i = 0; i < 8; i++) {
             BlockState s = level.getBlockState(ground);
-            if (s.isSolidRender(level, ground)) break;
+            if (!s.isAir()) break;
             ground = ground.below();
         }
         BlockPos base = ground.above();
