@@ -1,5 +1,6 @@
 package com.hana.gear_forge.mixin;
 
+import com.hana.gear_forge.entity.ysm.YsmModelGuard;
 import com.hana.gear_forge.entity.ysm.YsmNpc;
 import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;

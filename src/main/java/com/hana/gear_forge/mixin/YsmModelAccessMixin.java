@@ -1,13 +1,12 @@
 package com.hana.gear_forge.mixin;
 
+import com.hana.gear_forge.entity.ysm.YsmModelGuard;
 import com.hana.gear_forge.entity.ysm.YsmNpc;
 import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Locale;
 
 /**
  * 版权隔离：mod 内置的加密模型（柚鸟夏）不允许真实玩家通过 YSM GUI/命令给自己套用。
@@ -34,18 +33,5 @@ public abstract class YsmModelAccessMixin {
         if (YsmModelGuard.isInternalModel(modelId)) {
             ci.cancel();
         }
-    }
-}
-
-/** 内部模型 id 判定（供多个 mixin 复用）。 */
-final class YsmModelGuard {
-    private YsmModelGuard() {}
-
-    static boolean isInternalModel(String modelId) {
-        if (modelId == null) return false;
-        String lower = modelId.toLowerCase(Locale.ROOT);
-        return lower.contains("natsu")
-                || modelId.contains("柚鸟夏")
-                || modelId.contains("柚鳥夏");
     }
 }

@@ -136,7 +136,9 @@ public class NatsuBossEntity extends NatsuMobEntity {
     protected void dropCustomDeathLoot(net.minecraft.server.level.ServerLevel level,
                                        DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);
+        // 击败 Boss 掉落：契约（召唤队友）+ 夏之糖霜盾
         this.spawnAtLocation(new ItemStack(ModItems.NATSU_CONTRACT.get()));
+        this.spawnAtLocation(new ItemStack(ModItems.NATSU_SHIELD.get()));
     }
 
     @Override
