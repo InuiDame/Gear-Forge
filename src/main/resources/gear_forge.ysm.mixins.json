@@ -6,6 +6,9 @@
   "mixins": [
     "YsmModelAccessMixin"
   ],
+  "client": [
+    "YsmProxyNameMixin"
+  ],
   "injectors": {
     "defaultRequire": 0
   }

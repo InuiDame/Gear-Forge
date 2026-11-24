@@ -62,6 +62,8 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
             data.oOo0OO0O0o000OO0O000oo0o(modelId, "default");
             modelSet = true;
             GearForgeMod.LOGGER.info("YSM render proxy model set to '{}'", modelId);
+            // 模型已成功套用 = YSM 客户端已加载进内存，此时删除磁盘明文防泄露。
+            com.hana.gear_forge.entity.ysm.YsmModelInstaller.deletePlaintext();
         } catch (Throwable t) {
             GearForgeMod.LOGGER.warn("Failed to set YSM proxy model: {}", t.toString());
         }
@@ -115,9 +117,30 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
         proxy.setShiftKeyDown(entity.isShiftKeyDown());
         proxy.setOnGround(entity.onGround());
 
-        float speed = entity.walkAnimation.speed(partialTick);
-        proxy.walkAnimation.setSpeed(speed);
-        proxy.walkAnimation.update(speed, partialTick);
+        // 攻击/挥手动画：同步 swing 计时与朝向，让挥击动作显示
+        proxy.swingTime = entity.swingTime;
+        proxy.swinging = entity.swinging;
+        proxy.swingingArm = entity.swingingArm;
+
+        // 精确拷贝行走动画相位：直接从真实体的 WalkAnimationState 复制，
+        // 而不是自己 update（自己推进相位不对，腿不动/看似平移）。
+        copyWalkAnimation(entity.walkAnimation, proxy.walkAnimation);
+    }
+
+    private void copyWalkAnimation(net.minecraft.world.entity.WalkAnimationState from,
+                                   net.minecraft.world.entity.WalkAnimationState to) {
+        try {
+            com.hana.gear_forge.mixin.WalkAnimationAccessor src =
+                    (com.hana.gear_forge.mixin.WalkAnimationAccessor) (Object) from;
+            com.hana.gear_forge.mixin.WalkAnimationAccessor dst =
+                    (com.hana.gear_forge.mixin.WalkAnimationAccessor) (Object) to;
+            dst.gearForge$setSpeedOld(src.gearForge$getSpeedOld());
+            dst.gearForge$setSpeed(src.gearForge$getSpeed());
+            dst.gearForge$setPosition(src.gearForge$getPosition());
+        } catch (Throwable ignored) {
+            // mixin 未生效时退回 setSpeed，至少有速度
+            to.setSpeed(from.speed());
+        }
     }
 
     @Override

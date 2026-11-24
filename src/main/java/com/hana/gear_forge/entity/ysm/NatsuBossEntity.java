@@ -39,6 +39,27 @@ public class NatsuBossEntity extends NatsuMobEntity {
 
     public NatsuBossEntity(EntityType<? extends NatsuMobEntity> type, Level level) {
         super(type, level);
+        // YSM 玩家模型需要穿戴盔甲才显示鞋袜/护甲层；默认给一套（不掉落到地上）。
+        equipDefaultGear();
+    }
+
+    /** 给 Boss 穿上默认盔甲与武器（模型需要；掉落概率设为 0，避免额外掉落）。 */
+    private void equipDefaultGear() {
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.FEET,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_BOOTS));
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.LEGS,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_LEGGINGS));
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_CHESTPLATE));
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_HELMET));
+        // 一阶段不能空手：主手给樱花剑
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,
+                new net.minecraft.world.item.ItemStack(com.hana.gear_forge.item.ModItems.SAKURA_SWORD.get()));
+        // 装备/武器不掉落
+        for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
+            this.setDropChance(slot, 0.0F);
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {

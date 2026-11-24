@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "LivingEntityMixin",
+    "WalkAnimationAccessor",
     "NetworkRegistryMixin",
     "PiglinAiMixin",
     "SmithingMenuMixin"

@@ -29,6 +29,16 @@ public class NatsuCompanionEntity extends TamableAnimal implements YsmModelProvi
     public NatsuCompanionEntity(EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
         this.setTame(true, true);
+        // YSM 模型需要穿戴盔甲才显示鞋袜层，默认给一套（不掉落）
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.FEET,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LEATHER_BOOTS));
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.LEGS,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LEATHER_LEGGINGS));
+        this.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LEATHER_CHESTPLATE));
+        for (net.minecraft.world.entity.EquipmentSlot slot : net.minecraft.world.entity.EquipmentSlot.values()) {
+            this.setDropChance(slot, 0.0F);
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
