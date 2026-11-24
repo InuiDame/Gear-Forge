@@ -5,6 +5,7 @@ import com.hana.gear_forge.compat.curios.CursedAnvilItem;
 import com.hana.gear_forge.compat.curios.LuckyDiamondItem;
 import com.hana.gear_forge.compat.curios.YaokinCoinItem;
 import com.hana.gear_forge.GearForgeMod;
+import com.hana.gear_forge.content.SakuraMaterial;
 import com.hana.gear_forge.content.YaokinMaterial;
 import com.hana.gear_forge.item.custom.*;
 import net.minecraft.core.component.DataComponents;
@@ -166,6 +167,72 @@ public class ModItems {
 
     public static final DeferredItem<ArmorItem> YAOKIN_BOOTS = registerTyped("yaokin_boots",
             () -> new ArmorItem(YaokinMaterial.ARMOR, ArmorItem.Type.BOOTS,
+                    new Item.Properties().fireResistant()));
+
+    // ===================== 樱花木 =====================
+
+    /** 樱花木锭：下界合金锭 + 樱花原木合成，用于升级下界合金套与修复樱花装备。 */
+    public static final DeferredItem<Item> SAKURA_INGOT = registerItem("sakura_ingot",
+            () -> new Item(new Item.Properties().fireResistant()));
+
+    /** 樱花木粒：1 锭分解 9 粒，可逆。 */
+    public static final DeferredItem<Item> SAKURA_NUGGET = registerItem("sakura_nugget",
+            () -> new Item(new Item.Properties().fireResistant()));
+
+    /** 樱花石：樱花木锭转化而来，作为宝石镶嵌护甲/武器。 */
+    public static final DeferredItem<Item> SAKURA_STONE = registerItem("sakura_stone",
+            () -> new Item(new Item.Properties().fireResistant()));
+
+    /** 樱花饮：生命恢复 IV 30 秒。 */
+    public static final DeferredItem<SakuraDrinkItem> SAKURA_DRINK = registerTyped("sakura_drink",
+            SakuraDrinkItem::new);
+
+    /** 樱花曲奇：生命提升 I 3 分钟。 */
+    public static final DeferredItem<SakuraCookieItem> SAKURA_COOKIE = registerTyped("sakura_cookie",
+            SakuraCookieItem::new);
+
+    /** 樱花剑：下界合金数值，命中叠加樱花印记。 */
+    public static final DeferredItem<SwordItem> SAKURA_SWORD = registerTyped("sakura_sword",
+            () -> new SwordItem(SakuraMaterial.TIER, new Item.Properties()
+                    .fireResistant()
+                    .attributes(SwordItem.createAttributes(SakuraMaterial.TIER, 3, -2.4F))));
+
+    /** 樱花镐：数值同下界合金，砍树力等同斧头。 */
+    public static final DeferredItem<PickaxeItem> SAKURA_PICKAXE = registerTyped("sakura_pickaxe",
+            () -> new PickaxeItem(SakuraMaterial.TIER, new Item.Properties()
+                    .fireResistant()
+                    .attributes(PickaxeItem.createAttributes(SakuraMaterial.TIER, 1.0F, -2.8F))));
+
+    /** 樱花斧：数值同下界合金，砍树速度翻倍。 */
+    public static final DeferredItem<AxeItem> SAKURA_AXE = registerTyped("sakura_axe",
+            () -> new AxeItem(SakuraMaterial.TIER, new Item.Properties()
+                    .fireResistant()
+                    .attributes(AxeItem.createAttributes(SakuraMaterial.TIER, 5.0F, -3.0F))));
+
+    /** 樱花锹。 */
+    public static final DeferredItem<ShovelItem> SAKURA_SHOVEL = registerTyped("sakura_shovel",
+            () -> new ShovelItem(SakuraMaterial.TIER, new Item.Properties()
+                    .fireResistant()
+                    .attributes(ShovelItem.createAttributes(SakuraMaterial.TIER, 1.5F, -3.0F))));
+
+    /** 樱花锄：右键消耗耐久自动施肥。 */
+    public static final DeferredItem<HoeItem> SAKURA_HOE = registerTyped("sakura_hoe",
+            () -> new SakuraHoeItem());
+
+    public static final DeferredItem<ArmorItem> SAKURA_HELMET = registerTyped("sakura_helmet",
+            () -> new ArmorItem(SakuraMaterial.ARMOR, ArmorItem.Type.HELMET,
+                    new Item.Properties().fireResistant()));
+
+    public static final DeferredItem<ArmorItem> SAKURA_CHESTPLATE = registerTyped("sakura_chestplate",
+            () -> new ArmorItem(SakuraMaterial.ARMOR, ArmorItem.Type.CHESTPLATE,
+                    new Item.Properties().fireResistant()));
+
+    public static final DeferredItem<ArmorItem> SAKURA_LEGGINGS = registerTyped("sakura_leggings",
+            () -> new ArmorItem(SakuraMaterial.ARMOR, ArmorItem.Type.LEGGINGS,
+                    new Item.Properties().fireResistant()));
+
+    public static final DeferredItem<ArmorItem> SAKURA_BOOTS = registerTyped("sakura_boots",
+            () -> new ArmorItem(SakuraMaterial.ARMOR, ArmorItem.Type.BOOTS,
                     new Item.Properties().fireResistant()));
 
     private static DeferredItem<Item> registerItem(String name, Supplier<Item> itemSupplier) {

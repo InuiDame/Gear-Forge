@@ -51,6 +51,22 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.YAOKIN_LEGGINGS.get());
         basicItem(ModItems.YAOKIN_BOOTS.get());
 
+        // 樱花木系列
+        basicItem(ModItems.SAKURA_INGOT.get());
+        basicItem(ModItems.SAKURA_NUGGET.get());
+        basicItem(ModItems.SAKURA_STONE.get());
+        basicItem(ModItems.SAKURA_DRINK.get());
+        basicItem(ModItems.SAKURA_COOKIE.get());
+        handheldItem(ModItems.SAKURA_SWORD.get());
+        handheldItem(ModItems.SAKURA_PICKAXE.get());
+        handheldItem(ModItems.SAKURA_AXE.get());
+        handheldItem(ModItems.SAKURA_SHOVEL.get());
+        handheldItem(ModItems.SAKURA_HOE.get());
+        basicItem(ModItems.SAKURA_HELMET.get());
+        basicItem(ModItems.SAKURA_CHESTPLATE.get());
+        basicItem(ModItems.SAKURA_LEGGINGS.get());
+        basicItem(ModItems.SAKURA_BOOTS.get());
+
     }
 
 }

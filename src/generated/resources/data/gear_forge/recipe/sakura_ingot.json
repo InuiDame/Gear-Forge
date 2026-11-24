@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "L": {
+      "item": "minecraft:cherry_log"
+    }
+  },
+  "pattern": [
+    " L ",
+    "LIL",
+    " L "
+  ],
+  "result": {
+    "count": 1,
+    "id": "gear_forge:sakura_ingot"
+  }
+}

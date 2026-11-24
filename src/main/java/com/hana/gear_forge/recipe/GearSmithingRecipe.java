@@ -85,6 +85,13 @@ public class GearSmithingRecipe implements SmithingRecipe {
             return true;
         }
 
+        // 樱花木升级：同一个下界合金升级模板 + 材料槽放樱花木锭 + 底材是下界合金装备。
+        if (YaokinUpgradeRecipe.isUpgradeTemplate(template)
+                && SakuraUpgradeRecipe.isUpgradeMaterial(addition)
+                && SakuraUpgradeRecipe.isUpgradable(base)) {
+            return true;
+        }
+
         // 锻造锤：强化 +1，模板槽放消耗材料（可配置，默认钻石）。
         if (addition.is(ModItems.FORGE_HAMMER.get()) && GearHelper.isGearItem(base)) {
 
@@ -197,6 +204,13 @@ public class GearSmithingRecipe implements SmithingRecipe {
                 && YaokinUpgradeRecipe.isUpgradeMaterial(addition)
                 && YaokinUpgradeRecipe.isUpgradable(base)) {
             return YaokinUpgradeRecipe.upgrade(base);
+        }
+
+        // 樱花木升级：与耀金共用模板，靠材料槽的樱花木锭区分。
+        if (YaokinUpgradeRecipe.isUpgradeTemplate(input.template())
+                && SakuraUpgradeRecipe.isUpgradeMaterial(addition)
+                && SakuraUpgradeRecipe.isUpgradable(base)) {
+            return SakuraUpgradeRecipe.upgrade(base);
         }
 
         if (addition.is(ModItems.FORGE_HAMMER.get())) {
@@ -374,6 +388,8 @@ public class GearSmithingRecipe implements SmithingRecipe {
                 // 耀金锭：下界合金盔甲 → 耀金盔甲的材料槽也由本配方接管，
                 // 不加入这里会让强化台直接拒绝放入，升级链整体不可用。
                 || stack.is(ModItems.YAOKIN_INGOT.get())
+                // 樱花木锭：下界合金盔甲 → 樱花木盔甲，与耀金共用升级模板。
+                || stack.is(ModItems.SAKURA_INGOT.get())
                 || stack.is(Items.ENCHANTED_BOOK)
                 || isGemItem(stack);
     }

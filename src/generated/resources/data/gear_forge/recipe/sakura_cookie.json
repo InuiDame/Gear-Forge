@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "gear_forge:sakura_nugget"
+    },
+    {
+      "item": "gear_forge:sakura_nugget"
+    },
+    {
+      "item": "gear_forge:sakura_nugget"
+    },
+    {
+      "item": "gear_forge:sakura_nugget"
+    },
+    {
+      "item": "minecraft:cookie"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "gear_forge:sakura_cookie"
+  }
+}

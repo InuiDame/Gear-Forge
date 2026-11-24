@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_sakura_nugget": {
+      "conditions": {
+        "items": [
+          {
+            "items": "gear_forge:sakura_nugget"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "gear_forge:sakura_drink"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_sakura_nugget"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "gear_forge:sakura_drink"
+    ]
+  }
+}

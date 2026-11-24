@@ -67,6 +67,21 @@ public class ModCreativeTabs {
                         output.accept(ModItems.YAOKIN_CHESTPLATE.get());
                         output.accept(ModItems.YAOKIN_LEGGINGS.get());
                         output.accept(ModItems.YAOKIN_BOOTS.get());
+                        // 樱花木系列
+                        output.accept(ModItems.SAKURA_INGOT.get());
+                        output.accept(ModItems.SAKURA_NUGGET.get());
+                        output.accept(ModItems.SAKURA_STONE.get());
+                        output.accept(ModItems.SAKURA_DRINK.get());
+                        output.accept(ModItems.SAKURA_COOKIE.get());
+                        output.accept(ModItems.SAKURA_SWORD.get());
+                        output.accept(ModItems.SAKURA_PICKAXE.get());
+                        output.accept(ModItems.SAKURA_AXE.get());
+                        output.accept(ModItems.SAKURA_SHOVEL.get());
+                        output.accept(ModItems.SAKURA_HOE.get());
+                        output.accept(ModItems.SAKURA_HELMET.get());
+                        output.accept(ModItems.SAKURA_CHESTPLATE.get());
+                        output.accept(ModItems.SAKURA_LEGGINGS.get());
+                        output.accept(ModItems.SAKURA_BOOTS.get());
                     }).build());
 
     // 第二页：饰品
