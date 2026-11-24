@@ -45,17 +45,24 @@ public class CompanionMenu extends AbstractContainerMenu {
         super(ModMenus.COMPANION.get(), containerId);
         this.companion = companion;
 
-        // 队友装备槽 0-5：位置仿玩家装备栏（左侧竖排 + 手持）
-        int[] xs = {8, 8, 8, 8, 8, 30};
-        int[] ys = {18, 36, 54, 72, 90, 90};
+        // 槽位以 x=8+col*18 的统一网格排布（原版玩家背包就是 x=8 起，之前用 x=84 导致错位）。
+        // 布局（9 列 × 7 行）：
+        //   第 0 行(y=18)     ：队友装备 6 槽（头/胸/腿/脚/主手/副手）
+        //   第 1-2 行(y=36,54)：队友背包 18 格
+        //   第 3-5 行(y=72..) ：玩家背包 27 格
+        //   第 6 行(y=126)    ：玩家快捷栏 9 格
+        int gridX = 8;
+        int gridStep = 18;
+
+        // 队友装备槽 0-5：第 0 行，x=8/26/44/62/80/98
         Container equipmentFallback = new net.minecraft.world.SimpleContainer(1);
         for (int i = 0; i < EQUIPMENT_ORDER.length; i++) {
             final EquipmentSlot slot = EQUIPMENT_ORDER[i];
-            this.addSlot(new Slot(companion != null ? new EquipmentContainer(companion, slot) : equipmentFallback, 0, xs[i], ys[i]) {
+            this.addSlot(new Slot(companion != null ? new EquipmentContainer(companion, slot) : equipmentFallback,
+                    0, gridX + i * gridStep, 18) {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
                     if (slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND) return true;
-                    // 盔甲槽只接受可穿戴到该槽的物品
                     return stack.getItem() instanceof net.minecraft.world.item.ArmorItem armor
                             && armor.getEquipmentSlot() == slot;
                 }
@@ -67,22 +74,24 @@ public class CompanionMenu extends AbstractContainerMenu {
             });
         }
 
-        // 队友背包 18 格（9x2）
+        // 队友背包 18 格（9x2）：第 1-2 行
         Container inv = companion != null ? companion.getInventory() : new net.minecraft.world.SimpleContainer(18);
         for (int row = 0; row < 2; row++) {
             for (int col = 0; col < 9; col++) {
-                this.addSlot(new Slot(inv, col + row * 9, 84 + col * 18, 18 + row * 18));
+                this.addSlot(new Slot(inv, col + row * 9, gridX + col * gridStep, 36 + row * gridStep));
             }
         }
 
-        // 玩家背包 27 格 + 快捷栏 9 格
+        // 玩家背包 27 格（9x3）：第 3-5 行
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 84 + col * 18, 62 + row * 18));
+                this.addSlot(new Slot(playerInventory, col + row * 9 + 9,
+                        gridX + col * gridStep, 72 + row * gridStep));
             }
         }
+        // 玩家快捷栏 9 格：第 6 行
         for (int col = 0; col < 9; col++) {
-            this.addSlot(new Slot(playerInventory, col, 84 + col * 18, 120));
+            this.addSlot(new Slot(playerInventory, col, gridX + col * gridStep, 126));
         }
     }
 

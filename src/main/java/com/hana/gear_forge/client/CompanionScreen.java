@@ -14,14 +14,15 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 /**
- * 队友装备 + 背包的客户端界面。
+ * 队友装备 + 背包的客户端界面（仿原版玩家背包布局）。
  *
  * <p>关键：菜单类型必须在 {@link RegisterMenuScreensEvent} 注册对应的 Screen，
  * 否则服务端 openMenu 成功、客户端却报 "Failed to create screen for menu type:
- * gear_forge:companion"，玩家看到右键没反应。之前只实现了 CompanionMenu 忘了注册 Screen。
+ * gear_forge:companion"，玩家看到右键没反应。
  *
- * <p>背景直接复用原版通用容器贴图 generic_54（9列×6行），槽位布局与 CompanionMenu 一致：
- * 上排队友装备/背包，下排玩家背包与快捷栏。
+ * <p>槽位在 CompanionMenu 里按 x=8+col*18 的标准网格排布（与原版玩家背包一致：
+ * 第一行队友装备、接着队友背包 9x2、玩家背包 9x3、最后快捷栏 9）。
+ * 背景用原版通用容器贴图 generic_54（9列×6行统一网格），槽位与贴图格子一一对齐、不错位。
  */
 @EventBusSubscriber(modid = GearForgeMod.MODID, value = Dist.CLIENT)
 public final class CompanionScreen extends AbstractContainerScreen<CompanionMenu> {
@@ -37,15 +38,19 @@ public final class CompanionScreen extends AbstractContainerScreen<CompanionMenu
     public CompanionScreen(CompanionMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 176;
-        this.imageHeight = 166; // 覆盖到快捷栏(y=120)即可
-        this.inventoryLabelY = 109;
+        // 槽位到 y=126+16=142，留边取整 158；贴图按相同尺寸取顶部区域，避免拉伸导致错位
+        this.imageHeight = 158;
+        // 玩家背包标签放在玩家背包 27 格(第 3 行 y=72)上方
+        this.inventoryLabelY = 59;
+        this.titleLabelY = 6;
     }
 
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
-        // generic_54.png 画前 166 像素高（够覆盖所有槽位）
+        // generic_54.png 是 9 列统一网格，槽位 x=8+col*18、y=18+row*18。
+        // 源和目标都用 imageWidth×imageHeight（1:1 像素），不乱缩放就不会错位。
         graphics.blit(BACKGROUND, x, y, 0, 0, this.imageWidth, this.imageHeight);
     }
 
