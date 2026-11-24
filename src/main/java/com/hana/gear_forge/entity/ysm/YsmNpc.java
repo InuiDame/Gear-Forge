@@ -31,6 +31,8 @@ public class YsmNpc extends ServerPlayer {
     private final MinecraftServer server;
     private final String modelId;
     private int tabHideCooldown = 0;
+    /** 生成后重发模型设置的剩余次数：追踪关系在加入世界后下一 tick 才建立，需延迟重发。 */
+    private int modelRetry = 3;
 
     public YsmNpc(MinecraftServer server, ServerLevel level, String name, Vec3 pos, String modelId) {
         super(server, level, new GameProfile(UUID.randomUUID(), name), ClientInformation.createDefault());
@@ -51,16 +53,25 @@ public class YsmNpc extends ServerPlayer {
         hideFromTab();
     }
 
-    /** 设置 YSM 模型：model_id attachment 的 setModelAndTexture + setMandatory。 */
+    /**
+     * 设置 YSM 模型。
+     *
+     * <p>必须调用带 ServerPlayer 参数的重载 {@code setModel(ServerPlayer, modelId)}：
+     * 它内部会调用 YSM 的模型管理器 setModel(player, boolean, modelId)，后者不仅写入
+     * modelId，还会通过 {@code PacketDistributor.sendToPlayersTrackingEntityAndSelf}
+     * 把模型数据包发给所有追踪本假玩家实体的真实客户端——这才是让模型真正显示的关键。
+     * 之前调用的 setModelAndTexture(String,String) / setMandatory(boolean) 只改 attachment
+     * 内部字段、不触发同步，所以角色一直是默认 Steve 皮肤。
+     */
     private void applyYsmModel() {
         try {
             O0o0OoOOooOo0O0OOoo0Oo00 cap =
                     this.getData(O0o0OoOOooOo0O0OOoo0Oo00.oOo0OO0O0o000OO0O000oo0o);
-            // 纹理传 "-" 让 YSM 用模型默认纹理；setMandatory(true) 让无连接的假玩家也同步
-            cap.oOo0OO0O0o000OO0O000oo0o(modelId, "-");
-            cap.oOoo00O0o0oO0o0oO00OO0O0(true);
-        } catch (Throwable ignored) {
-            // YSM 未安装或版本不匹配时静默降级（NPC 会显示为默认 Steve 皮肤）
+            cap.oOo0OO0O0o000OO0O000oo0o(this, modelId);
+        } catch (Throwable t) {
+            // YSM 未安装/版本不匹配/模型加载失败时降级为默认皮肤，但写日志便于排查
+            com.hana.gear_forge.GearForgeMod.LOGGER.warn(
+                    "Failed to apply YSM model '{}' to NPC: {}", modelId, t.toString());
         }
     }
 
@@ -76,6 +87,17 @@ public class YsmNpc extends ServerPlayer {
         if (--tabHideCooldown <= 0) {
             tabHideCooldown = 100;   // 每 5 秒重发一次，压制 600 tick 的重新广播
             hideFromTab();
+        }
+        // 前几 tick 重发模型：实体刚加入世界时尚无追踪者，模型包可能发不出去。
+        // 在第 5/20/60 tick 各重发一次，确保附近的真实客户端收到并套上模型。
+        if (modelRetry > 0) {
+            int elapsed = this.tickCount;
+            if ((modelRetry == 3 && elapsed >= 5)
+                    || (modelRetry == 2 && elapsed >= 20)
+                    || (modelRetry == 1 && elapsed >= 60)) {
+                modelRetry--;
+                applyYsmModel();
+            }
         }
     }
 
