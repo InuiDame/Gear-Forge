@@ -1,6 +1,9 @@
 package com.hana.gear_forge.command;
 
+import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.component.ModDataComponents;
+import com.hana.gear_forge.entity.ysm.NatsuBossNpc;
+import com.hana.gear_forge.entity.ysm.NatsuCompanionNpc;
 import com.hana.gear_forge.event.MobGearEventHandler;
 import com.hana.gear_forge.util.GearHelper;
 import com.mojang.brigadier.CommandDispatcher;
@@ -32,6 +35,10 @@ public class GearForgeCommands {
         dispatcher.register(Commands.literal("gear_forge")
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("test")
+                        .then(Commands.literal("natsu_boss")
+                                .executes(ctx -> spawnNatsu(ctx, true)))
+                        .then(Commands.literal("natsu_companion")
+                                .executes(ctx -> spawnNatsu(ctx, false)))
                         .then(Commands.literal("spawnmob")
                                 // 用 string() 而不是 word()：word() 的 readUnquotedString 不允许冒号，
                                 // 导致 /gear_forge test spawnmob gear_forge:xxx 无法输入，
@@ -59,6 +66,27 @@ public class GearForgeCommands {
                                                                                 IntegerArgumentType.getInteger(ctx, "gearCount"),
                                                                                 StringArgumentType.getString(ctx, "upgradeLevels"),
                                                                                 StringArgumentType.getString(ctx, "affixCounts")))))))))));
+    }
+
+    /** 在命令执行位置生成柚鸟夏 Boss 或队友，用于验证假玩家 YSM NPC 是否正常工作。 */
+    private static int spawnNatsu(CommandContext<CommandSourceStack> ctx, boolean boss) {
+        CommandSourceStack source = ctx.getSource();
+        ServerLevel level = source.getLevel();
+        var pos = source.getPosition();
+        try {
+            if (boss) {
+                new NatsuBossNpc(level.getServer(), level, pos.x, pos.y, pos.z);
+            } else {
+                new NatsuCompanionNpc(level.getServer(), level, pos.x, pos.y, pos.z,
+                        source.getEntity() instanceof net.minecraft.world.entity.player.Player p ? p : null);
+            }
+            source.sendSuccess(() -> Component.literal(boss ? "已生成柚鸟夏 Boss（三阶段）" : "已生成队友小夏"), true);
+            return 1;
+        } catch (Throwable t) {
+            GearForgeMod.LOGGER.error("Failed to spawn Natsu NPC via command", t);
+            source.sendFailure(Component.literal("生成失败: " + t));
+            return 0;
+        }
     }
 
     private static int execute(CommandContext<CommandSourceStack> ctx,

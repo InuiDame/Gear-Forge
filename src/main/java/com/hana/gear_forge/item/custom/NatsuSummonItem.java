@@ -1,6 +1,6 @@
 package com.hana.gear_forge.item.custom;
 
-import com.hana.gear_forge.entity.ysm.YsmNpc;
+import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.entity.ysm.NatsuBossNpc;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -27,12 +27,21 @@ public class NatsuSummonItem extends Item {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos().above();
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
-            NatsuBossNpc boss = new NatsuBossNpc(serverLevel.getServer(), serverLevel,
-                    pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-            if (context.getPlayer() != null) {
-                context.getPlayer().sendSystemMessage(Component.translatable(
-                        "message.gear_forge.natsu_summon").withStyle(ChatFormatting.LIGHT_PURPLE));
-                if (!context.getPlayer().isCreative()) context.getItemInHand().shrink(1);
+            try {
+                NatsuBossNpc boss = new NatsuBossNpc(serverLevel.getServer(), serverLevel,
+                        pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+                if (context.getPlayer() != null) {
+                    context.getPlayer().sendSystemMessage(Component.translatable(
+                            "message.gear_forge.natsu_summon").withStyle(ChatFormatting.LIGHT_PURPLE));
+                    if (!context.getPlayer().isCreative()) context.getItemInHand().shrink(1);
+                }
+            } catch (Throwable t) {
+                GearForgeMod.LOGGER.error("Failed to summon Natsu Boss", t);
+                if (context.getPlayer() != null) {
+                    context.getPlayer().sendSystemMessage(Component.literal(
+                            "召唤失败：请确认已安装 YSM 并查看日志").withStyle(ChatFormatting.RED));
+                }
+                return InteractionResult.FAIL;
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
