@@ -85,6 +85,8 @@ public class ModCreativeTabs {
                         // 柚鸟夏 Boss / 队友
                         output.accept(ModItems.NATSU_SUMMON.get());
                         output.accept(ModItems.NATSU_CONTRACT.get());
+                        // 图中盾牌
+                        output.accept(ModItems.NATSU_SHIELD.get());
                     }).build());
 
     // 第二页：饰品

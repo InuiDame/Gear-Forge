@@ -125,6 +125,10 @@ dependencies {
     compileOnly files('libs/jei-1.21.1-neoforge-api-19.76.1.478.jar',
                       'libs/jei-1.21.1-common-api-19.76.1.478.jar')
 
+    // TaCZ: 仅编译期引用子弹命中结果类，使可选 Mixin 的注入方法描述符与目标完全一致。
+    // 运行时由玩家安装的 TaCZ 提供，不打包进本 mod。
+    compileOnly files('libs/tacz-neoforge-1.21.1-1.2.0-hotfix.jar')
+
     // YSM (Yes Steve Model): 编译期引用其混淆 attachment API，用于给假玩家 NPC 套模型。
     // 运行时由玩家安装的 YSM 提供，不打包进本 mod。
     compileOnly files('libs/ysm-2.6.5-neoforge+mc1.21.1.jar')

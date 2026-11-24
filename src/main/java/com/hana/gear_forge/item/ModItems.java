@@ -242,6 +242,11 @@ public class ModItems {
     public static final DeferredItem<Item> NATSU_CONTRACT = registerItem("natsu_contract",
             () -> new NatsuContractItem(new Item.Properties().stacksTo(16)));
 
+    // ===== 夏之糖霜盾 =====
+    /** 图中蓝白塔盾。继承 ShieldItem，因此 1.21.1 原版正面格挡逻辑完全适用。 */
+    public static final DeferredItem<NatsuShieldItem> NATSU_SHIELD = registerTyped("natsu_shield",
+            () -> new NatsuShieldItem(new Item.Properties().durability(420).stacksTo(1)));
+
     private static DeferredItem<Item> registerItem(String name, Supplier<Item> itemSupplier) {
         return ITEMS.register(name, itemSupplier);
     }
