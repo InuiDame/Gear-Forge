@@ -175,5 +175,6 @@
   "tooltip.gear_forge.sakura_set": "Wearing all four pieces grants Cherry Blessing V (50% magic damage reduction).",
   "tooltip.gear_forge.gem_effect.sakura_blessing": "On armor: Cherry Blessing I, 10% magic damage reduction",
   "tooltip.gear_forge.gem_effect.sakura_mark": "On weapon: applies Cherry Marks on hit",
-  "tooltip.gear_forge.yaokin_set": "Full set: Midas Touch I + Gilded (Piglins treat as gold armor)"
+  "tooltip.gear_forge.yaokin_set": "Full set: Midas Touch I + Gilded (Piglins treat as gold armor)",
+  "gem.gear_forge.sakura_stone": "Cherry Blossom Stone"
 }
