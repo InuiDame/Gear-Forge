@@ -1,0 +1,19 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "gear_forge:sakura"
+      }
+    ],
+    "humanoid_baby": [
+      {
+        "texture": "gear_forge:sakura"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "gear_forge:sakura"
+      }
+    ]
+  }
+}

@@ -57,6 +57,22 @@ public class ModItemModelProvider extends ModelProvider {
         flat(itemModels, ModItems.YAOKIN_CHESTPLATE.get());
         flat(itemModels, ModItems.YAOKIN_LEGGINGS.get());
         flat(itemModels, ModItems.YAOKIN_BOOTS.get());
+
+        // 樱花木系列
+        flat(itemModels, ModItems.SAKURA_INGOT.get());
+        flat(itemModels, ModItems.SAKURA_NUGGET.get());
+        flat(itemModels, ModItems.SAKURA_STONE.get());
+        flat(itemModels, ModItems.SAKURA_DRINK.get());
+        flat(itemModels, ModItems.SAKURA_COOKIE.get());
+        handheld(itemModels, ModItems.SAKURA_SWORD.get());
+        handheld(itemModels, ModItems.SAKURA_PICKAXE.get());
+        handheld(itemModels, ModItems.SAKURA_AXE.get());
+        handheld(itemModels, ModItems.SAKURA_SHOVEL.get());
+        handheld(itemModels, ModItems.SAKURA_HOE.get());
+        flat(itemModels, ModItems.SAKURA_HELMET.get());
+        flat(itemModels, ModItems.SAKURA_CHESTPLATE.get());
+        flat(itemModels, ModItems.SAKURA_LEGGINGS.get());
+        flat(itemModels, ModItems.SAKURA_BOOTS.get());
     }
 
     private static void flat(ItemModelGenerators itemModels, net.minecraft.world.item.Item item) {

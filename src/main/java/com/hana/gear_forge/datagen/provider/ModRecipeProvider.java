@@ -2,6 +2,9 @@ package com.hana.gear_forge.datagen.provider;
 
 import com.hana.gear_forge.item.ModItems;
 import net.minecraft.advancements.Advancement;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.worldgen.BootstrapContext;
@@ -177,5 +180,52 @@ public class ModRecipeProvider extends RecipeProvider {
                 .save(output);
 
         // 耀金剑/工具/盔甲不再有工作台配方：只能在锻造台用原版下界合金升级模板升级。
+
+        // ===================== 樱花木 =====================
+
+        // 樱花木锭：下界合金锭居中，上下左右各一个樱花原木。
+        shaped(RecipeCategory.MISC, ModItems.SAKURA_INGOT.get())
+                .pattern(" L ")
+                .pattern("LIL")
+                .pattern(" L ")
+                .define('L', Items.CHERRY_LOG)
+                .define('I', Items.NETHERITE_INGOT)
+                .unlockedBy("has_netherite_ingot", has(Items.NETHERITE_INGOT))
+                .save(output);
+
+        // 樱花木锭 → 9 粒；9 粒 → 1 锭（自定义 id 避免与锭合成配方重名）。
+        shapeless(RecipeCategory.MISC, ModItems.SAKURA_NUGGET.get(), 9)
+                .requires(ModItems.SAKURA_INGOT.get())
+                .unlockedBy("has_sakura_ingot", has(ModItems.SAKURA_INGOT.get()))
+                .save(output, ResourceKey.create(Registries.RECIPE,
+                        Identifier.fromNamespaceAndPath("gear_forge", "sakura_ingot_to_nuggets")));
+        shaped(RecipeCategory.MISC, ModItems.SAKURA_INGOT.get())
+                .pattern("NNN")
+                .pattern("NNN")
+                .pattern("NNN")
+                .define('N', ModItems.SAKURA_NUGGET.get())
+                .unlockedBy("has_sakura_nugget", has(ModItems.SAKURA_NUGGET.get()))
+                .save(output, ResourceKey.create(Registries.RECIPE,
+                        Identifier.fromNamespaceAndPath("gear_forge", "sakura_nuggets_to_ingot")));
+
+        // 樱花石：樱花木锭直接转化。
+        shapeless(RecipeCategory.MISC, ModItems.SAKURA_STONE.get())
+                .requires(ModItems.SAKURA_INGOT.get())
+                .unlockedBy("has_sakura_ingot", has(ModItems.SAKURA_INGOT.get()))
+                .save(output);
+
+        // 樱花饮 / 樱花曲奇。
+        shapeless(RecipeCategory.FOOD, ModItems.SAKURA_DRINK.get())
+                .requires(ModItems.SAKURA_NUGGET.get(), 4)
+                .requires(Items.POTION)
+                .unlockedBy("has_sakura_nugget", has(ModItems.SAKURA_NUGGET.get()))
+                .save(output);
+        shapeless(RecipeCategory.FOOD, ModItems.SAKURA_COOKIE.get())
+                .requires(ModItems.SAKURA_NUGGET.get(), 4)
+                .requires(Items.COOKIE)
+                .unlockedBy("has_sakura_nugget", has(ModItems.SAKURA_NUGGET.get()))
+                .save(output);
+
+        // 樱花剑/工具/盔甲不在这里：用下界合金升级模板 + 樱花木锭在强化台升级。
     }
 }

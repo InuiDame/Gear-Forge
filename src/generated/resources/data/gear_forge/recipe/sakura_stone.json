@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "gear_forge:sakura_ingot"
+  ],
+  "result": {
+    "count": 1,
+    "id": "gear_forge:sakura_stone"
+  }
+}

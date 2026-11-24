@@ -5,7 +5,9 @@ import com.hana.gear_forge.compat.curios.CursedAnvilItem;
 import com.hana.gear_forge.compat.curios.LuckyDiamondItem;
 import com.hana.gear_forge.compat.curios.YaokinCoinItem;
 import com.hana.gear_forge.GearForgeMod;
+import com.hana.gear_forge.content.SakuraMaterial;
 import com.hana.gear_forge.content.YaokinMaterial;
+import net.minecraft.world.food.FoodProperties;
 import com.hana.gear_forge.item.custom.*;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -158,6 +160,56 @@ public class ModItems {
     public static final DeferredItem<Item> YAOKIN_BOOTS = registerItem("yaokin_boots",
             Item::new, () -> new Item.Properties()
                     .humanoidArmor(YaokinMaterial.ARMOR, ArmorType.BOOTS).fireResistant());
+
+    // ===================== 樱花木 =====================
+
+    public static final DeferredItem<Item> SAKURA_INGOT = registerItem("sakura_ingot",
+            Item::new, () -> new Item.Properties().fireResistant());
+
+    public static final DeferredItem<Item> SAKURA_NUGGET = registerItem("sakura_nugget",
+            Item::new, () -> new Item.Properties().fireResistant());
+
+    public static final DeferredItem<Item> SAKURA_STONE = registerItem("sakura_stone",
+            Item::new, () -> new Item.Properties().fireResistant());
+
+    public static final DeferredItem<SakuraDrinkItem> SAKURA_DRINK = registerTyped("sakura_drink",
+            SakuraDrinkItem::new, () -> new Item.Properties().stacksTo(16)
+                    .food(new FoodProperties.Builder().nutrition(4).saturationModifier(0.6F).alwaysEdible().build()));
+
+    public static final DeferredItem<SakuraCookieItem> SAKURA_COOKIE = registerTyped("sakura_cookie",
+            SakuraCookieItem::new, () -> new Item.Properties().stacksTo(16)
+                    .food(new FoodProperties.Builder().nutrition(6).saturationModifier(1.2F).build()));
+
+    public static final DeferredItem<Item> SAKURA_SWORD = registerItem("sakura_sword",
+            Item::new, () -> new Item.Properties().sword(SakuraMaterial.TOOL, 3.0F, -2.4F).fireResistant());
+
+    public static final DeferredItem<Item> SAKURA_PICKAXE = registerItem("sakura_pickaxe",
+            Item::new, () -> new Item.Properties().pickaxe(SakuraMaterial.TOOL, 1.0F, -2.8F).fireResistant());
+
+    public static final DeferredItem<Item> SAKURA_AXE = registerItem("sakura_axe",
+            Item::new, () -> new Item.Properties().axe(SakuraMaterial.TOOL, 5.0F, -3.0F).fireResistant());
+
+    public static final DeferredItem<Item> SAKURA_SHOVEL = registerItem("sakura_shovel",
+            Item::new, () -> new Item.Properties().shovel(SakuraMaterial.TOOL, 1.5F, -3.0F).fireResistant());
+
+    public static final DeferredItem<Item> SAKURA_HOE = registerItem("sakura_hoe",
+            Item::new, () -> new Item.Properties().hoe(SakuraMaterial.TOOL, -4.0F, 0.0F).fireResistant());
+
+    public static final DeferredItem<Item> SAKURA_HELMET = registerItem("sakura_helmet",
+            Item::new, () -> new Item.Properties()
+                    .humanoidArmor(SakuraMaterial.ARMOR, ArmorType.HELMET).fireResistant());
+
+    public static final DeferredItem<Item> SAKURA_CHESTPLATE = registerItem("sakura_chestplate",
+            Item::new, () -> new Item.Properties()
+                    .humanoidArmor(SakuraMaterial.ARMOR, ArmorType.CHESTPLATE).fireResistant());
+
+    public static final DeferredItem<Item> SAKURA_LEGGINGS = registerItem("sakura_leggings",
+            Item::new, () -> new Item.Properties()
+                    .humanoidArmor(SakuraMaterial.ARMOR, ArmorType.LEGGINGS).fireResistant());
+
+    public static final DeferredItem<Item> SAKURA_BOOTS = registerItem("sakura_boots",
+            Item::new, () -> new Item.Properties()
+                    .humanoidArmor(SakuraMaterial.ARMOR, ArmorType.BOOTS).fireResistant());
 
     // 26.3 起 Item.Properties 必须带 id，否则 Item 构造时抛 "Item id not set"。
     // registerItem(name, factory, props) 由 NeoForge 自动给 props 注入 setId。

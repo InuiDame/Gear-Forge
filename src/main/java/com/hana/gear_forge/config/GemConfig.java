@@ -126,7 +126,13 @@ public class GemConfig {
                                 List.of(
                                         new GemEffect("shield_block_recovery", 3.0, "减少格挡后受到的伤害+3")
                                 ),
-                                List.of("weapon", "armor", "tool"), "uncommon")
+                                List.of("weapon", "armor", "tool"), "uncommon"),
+                        new GemDefinition("sakura_stone", "樱花石", 1, "gear_forge:sakura_stone",
+                                List.of(
+                                        new GemEffect("sakura_blessing", 1.0, "樱花之护佑 I：减免10%魔法伤害（护甲）"),
+                                        new GemEffect("sakura_mark", 1.0, "攻击叠加樱花印记（武器）")
+                                ),
+                                List.of("weapon", "armor"), "rare")
                 ),
                 5
         );

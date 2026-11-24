@@ -28,5 +28,10 @@ public final class ModMobEffects {
             MOB_EFFECTS.register("gilded",
                     () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0x8FD8F0) {});
 
+    /** 樱花之护佑：等级 N 减免 N×10% 魔法伤害（套装给 5 级、樱花石宝石给 1 级）。 */
+    public static final DeferredHolder<MobEffect, MobEffect> SAKURA_BLESSING =
+            MOB_EFFECTS.register("sakura_blessing",
+                    () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0xFFB7C5) {});
+
     private ModMobEffects() {}
 }
