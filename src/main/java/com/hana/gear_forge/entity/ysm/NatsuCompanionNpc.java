@@ -23,6 +23,9 @@ public class NatsuCompanionNpc extends YsmNpc {
                              double x, double y, double z, Player owner) {
         super(server, level, "小夏", new Vec3(x, y, z), NATSU_MODEL_ID);
         if (owner != null) this.ownerUuid = owner.getStringUUID();
+        // 假玩家默认 maxHealth 20，先提到 200 再设血量，否则被 clamp 成 20
+        var attr = this.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+        if (attr != null) attr.setBaseValue(200);
         this.setHealth(200);
     }
 

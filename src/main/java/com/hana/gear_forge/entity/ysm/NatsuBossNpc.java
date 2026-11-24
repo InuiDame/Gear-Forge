@@ -30,7 +30,8 @@ import java.util.List;
  */
 public class NatsuBossNpc extends YsmNpc {
 
-    private static final int[] MAX_HP = {300, 600, 900};
+    /** Boss 总血量。三阶段共享同一条血条，按剩余血量百分比切换阶段。 */
+    private static final float TOTAL_HP = 900.0F;
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
             Component.translatable("entity.gear_forge.natsu_boss"),
@@ -48,7 +49,11 @@ public class NatsuBossNpc extends YsmNpc {
                         double x, double y, double z) {
         super(server, level, "柚鸟夏", new Vec3(x, y, z), NATSU_MODEL_ID);
         this.level = level;
-        this.setHealth(MAX_HP[0]);
+        // 假玩家默认 maxHealth 只有 20，必须先把 MAX_HEALTH 属性提到 900，
+        // 否则 setHealth(900) 会被 clamp 到 20，且触发"一出生就残血三阶段"。
+        var attr = this.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+        if (attr != null) attr.setBaseValue(TOTAL_HP);
+        this.setHealth(TOTAL_HP);
         bossEvent.setProgress(1.0F);
     }
 
@@ -83,9 +88,9 @@ public class NatsuBossNpc extends YsmNpc {
             }
         }
 
-        // 阶段切换
-        if (phase == 0 && this.getHealth() <= MAX_HP[0] * 0.66F) enterPhase(1);
-        else if (phase == 1 && this.getHealth() <= MAX_HP[1] * 0.33F) enterPhase(2);
+        // 阶段切换：按总血量百分比（66% / 33%），不回血
+        if (phase == 0 && this.getHealth() <= TOTAL_HP * 0.66F) enterPhase(1);
+        else if (phase == 1 && this.getHealth() <= TOTAL_HP * 0.33F) enterPhase(2);
 
         // 甜派能力
         if (abilityCooldown <= 0 && phaseTransition <= 0 && target != null) {
@@ -95,7 +100,7 @@ public class NatsuBossNpc extends YsmNpc {
         if (abilityCooldown > 0) abilityCooldown--;
         if (attackCooldown > 0) attackCooldown--;
 
-        bossEvent.setProgress(this.getHealth() / MAX_HP[phase]);
+        bossEvent.setProgress(this.getHealth() / TOTAL_HP);
         for (ServerPlayer p : level.getServer().getPlayerList().getPlayers()) {
             if (p.distanceTo(this) < 40) bossEvent.addPlayer(p);
             else bossEvent.removePlayer(p);
@@ -123,8 +128,7 @@ public class NatsuBossNpc extends YsmNpc {
 
     private void enterPhase(int newPhase) {
         phase = newPhase;
-        phaseTransition = 40;
-        this.heal(MAX_HP[phase] - this.getHealth());
+        phaseTransition = 40;   // 切阶段短暂无敌+特效，不回血
         spawnBurst();
         Component msg = Component.translatable("message.gear_forge.natsu_phase_" + (phase + 1))
                 .withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD);

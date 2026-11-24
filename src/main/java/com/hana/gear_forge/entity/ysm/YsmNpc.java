@@ -25,8 +25,12 @@ import java.util.UUID;
  */
 public class YsmNpc extends ServerPlayer {
 
-    /** YSM 模型 id：就是 config/yes_steve_model/custom/ 下的 .ysm 文件名。 */
-    public static final String NATSU_MODEL_ID = "natsu.ysm";
+    /**
+     * YSM 模型 id：必须是去掉扩展名的模型 key。
+     * 磁盘文件名是 natsu.ysm（见 YsmModelInstaller.MODEL_FILE），但 YSM 加载器会把
+     * .ysm/.zip/.7z 后缀去掉作为注册表 key，故 attachment 与同步包里要用 "natsu"。
+     */
+    public static final String NATSU_MODEL_ID = "natsu";
 
     private final MinecraftServer server;
     private final String modelId;
@@ -65,9 +69,27 @@ public class YsmNpc extends ServerPlayer {
      */
     private void applyYsmModel() {
         try {
+            // 探测 YSM 注册表中的模型 key：加载器会把 .ysm 后缀去掉，故可能是 "natsu" 或 "natsu.ysm"。
+            // 用实际存在的那个，避免猜错导致模型套不上。
+            String resolved = modelId;
+            try {
+                boolean plain = com.elfmcys.yesstevemodel.O0Ooo000O0ooO00Oooo00oOO
+                        .oOo0OO0O0o000OO0O000oo0o(modelId).isPresent();
+                boolean withExt = com.elfmcys.yesstevemodel.O0Ooo000O0ooO00Oooo00oOO
+                        .oOo0OO0O0o000OO0O000oo0o(modelId + ".ysm").isPresent();
+                com.hana.gear_forge.GearForgeMod.LOGGER.info(
+                        "YSM model lookup '{}'={}, '{}.ysm'={}", modelId, plain, modelId, withExt);
+                if (!plain && withExt) resolved = modelId + ".ysm";
+            } catch (Throwable probe) {
+                com.hana.gear_forge.GearForgeMod.LOGGER.warn("YSM model lookup failed: {}", probe.toString());
+            }
+
             O0o0OoOOooOo0O0OOoo0Oo00 cap =
                     this.getData(O0o0OoOOooOo0O0OOoo0Oo00.oOo0OO0O0o000OO0O000oo0o);
-            cap.oOo0OO0O0o000OO0O000oo0o(this, modelId);
+            cap.oOo0OO0O0o000OO0O000oo0o(this, resolved);
+            String actual = cap.oOoo00O0o0oO0o0oO00OO0O0();
+            com.hana.gear_forge.GearForgeMod.LOGGER.info(
+                    "YSM model applied to NPC: requested='{}' attachment='{}'", resolved, actual);
         } catch (Throwable t) {
             // YSM 未安装/版本不匹配/模型加载失败时降级为默认皮肤，但写日志便于排查
             com.hana.gear_forge.GearForgeMod.LOGGER.warn(
