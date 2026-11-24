@@ -77,12 +77,10 @@ public class NatsuBossNpc extends YsmNpc {
             Vec3 to = target.position().subtract(this.position());
             this.setYRot((float) (Math.atan2(-to.x, to.z) * 180.0 / Math.PI));
 
-            // 靠近（阶段越高越快）
+            // 靠近（阶段越高越快）——服务端直接 absMoveTo 驱动
             double dist = this.distanceTo(target);
             if (dist > 2.2 && phaseTransition <= 0) {
-                Vec3 dir = to.normalize().scale(0.10 + phase * 0.04);
-                this.setDeltaMovement(this.getDeltaMovement().add(dir.x * 0.15, 0, dir.z * 0.15)
-                        .multiply(0.85, 1.0, 0.85));
+                this.moveToward(target.position(), 0.10 + phase * 0.04);
             } else if (dist <= 2.2 && attackCooldown <= 0 && phaseTransition <= 0) {
                 attack();
             }

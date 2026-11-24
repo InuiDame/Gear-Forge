@@ -43,7 +43,8 @@ public class YsmNpc extends ServerPlayer {
         this.server = server;
         this.modelId = modelId;
         this.setPos(pos);
-        this.setInvulnerable(true);
+        // 不用 setInvulnerable(true)：原版 isInvulnerable() 恒真会让伤害系统直接忽略一切攻击，
+        // 导致 Boss 打不动。Boss 的无敌帧由 NatsuBossNpc.hurt() 的 phaseTransition 自行控制。
 
         // 加入 PlayerList：建立 PlayerInfo（客户端才能生成 RemotePlayer），并触发 YSM 同步跟踪
         server.getPlayerList().placeNewPlayer(
@@ -53,45 +54,32 @@ public class YsmNpc extends ServerPlayer {
         // 设置 YSM 模型
         applyYsmModel();
 
-        // 从 tab 隐藏（必须在 placeNewPlayer 之后）
-        hideFromTab();
+        // 诊断对照：暂不隐藏 tab，验证 PlayerInfoRemove 是否干扰 YSM 模型在客户端的渲染/同步。
+        // hideFromTab();
     }
 
     /**
-     * 设置 YSM 模型。
-     *
-     * <p>必须调用带 ServerPlayer 参数的重载 {@code setModel(ServerPlayer, modelId)}：
-     * 它内部会调用 YSM 的模型管理器 setModel(player, boolean, modelId)，后者不仅写入
-     * modelId，还会通过 {@code PacketDistributor.sendToPlayersTrackingEntityAndSelf}
-     * 把模型数据包发给所有追踪本假玩家实体的真实客户端——这才是让模型真正显示的关键。
-     * 之前调用的 setModelAndTexture(String,String) / setMandatory(boolean) 只改 attachment
-     * 内部字段、不触发同步，所以角色一直是默认 Steve 皮肤。
+     * 设置 YSM 模型。反编译 YSM 2.6.5 确认两条路径都要走：
+     * <ol>
+     *   <li>{@code setModel(String modelId, String texture)} 写 attachment 的持久化字段
+     *       （field #53=modelId, #47=texture），客户端实体数据同步时据此选模型渲染。</li>
+     *   <li>{@code setModel(ServerPlayer, modelId)} 是 YSM 换模型命令的入口，内部走模型管理器
+     *       setModel(player, sendToClient, modelId) → 发包给追踪本实体的真实客户端。</li>
+     * </ol>
+     * 只调其中一个都不完整：前者不发包、后者不写 attachment 字段。
      */
     private void applyYsmModel() {
         try {
-            // 探测 YSM 注册表中的模型 key：加载器会把 .ysm 后缀去掉，故可能是 "natsu" 或 "natsu.ysm"。
-            // 用实际存在的那个，避免猜错导致模型套不上。
-            String resolved = modelId;
-            try {
-                boolean plain = com.elfmcys.yesstevemodel.O0Ooo000O0ooO00Oooo00oOO
-                        .oOo0OO0O0o000OO0O000oo0o(modelId).isPresent();
-                boolean withExt = com.elfmcys.yesstevemodel.O0Ooo000O0ooO00Oooo00oOO
-                        .oOo0OO0O0o000OO0O000oo0o(modelId + ".ysm").isPresent();
-                com.hana.gear_forge.GearForgeMod.LOGGER.info(
-                        "YSM model lookup '{}'={}, '{}.ysm'={}", modelId, plain, modelId, withExt);
-                if (!plain && withExt) resolved = modelId + ".ysm";
-            } catch (Throwable probe) {
-                com.hana.gear_forge.GearForgeMod.LOGGER.warn("YSM model lookup failed: {}", probe.toString());
-            }
-
             O0o0OoOOooOo0O0OOoo0Oo00 cap =
                     this.getData(O0o0OoOOooOo0O0OOoo0Oo00.oOo0OO0O0o000OO0O000oo0o);
-            cap.oOo0OO0O0o000OO0O000oo0o(this, resolved);
-            String actual = cap.oOoo00O0o0oO0o0oO00OO0O0();
+            // 1) 写 attachment 字段：modelId + 纹理（"-" 表示用模型默认纹理）
+            cap.oOo0OO0O0o000OO0O000oo0o(modelId, "-");
+            // 2) 触发 YSM 管理器发包同步
+            cap.oOo0OO0O0o000OO0O000oo0o(this, modelId);
             com.hana.gear_forge.GearForgeMod.LOGGER.info(
-                    "YSM model applied to NPC: requested='{}' attachment='{}'", resolved, actual);
+                    "YSM model applied to NPC '{}': modelId='{}' attachment='{}'",
+                    this.getName().getString(), modelId, cap.oOoo00O0o0oO0o0oO00OO0O0());
         } catch (Throwable t) {
-            // YSM 未安装/版本不匹配/模型加载失败时降级为默认皮肤，但写日志便于排查
             com.hana.gear_forge.GearForgeMod.LOGGER.warn(
                     "Failed to apply YSM model '{}' to NPC: {}", modelId, t.toString());
         }
@@ -106,10 +94,11 @@ public class YsmNpc extends ServerPlayer {
     @Override
     public void tick() {
         super.tick();
-        if (--tabHideCooldown <= 0) {
-            tabHideCooldown = 100;   // 每 5 秒重发一次，压制 600 tick 的重新广播
-            hideFromTab();
-        }
+        // 诊断对照：tab 隐藏暂关
+        // if (--tabHideCooldown <= 0) {
+        //     tabHideCooldown = 100;
+        //     hideFromTab();
+        // }
         // 前几 tick 重发模型：实体刚加入世界时尚无追踪者，模型包可能发不出去。
         // 在第 5/20/60 tick 各重发一次，确保附近的真实客户端收到并套上模型。
         if (modelRetry > 0) {
@@ -125,5 +114,28 @@ public class YsmNpc extends ServerPlayer {
 
     public String getModelId() {
         return modelId;
+    }
+
+    /**
+     * 服务端直接驱动 NPC 朝目标移动。
+     *
+     * <p>假玩家是 ServerPlayer，正常玩家的位置由客户端上报驱动：{@code ServerGamePacketListenerImpl.tick()}
+     * 在 doTick() 之后会用 {@code absMoveTo(firstGoodX, ...)} 把实体拉回客户端确认的位置，
+     * 所以单纯 setDeltaMovement() 会被抹掉、看起来"不动"。这里直接 absMoveTo 到新位置，
+     * 位置立即生效且随实体数据同步发给周围客户端。
+     */
+    public void moveToward(Vec3 target, double speed) {
+        Vec3 dir = target.subtract(this.position());
+        dir = new Vec3(dir.x, 0.0, dir.z);   // 只在水平面移动，Y 交给重力/地面
+        double len = dir.length();
+        if (len < 0.1) return;
+        // 限制单 tick 位移，避免瞬移
+        double step = Math.min(speed, len);
+        Vec3 delta = dir.scale(step / len);
+        double nx = this.getX() + delta.x;
+        double nz = this.getZ() + delta.z;
+        float yaw = (float) (Math.atan2(-dir.x, dir.z) * 180.0 / Math.PI);
+        this.setYRot(yaw);
+        this.absMoveTo(nx, this.getY(), nz, yaw, this.getXRot());
     }
 }

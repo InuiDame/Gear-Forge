@@ -26,11 +26,11 @@ public abstract class YsmModelAccessMixin {
         if (player instanceof YsmNpc) return;   // 我们的 Boss/队友：放行
         // 内部模型 key（无扩展名与带扩展名两种形式都拦截）
         String id = modelId == null ? "" : modelId;
-        if (YsmNpc.NATSU_MODEL_ID.equals(id)
-                || (YsmNpc.NATSU_MODEL_ID + ".ysm").equals(id)
-                || "natsu".equals(id)
-                || "natsu.ysm".equals(id)
-                || id.contains("natsu")) {
+        String lower = id.toLowerCase(java.util.Locale.ROOT);
+        // 覆盖文件名 key、带扩展名形式、以及模型内部显示名（含中文）。
+        if (lower.contains("natsu")
+                || id.contains("柚鸟夏")
+                || id.contains("柚鳥夏")) {
             ci.cancel();
         }
     }

@@ -71,10 +71,8 @@ public class NatsuCompanionNpc extends YsmNpc {
         }
 
         if (target != null) {
-            Vec3 dir = target.subtract(this.position()).normalize().scale(speed);
-            this.setDeltaMovement(this.getDeltaMovement().add(dir.x * 0.15, 0, dir.z * 0.15)
-                    .multiply(0.85, 1.0, 0.85));
-            this.setYRot((float) (Math.atan2(-dir.x, dir.z) * 180.0 / Math.PI));
+            // 假玩家位置由服务端直接驱动（setDeltaMovement 会被 ServerPlayer 的位置确认机制抹掉）
+            this.moveToward(target, speed);
         } else if (mode == 2) {
             this.setDeltaMovement(0, this.getDeltaMovement().y, 0);
         }
