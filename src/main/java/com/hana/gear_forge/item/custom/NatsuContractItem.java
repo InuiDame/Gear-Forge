@@ -1,12 +1,14 @@
 package com.hana.gear_forge.item.custom;
 
 import com.hana.gear_forge.GearForgeMod;
-import com.hana.gear_forge.entity.ysm.NatsuCompanionNpc;
+import com.hana.gear_forge.entity.ModEntities;
+import com.hana.gear_forge.entity.ysm.NatsuCompanionEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -28,14 +30,15 @@ public class NatsuContractItem extends Item {
         BlockPos pos = context.getClickedPos().above();
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
             try {
-                NatsuCompanionNpc companion = new NatsuCompanionNpc(
-                        serverLevel.getServer(), serverLevel,
-                        pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5,
-                        context.getPlayer());
-                if (context.getPlayer() != null) {
-                    context.getPlayer().sendSystemMessage(Component.translatable(
+                final net.minecraft.world.entity.player.Player owner = context.getPlayer();
+                NatsuCompanionEntity companion = ModEntities.NATSU_COMPANION.get().spawn(
+                        serverLevel,
+                        e -> { if (owner != null) e.setOwner(owner); },
+                        pos, MobSpawnType.SPAWN_EGG, true, false);
+                if (companion != null && owner != null) {
+                    owner.sendSystemMessage(Component.translatable(
                             "message.gear_forge.natsu_companion").withStyle(ChatFormatting.LIGHT_PURPLE));
-                    if (!context.getPlayer().isCreative()) context.getItemInHand().shrink(1);
+                    if (!owner.isCreative()) context.getItemInHand().shrink(1);
                 }
             } catch (Throwable t) {
                 GearForgeMod.LOGGER.error("Failed to summon Natsu Companion", t);

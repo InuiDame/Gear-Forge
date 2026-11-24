@@ -1,12 +1,14 @@
 package com.hana.gear_forge.item.custom;
 
 import com.hana.gear_forge.GearForgeMod;
-import com.hana.gear_forge.entity.ysm.NatsuBossNpc;
+import com.hana.gear_forge.entity.ModEntities;
+import com.hana.gear_forge.entity.ysm.NatsuBossEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -28,9 +30,9 @@ public class NatsuSummonItem extends Item {
         BlockPos pos = context.getClickedPos().above();
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
             try {
-                NatsuBossNpc boss = new NatsuBossNpc(serverLevel.getServer(), serverLevel,
-                        pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-                if (context.getPlayer() != null) {
+                NatsuBossEntity boss = ModEntities.NATSU_BOSS.get().spawn(
+                        serverLevel, null, pos, MobSpawnType.SPAWN_EGG, true, false);
+                if (boss != null && context.getPlayer() != null) {
                     context.getPlayer().sendSystemMessage(Component.translatable(
                             "message.gear_forge.natsu_summon").withStyle(ChatFormatting.LIGHT_PURPLE));
                     if (!context.getPlayer().isCreative()) context.getItemInHand().shrink(1);

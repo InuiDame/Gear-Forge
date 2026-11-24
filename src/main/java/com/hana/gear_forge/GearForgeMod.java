@@ -2,6 +2,7 @@ package com.hana.gear_forge;
 
 import com.hana.gear_forge.block.ModBlocks;
 import com.hana.gear_forge.component.ModDataComponents;
+import com.hana.gear_forge.entity.ModEntities;
 import com.hana.gear_forge.content.ModMobEffects;
 import com.hana.gear_forge.content.SakuraMaterial;
 import com.hana.gear_forge.content.YaokinMaterial;
@@ -34,6 +35,7 @@ public class GearForgeMod {
         SakuraMaterial.ARMOR_MATERIALS.register(modEventBus);
         ModMobEffects.MOB_EFFECTS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
+        ModEntities.ENTITY_TYPES.register(modEventBus);
         ModGlobalLootModifiers.GLM_SERIALIZERS.register(modEventBus);
 
 

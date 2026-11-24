@@ -1,7 +1,7 @@
 package com.hana.gear_forge.event;
 
 import com.hana.gear_forge.GearForgeMod;
-import com.hana.gear_forge.entity.ysm.NatsuCompanionNpc;
+import com.hana.gear_forge.entity.ysm.NatsuCompanionEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,7 +25,7 @@ public final class YsmNpcEvents {
 
     @SubscribeEvent
     public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
-        if (!(event.getTarget() instanceof NatsuCompanionNpc companion)) return;
+        if (!(event.getTarget() instanceof NatsuCompanionEntity companion)) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (event.getHand() != InteractionHand.MAIN_HAND) return;
 

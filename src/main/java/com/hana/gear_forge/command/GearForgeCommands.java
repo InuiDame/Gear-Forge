@@ -2,8 +2,9 @@ package com.hana.gear_forge.command;
 
 import com.hana.gear_forge.GearForgeMod;
 import com.hana.gear_forge.component.ModDataComponents;
-import com.hana.gear_forge.entity.ysm.NatsuBossNpc;
-import com.hana.gear_forge.entity.ysm.NatsuCompanionNpc;
+import com.hana.gear_forge.entity.ModEntities;
+import com.hana.gear_forge.entity.ysm.NatsuBossEntity;
+import com.hana.gear_forge.entity.ysm.NatsuCompanionEntity;
 import com.hana.gear_forge.event.MobGearEventHandler;
 import com.hana.gear_forge.util.GearHelper;
 import com.mojang.brigadier.CommandDispatcher;
@@ -74,11 +75,18 @@ public class GearForgeCommands {
         ServerLevel level = source.getLevel();
         var pos = source.getPosition();
         try {
+            net.minecraft.core.BlockPos blockPos = net.minecraft.core.BlockPos.containing(pos);
+            net.minecraft.world.entity.player.Player owner =
+                    source.getEntity() instanceof net.minecraft.world.entity.player.Player p ? p : null;
             if (boss) {
-                new NatsuBossNpc(level.getServer(), level, pos.x, pos.y, pos.z);
+                NatsuBossEntity e = ModEntities.NATSU_BOSS.get().spawn(
+                        level, null, blockPos, net.minecraft.world.entity.MobSpawnType.COMMAND, true, false);
+                if (e == null) throw new IllegalStateException("Boss spawn returned null");
             } else {
-                new NatsuCompanionNpc(level.getServer(), level, pos.x, pos.y, pos.z,
-                        source.getEntity() instanceof net.minecraft.world.entity.player.Player p ? p : null);
+                NatsuCompanionEntity e = ModEntities.NATSU_COMPANION.get().spawn(
+                        level, x -> { if (owner != null) x.setOwner(owner); },
+                        blockPos, net.minecraft.world.entity.MobSpawnType.COMMAND, true, false);
+                if (e == null) throw new IllegalStateException("Companion spawn returned null");
             }
             source.sendSuccess(() -> Component.literal(boss ? "已生成柚鸟夏 Boss（三阶段）" : "已生成队友小夏"), true);
             return 1;
