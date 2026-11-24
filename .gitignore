@@ -59,3 +59,8 @@ desktop.ini
 
 # JEI API jars are vendored because Maven download is blocked by TLS in this environment.
 !libs/*.jar
+
+# YSM model: only the AES-encrypted .enc is committed; plaintext .ysm must never be tracked.
+# The mod decrypts natsu.ysm.enc at runtime into the game config directory.
+src/main/resources/assets/gear_forge/ysm/*.ysm
+!src/main/resources/assets/gear_forge/ysm/*.ysm.enc
