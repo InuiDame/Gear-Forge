@@ -20,11 +20,9 @@ import java.util.HashSet;
 @Mixin(targets = "com.elfmcys.yesstevemodel.O0o0Oo0Oo0Ooo0oO000o0OOO", remap = false)
 public abstract class YsmModelGuiHideMixin {
 
-    /** 访问 GUI 的隐藏模型 id 集合字段。 */
+    /** 访问 GUI 的隐藏模型 id 集合字段（@Accessor 方法必须是抽象的）。 */
     @org.spongepowered.asm.mixin.gen.Accessor("oOOO00ooO0oOOoOOo0OoOOOo")
-    private HashSet<String> gearForge$getHiddenModels() {
-        throw new AssertionError();
-    }
+    abstract HashSet<String> gearForge$getHiddenModels();
 
     @Inject(method = "<init>()V", at = @At("TAIL"), remap = false)
     private void gearForge$hideInternalModel(CallbackInfo ci) {
