@@ -4,7 +4,6 @@ import com.hana.gear_forge.GearForgeMod;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.event.server.ServerStartedEvent;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -47,7 +46,8 @@ public final class YsmModelInstaller {
         event.enqueueWork(YsmModelInstaller::install);
     }
 
-    private static void install() {
+    /** 供重载钩子调用：每次 YSM 资源重载前重新解密写出明文。 */
+    public static void install() {
         try {
             Path dir = modelDir();
             Files.createDirectories(dir);
@@ -97,24 +97,6 @@ public final class YsmModelInstaller {
             }
         } catch (Exception e) {
             GearForgeMod.LOGGER.warn("Failed to remove temporary YSM model: {}", e.toString());
-        }
-    }
-
-    /** YSM 已加载完成后，删除磁盘明文，防止玩家复制模型源文件。 */
-    @EventBusSubscriber(modid = GearForgeMod.MODID)
-    public static final class Cleanup {
-        private Cleanup() {}
-
-        @SubscribeEvent
-        public static void onServerStarted(ServerStartedEvent event) {
-            // 延迟到服务端 tick 后删除，给客户端留出加载模型的时间窗。
-            // 客户端渲染器首次成功套用模型后也会调用 deletePlaintext() 双保险。
-            event.getServer().execute(() -> {
-                try {
-                    deletePlaintext();
-                } catch (Exception ignored) {
-                }
-            });
         }
     }
 

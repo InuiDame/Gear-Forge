@@ -5,10 +5,13 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "YsmModelAccessMixin",
-    "YsmExportCommandMixin"
+    "YsmModelSyncGuardMixin",
+    "YsmExportCommandMixin",
+    "YsmReloadMixin"
   ],
   "client": [
-    "YsmProxyNameMixin"
+    "YsmProxyNameMixin",
+    "YsmModelGuiHideMixin"
   ],
   "injectors": {
     "defaultRequire": 0

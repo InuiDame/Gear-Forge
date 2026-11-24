@@ -31,6 +31,14 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
     private RemotePlayer proxy;
     private boolean modelSet = false;
     private String modelId;
+    // 动画时间轴：proxy.tickCount 跟随真实实体 tick（20/s），重算 offset 保证实体切换时单调
+    private int lastEntityId = -1;
+    private int tickOffset = 0;
+    // 攻击动画：记录上一帧挥手状态，检测上升沿时强制干净重启 proxy 的 swing。
+    // YSM 的 attack 是状态驱动动画；长生命周期 proxy 直接拷贝 swinging=true 不会
+    // 重新触发同名动画（只第一次有效），需要先清 false 再走一次 swing(hand)。
+    private boolean prevSwinging = false;
+    private int prevSwingTime = 0;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public YsmEntityRenderer(EntityRendererProvider.Context ctx) {
@@ -119,10 +127,30 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
         proxy.setShiftKeyDown(entity.isShiftKeyDown());
         proxy.setOnGround(entity.onGround());
 
-        // 攻击/挥手/受伤动画：YSM 动画谓词读这些字段选 swing/use/attacked 动画
-        proxy.swingTime = entity.swingTime;
-        proxy.swinging = entity.swinging;
-        proxy.swingingArm = entity.swingingArm;
+        // 攻击/挥手/受伤动画：YSM 动画谓词读这些字段选 swing/use/attacked 动画。
+        // swing 关键：必须检测到 swinging 的"上升沿"并让 swingTime 从起点重新计数，
+        // 否则长生命周期 proxy 上同名攻击动画只在第一次播放。
+        boolean swinging = entity.swinging;
+        int swingTime = entity.swingTime;
+        net.minecraft.world.InteractionHand swingArm = entity.swingingArm;
+        boolean risingEdge = swinging && !prevSwinging;
+        // swingTime 回退到 0/1 也算新一轮（1.21.1 每 6 tick 一次攻击，swinging 可能一直为 true）
+        boolean restarted = swinging && prevSwinging && swingTime <= 1 && prevSwingTime > 1;
+        if (risingEdge || restarted) {
+            proxy.swinging = false;
+            proxy.swingTime = 0;
+            // 走原版 swing() 触发干净的动画状态转换（swingTime=-1 → 0 起步）
+            if (swingArm != null) {
+                proxy.swing(swingArm);
+            } else {
+                proxy.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            }
+        }
+        proxy.swingTime = swingTime;
+        proxy.swinging = swinging;
+        proxy.swingingArm = swingArm;
+        prevSwinging = swinging;
+        prevSwingTime = swingTime;
         proxy.hurtTime = entity.hurtTime;
         proxy.hurtDuration = entity.hurtDuration;
         proxy.setSprinting(entity.isSprinting());
@@ -133,11 +161,19 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
             proxy.setItemSlot(slot, entity.getItemBySlot(slot).copy());
         }
 
-        // 【关键】YSM 动画时间轴 = Entity.tickCount + partialTick，逐帧累加成 accumulator。
-        // proxy 从不参与世界 tick，必须驱动它。用单调递增计数：多个实体/重新召唤时
-        // 新实体 tickCount 从 0 开始，直接赋值会让 animation accumulator 检测到时间倒退
-        // 而重置（表现为重新召唤后动画短暂消失），故取 max(上次+1, 实体tickCount)。
-        proxy.tickCount = Math.max(proxy.tickCount + 1, entity.tickCount);
+        // 【关键】YSM 动画时间轴 = Entity.tickCount + partialTick，帧间累加成 accumulator，
+        // 关键帧按 accumulator/20 采样，即设计速率是 20 tick/秒（原版 TPS）。
+        // 之前用 max(proxy.tickCount+1, entity.tickCount) 每"渲染帧"+1，60FPS 下
+        // 每秒 +60 → 动画快 3 倍、受伤/挥剑动画被压缩变短。
+        // 正确做法：时间轴严格跟随真实实体的 tick（每秒 +20）。同一实体内 tickCount 单调
+        // 自增；实体切换/重新召唤时新实体 tickCount 回退到 0，用 offset 把它平移到
+        // 上次时间之后，保证 accumulator 永不检测到倒退（不重置），同时速率正确。
+        int tick = entity.tickCount;
+        if (entity.getId() != lastEntityId) {
+            tickOffset = proxy.tickCount - tick + 1;
+            lastEntityId = entity.getId();
+        }
+        proxy.tickCount = tickOffset + tick;
 
         // 行走动画相位：walk 谓词读 abs(speed)>0.05 决定是否播放行走动画。
         copyWalkAnimation(entity.walkAnimation, proxy.walkAnimation);
