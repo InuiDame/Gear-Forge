@@ -715,8 +715,7 @@ public class GearEventHandlers {
         private static boolean isSakuraTooltipKey(String itemId) {
             return switch (itemId) {
                 case "gear_forge:sakura_sword", "gear_forge:sakura_pickaxe", "gear_forge:sakura_axe",
-                     "gear_forge:sakura_hoe", "gear_forge:sakura_drink", "gear_forge:sakura_cookie",
-                     "gear_forge:sakura_stone" -> true;
+                     "gear_forge:sakura_hoe", "gear_forge:sakura_drink", "gear_forge:sakura_cookie" -> true;
                 default -> false;
             };
         }
@@ -754,6 +753,17 @@ public class GearEventHandlers {
                             .withStyle(ChatFormatting.AQUA));
                 }
                 // 继续向下追加 gear 数据的 tooltip，不吞掉强化/宝石信息。
+            }
+
+            // 耀金套装：四件套效果提示。
+            if ("gear_forge".equals(itemRl.getNamespace())
+                    && (itemIdStr.equals("gear_forge:yaokin_helmet")
+                    || itemIdStr.equals("gear_forge:yaokin_chestplate")
+                    || itemIdStr.equals("gear_forge:yaokin_leggings")
+                    || itemIdStr.equals("gear_forge:yaokin_boots"))) {
+                tooltip.add(Component.empty());
+                tooltip.add(Component.translatable("tooltip.gear_forge.yaokin_set")
+                        .withStyle(ChatFormatting.GOLD));
             }
 
             GemConfig gemConfig = ModConfigs.getGemConfig();

@@ -544,7 +544,8 @@ public class GearSmithingRecipe implements SmithingRecipe {
     private static boolean isModGem(ItemStack stack) {
         return stack.is(ModItems.RUBY.get()) || stack.is(ModItems.SAPPHIRE.get())
                 || stack.is(ModItems.EMERALD_GEM.get()) || stack.is(ModItems.TOPAZ.get())
-                || stack.is(ModItems.JADE.get()) || stack.is(ModItems.ONYX.get());
+                || stack.is(ModItems.JADE.get()) || stack.is(ModItems.ONYX.get())
+                || stack.is(ModItems.SAKURA_STONE.get());
     }
 
     private static String getGemItemId(ItemStack stack) {
@@ -554,6 +555,7 @@ public class GearSmithingRecipe implements SmithingRecipe {
         if (stack.is(ModItems.TOPAZ.get())) return "gear_forge:topaz";
         if (stack.is(ModItems.JADE.get())) return "gear_forge:jade";
         if (stack.is(ModItems.ONYX.get())) return "gear_forge:onyx";
+        if (stack.is(ModItems.SAKURA_STONE.get())) return "gear_forge:sakura_stone";
         if (stack.is(Items.DIAMOND)) return "minecraft:diamond";
         if (stack.is(Items.NETHER_STAR)) return "minecraft:nether_star";
         return null;
