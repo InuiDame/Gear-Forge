@@ -62,8 +62,8 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
             data.oOo0OO0O0o000OO0O000oo0o(modelId, "default");
             modelSet = true;
             GearForgeMod.LOGGER.info("YSM render proxy model set to '{}'", modelId);
-            // 模型已成功套用 = YSM 客户端已加载进内存，此时删除磁盘明文防泄露。
-            com.hana.gear_forge.entity.ysm.YsmModelInstaller.deletePlaintext();
+            // 注意：不要在这里删明文。模型加载由 YSM 的 reload listener 统一完成，
+            // 明文删除由 ServerStartedEvent 在加载完成后统一执行（见 YsmModelInstaller）。
         } catch (Throwable t) {
             GearForgeMod.LOGGER.warn("Failed to set YSM proxy model: {}", t.toString());
         }
@@ -117,13 +117,20 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
         proxy.setShiftKeyDown(entity.isShiftKeyDown());
         proxy.setOnGround(entity.onGround());
 
-        // 攻击/挥手动画：同步 swing 计时与朝向，让挥击动作显示
+        // 攻击/挥手/受伤动画：YSM 动画谓词读这些字段选 swing/attacked 动画
         proxy.swingTime = entity.swingTime;
         proxy.swinging = entity.swinging;
         proxy.swingingArm = entity.swingingArm;
+        proxy.hurtTime = entity.hurtTime;
+        proxy.hurtDuration = entity.hurtDuration;
+        proxy.setSprinting(entity.isSprinting());
 
-        // 精确拷贝行走动画相位：直接从真实体的 WalkAnimationState 复制，
-        // 而不是自己 update（自己推进相位不对，腿不动/看似平移）。
+        // 【关键】YSM 动画时间轴用的是 Entity.tickCount（动画帧 = tickCount + partialTick），
+        // 不是 walkAnimation.position。proxy 从不参与世界 tick，tickCount 恒为 0，
+        // 导致动画永远卡在第一帧（看似平移/站姿僵硬）。必须每帧同步真实体的 tickCount。
+        proxy.tickCount = entity.tickCount;
+
+        // 行走动画相位：walk 谓词读 abs(speed)>0.05 决定是否播放行走动画。
         copyWalkAnimation(entity.walkAnimation, proxy.walkAnimation);
     }
 
