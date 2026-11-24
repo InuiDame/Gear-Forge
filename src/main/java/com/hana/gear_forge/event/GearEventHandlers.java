@@ -706,6 +706,16 @@ public class GearEventHandlers {
     @EventBusSubscriber(modid = GearForgeMod.MODID, value = Dist.CLIENT)
     public static class ClientEvents {
 
+        /** 哪些樱花物品在语言文件里有专属 tooltip 描述键。 */
+        private static boolean isSakuraTooltipKey(String itemId) {
+            return switch (itemId) {
+                case "gear_forge:sakura_sword", "gear_forge:sakura_pickaxe", "gear_forge:sakura_axe",
+                     "gear_forge:sakura_hoe", "gear_forge:sakura_drink", "gear_forge:sakura_cookie",
+                     "gear_forge:sakura_stone" -> true;
+                default -> false;
+            };
+        }
+
         /** 转生继承详情是否展开：按住任一 Ctrl 键才显示，避免长列表刷屏。 */
         private static boolean isControlHeld() {
             var window = net.minecraft.client.Minecraft.getInstance().getWindow().getWindow();
@@ -723,6 +733,26 @@ public class GearEventHandlers {
             // Check if this item is a raw gem (show effects)
             ResourceLocation itemRl = BuiltInRegistries.ITEM.getKey(stack.getItem());
             String itemIdStr = itemRl.toString();
+
+            // 樱花木系列：固定描述（装备没有 gear 数据时也会走这里，确保 tooltip 有文字）。
+            if ("gear_forge".equals(itemRl.getNamespace()) && itemIdStr.startsWith("gear_forge:sakura_")) {
+                String key = "tooltip." + itemIdStr.replace(':', '.');
+                MutableComponent desc = Component.translatable(key);
+                // 语言文件里没有该键时 translatable 会原样显示键名，这里用一个已知键集合过滤。
+                if (isSakuraTooltipKey(itemIdStr)) {
+                    tooltip.add(Component.empty());
+                    tooltip.add(desc.withStyle(ChatFormatting.LIGHT_PURPLE));
+                }
+                if (itemIdStr.equals("gear_forge:sakura_helmet")
+                        || itemIdStr.equals("gear_forge:sakura_chestplate")
+                        || itemIdStr.equals("gear_forge:sakura_leggings")
+                        || itemIdStr.equals("gear_forge:sakura_boots")) {
+                    tooltip.add(Component.translatable("tooltip.gear_forge.sakura_set")
+                            .withStyle(ChatFormatting.AQUA));
+                }
+                // 原样返回：让下面 gear 数据的 tooltip 继续追加，不吞掉强化/宝石信息。
+            }
+
             GemConfig gemConfig = ModConfigs.getGemConfig();
             boolean isRawGem = false;
             for (GemDefinition gem : gemConfig.getGems()) {
@@ -746,7 +776,8 @@ public class GearEventHandlers {
                     for (GemEffect effect : gem.getEffects()) {
                         String type = effect.getType();
                         // 特殊效果：纯文字，无数值（走语言文件，避免英文语言下显示中文）
-                        if ("unique".equals(type) || "enchant_compat".equals(type)) {
+                        if ("unique".equals(type) || "enchant_compat".equals(type)
+                                || "sakura_blessing".equals(type) || "sakura_mark".equals(type)) {
                             tooltip.add(Component.literal(" ").append(
                                     Component.translatable("tooltip.gear_forge.gem_effect." + type))
                                     .withStyle(gemColor));
