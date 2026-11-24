@@ -176,5 +176,20 @@
   "tooltip.gear_forge.gem_effect.sakura_blessing": "镶护甲：樱花之护佑 I，减免10%魔法伤害",
   "tooltip.gear_forge.gem_effect.sakura_mark": "镶武器：攻击叠加樱花印记",
   "tooltip.gear_forge.yaokin_set": "穿齐四件：常驻点金 I + 金化（猪灵视作金装）",
-  "gem.gear_forge.sakura_stone": "樱花石"
+  "gem.gear_forge.sakura_stone": "樱花石",
+  "item.gear_forge.natsu_summon": "浪漫的邀请函",
+  "item.gear_forge.natsu_contract": "甜点部的契约",
+  "entity.gear_forge.natsu_boss": "柚鸟夏 · 放学后的甜点部",
+  "tooltip.gear_forge.natsu_summon": "右键地面召唤三阶段的柚鸟夏 Boss（需安装 YSM 及柚鸟夏模型）。",
+  "tooltip.gear_forge.natsu_contract": "击败柚鸟夏后获得。右键生成队友小夏。",
+  "tooltip.gear_forge.natsu_contract_2": "右键：打开背包添加装备  |  Shift+右键：切换跟随/游荡/站立",
+  "message.gear_forge.natsu_summon": "「老师，来一场浪漫的相遇吧！」——柚鸟夏登场！",
+  "message.gear_forge.natsu_companion": "「那么，一起走吧！」",
+  "message.gear_forge.natsu_defeated": "柚鸟夏：「今天就到这里吧……剩下的，是甜点的时间。」掉落了甜点部的契约。",
+  "message.gear_forge.natsu_phase_2": "「人生就像巧克力椒盐卷饼！」——第二阶段！",
+  "message.gear_forge.natsu_phase_3": "「最终手段……Beyond The Lumination！」——最终阶段！",
+  "message.gear_forge.natsu_mode_0": "小夏：跟随模式。",
+  "message.gear_forge.natsu_mode_1": "小夏：范围游荡模式。",
+  "message.gear_forge.natsu_mode_2": "小夏：站立不动。",
+  "container.gear_forge.natsu_companion": "小夏的背包"
 }

@@ -235,6 +235,13 @@ public class ModItems {
             () -> new ArmorItem(SakuraMaterial.ARMOR, ArmorItem.Type.BOOTS,
                     new Item.Properties().fireResistant()));
 
+    // ===== 柚鸟夏 Boss / 队友（YSM 假玩家模型） =====
+    public static final DeferredItem<Item> NATSU_SUMMON = registerItem("natsu_summon",
+            () -> new NatsuSummonItem(new Item.Properties().stacksTo(16)));
+
+    public static final DeferredItem<Item> NATSU_CONTRACT = registerItem("natsu_contract",
+            () -> new NatsuContractItem(new Item.Properties().stacksTo(16)));
+
     private static DeferredItem<Item> registerItem(String name, Supplier<Item> itemSupplier) {
         return ITEMS.register(name, itemSupplier);
     }

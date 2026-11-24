@@ -67,6 +67,10 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.SAKURA_LEGGINGS.get());
         basicItem(ModItems.SAKURA_BOOTS.get());
 
+        // 柚鸟夏 Boss / 队友（YSM）
+        basicItem(ModItems.NATSU_SUMMON.get());
+        basicItem(ModItems.NATSU_CONTRACT.get());
+
     }
 
 }

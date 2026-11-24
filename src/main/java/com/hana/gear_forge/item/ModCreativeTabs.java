@@ -82,6 +82,9 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SAKURA_CHESTPLATE.get());
                         output.accept(ModItems.SAKURA_LEGGINGS.get());
                         output.accept(ModItems.SAKURA_BOOTS.get());
+                        // 柚鸟夏 Boss / 队友
+                        output.accept(ModItems.NATSU_SUMMON.get());
+                        output.accept(ModItems.NATSU_CONTRACT.get());
                     }).build());
 
     // 第二页：饰品

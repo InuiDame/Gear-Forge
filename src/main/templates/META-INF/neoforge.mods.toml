@@ -41,3 +41,11 @@ config="${mod_id}.mixins.json"
     versionRange="${curios_version_range}"
     ordering="AFTER"
     side="BOTH"
+
+# 柚鸟夏 Boss/队友用 YSM 假玩家模型渲染，YSM 必需。
+[[dependencies.${mod_id}]]
+    modId="yes_steve_model"
+    type="required"
+    versionRange="[2.6,)"
+    ordering="AFTER"
+    side="BOTH"

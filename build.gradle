@@ -124,6 +124,12 @@ dependencies {
     // API jar 走 libs/ 平铺目录（见 repositories 里的说明），运行时的完整 JEI 由玩家自己安装。
     compileOnly files('libs/jei-1.21.1-neoforge-api-19.76.1.478.jar',
                       'libs/jei-1.21.1-common-api-19.76.1.478.jar')
+
+    // YSM (Yes Steve Model): 编译期引用其混淆 attachment API，用于给假玩家 NPC 套模型。
+    // 运行时由玩家安装的 YSM 提供，不打包进本 mod。
+    compileOnly files('libs/ysm-2.6.5-neoforge+mc1.21.1.jar')
+    // dev/datagen 运行时需要 YSM 存在（mods.toml 声明为必需依赖）
+    localRuntime files('libs/ysm-2.6.5-neoforge+mc1.21.1.jar')
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
