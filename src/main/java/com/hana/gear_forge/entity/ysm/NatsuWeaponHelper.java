@@ -7,9 +7,10 @@ import net.minecraft.world.item.ItemStack;
 /**
  * 柚鸟夏主手武器工厂。
  *
- * <p>使用本项目原创绘制的 TaCZ 枪包「超越甜梦」
- * （GunId: {@code gear_forge:natsu_smg}），枪包由 TaczPackInstaller 在启动时
- * 释放到 {@code tacz/} 目录。模型与贴图全部自有，动画/音效复用 TaCZ 内置资源。
+ * <p>使用内置的原版超越沉思 TaCZ 枪包（GunId: {@code bluearchive:natsu}），
+ * 枪包由 TaczPackInstaller 在启动时释放到 {@code tacz/} 目录。
+ * 仅对物品栏图标（去青色光环）和弹药 HUD 图标（改枪械剪影）做了小改动，
+ * 3D 模型/动画/音效保持原版，渲染表现与蔚蓝档案枪包一致。
  * 没装 TaCZ 时降级到 mod 自带的简易 SMG 物品。
  *
  * <p>TaCZ 是 compileOnly 可选依赖，所有对它的引用都隔离在此类并通过
@@ -18,7 +19,7 @@ import net.minecraft.world.item.ItemStack;
 public final class NatsuWeaponHelper {
 
     private static final ResourceLocation GUN_ID =
-            ResourceLocation.fromNamespaceAndPath("gear_forge", "natsu_smg");
+            ResourceLocation.fromNamespaceAndPath("bluearchive", "natsu");
 
     private NatsuWeaponHelper() {}
 

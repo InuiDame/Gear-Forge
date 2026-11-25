@@ -9,20 +9,19 @@ import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 
 /**
- * 释放 mod 自带的原创 TaCZ 枪包到游戏目录 {@code tacz/}。
+ * 释放 mod 自带的超越沉思 TaCZ 枪包（仅图标小改）到游戏目录 {@code tacz/}。
  *
- * <p>枪包是本项目用 Blockbench 原创绘制的「超越甜梦」冲锋枪
- * （namespace {@code gear_forge}，GunId {@code gear_forge:natsu_smg}），
- * 只含这一把枪，模型/贴图/数据全部自有，动画与音效复用 TaCZ 内置资源，
- * 因此不依赖玩家另外安装蔚蓝档案枪包，也不加密（与 YSM 模型不同）。
+ * <p>枪包基于原版超越沉思（namespace {@code bluearchive}，GunId {@code bluearchive:natsu}），
+ * 只做了两处图标小改：物品栏图标去掉青色十字光环、弹药 HUD 头像换成枪械剪影；
+ * 3D 模型与动画音效完全保持原版，保证渲染正常。不加密（与 YSM 模型不同）。
  *
  * <p>必须在 mod 构造阶段调用（GearForgeMod 构造函数开头），早于 TaCZ 作为
  * RepositorySource 在资源包发现阶段扫描 {@code tacz/} 目录，保证当次启动即生效。
  */
 public final class TaczPackInstaller {
 
-    private static final String BUNDLED_RESOURCE = "/assets/gear_forge/tacz/gearforge_natsu_smg.zip";
-    private static final String TARGET_NAME = "gearforge_natsu_smg.zip";
+    private static final String BUNDLED_RESOURCE = "/assets/gear_forge/tacz/gearforge_natsu.zip";
+    private static final String TARGET_NAME = "gearforge_natsu.zip";
 
     private TaczPackInstaller() {}
 
