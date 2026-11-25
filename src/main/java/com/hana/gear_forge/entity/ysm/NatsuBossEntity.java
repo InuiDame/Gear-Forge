@@ -97,7 +97,7 @@ public class NatsuBossEntity extends NatsuMobEntity {
         this.setItemSlot(EquipmentSlot.LEGS, legs);
         this.setItemSlot(EquipmentSlot.FEET, feet);
         // 三个阶段都拿着枪
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.NATSU_GUN.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, NatsuWeaponHelper.createGun());
         // 三个阶段都拿着盾
         this.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(ModItems.NATSU_SHIELD.get()));
         for (EquipmentSlot slot : EquipmentSlot.values()) this.setDropChance(slot, 0.0F);
@@ -121,7 +121,8 @@ public class NatsuBossEntity extends NatsuMobEntity {
     @Override
     public void tick() {
         super.tick();
-        if (this.isDeadOrDying()) return;
+        // 技能/阶段/血条全是服务端逻辑；客户端实体也 tick，但绝不能强转 ClientLevel→ServerLevel。
+        if (this.level().isClientSide || this.isDeadOrDying()) return;
         if (phaseTransition > 0) phaseTransition--;
 
         if (phase == 0 && this.getHealth() <= TOTAL_HP * 0.66F) enterPhase(1);
@@ -428,7 +429,7 @@ public class NatsuBossEntity extends NatsuMobEntity {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);
         this.spawnAtLocation(new ItemStack(ModItems.NATSU_SHIELD.get()));
-        this.spawnAtLocation(new ItemStack(ModItems.NATSU_GUN.get()));
+        this.spawnAtLocation(NatsuWeaponHelper.createGun());
 
         LivingEntity killer = source.getEntity() instanceof LivingEntity le ? le : null;
         if (killer instanceof ServerPlayer sp
