@@ -161,6 +161,15 @@ public class YsmEntityRenderer<T extends LivingEntity & YsmModelProvider>
             proxy.setItemSlot(slot, entity.getItemBySlot(slot).copy());
         }
 
+        // 【举盾动画】队友盯上点燃的苦力怕时会举盾；YSM 的 block/use 动画读
+        // isUsingItem() + getUsedItemHand()，需在 proxy 上驱动（副手持盾）。
+        if (entity instanceof com.hana.gear_forge.entity.ysm.NatsuCompanionEntity companion
+                && companion.isShieldRaised()) {
+            if (!proxy.isUsingItem()) proxy.startUsingItem(net.minecraft.world.InteractionHand.OFF_HAND);
+        } else if (proxy.isUsingItem()) {
+            proxy.stopUsingItem();
+        }
+
         // 【关键】YSM 动画时间轴 = Entity.tickCount + partialTick，帧间累加成 accumulator，
         // 关键帧按 accumulator/20 采样，即设计速率是 20 tick/秒（原版 TPS）。
         // 之前用 max(proxy.tickCount+1, entity.tickCount) 每"渲染帧"+1，60FPS 下
