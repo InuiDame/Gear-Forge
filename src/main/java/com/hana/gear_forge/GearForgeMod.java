@@ -24,6 +24,10 @@ public class GearForgeMod {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public GearForgeMod(IEventBus modEventBus, ModContainer modContainer) {
+        // 必须在 mod 构造阶段释放 TaCZ 枪包：TaCZ 在资源包发现阶段扫描 tacz/ 目录，
+        // 晚于该阶段的释放要等下次启动才生效。
+        com.hana.gear_forge.entity.ysm.TaczPackInstaller.install();
+
         ModConfigs.init();
 
         ModDataComponents.DATA_COMPONENTS.register(modEventBus);

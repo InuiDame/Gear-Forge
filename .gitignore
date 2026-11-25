@@ -40,6 +40,9 @@ docs/last-ai-response.txt
 *.nar
 *.ear
 *.zip
+# Exception: the bundled TaCZ gunpack (Beyond The Lumination) must ship with the mod.
+# This gun data is NOT encrypted (unlike the YSM model) and is released to tacz/ at startup.
+!src/main/resources/assets/gear_forge/tacz/natsu_gunpack.zip
 *.tar.gz
 *.rar
 
