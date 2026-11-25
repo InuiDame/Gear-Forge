@@ -51,7 +51,7 @@ config="${mod_id}.ysm.mixins.json"
     side="BOTH"
 
 # TaCZ is required: the boss wields the "Beyond The Lumination" SMG from the
-# bundled bluearchive gunpack, released into the tacz/ folder at startup.
+# Original in-house TaCZ gunpack (Beyond Sweetness SMG), released into the tacz/ folder at startup.
 # The gunpack data itself is NOT encrypted (unlike the YSM model).
 [[dependencies.${mod_id}]]
     modId="tacz"
