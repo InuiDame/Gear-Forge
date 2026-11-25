@@ -50,9 +50,9 @@ config="${mod_id}.ysm.mixins.json"
     ordering="AFTER"
     side="BOTH"
 
-# TaCZ is required: the boss wields the "Beyond The Lumination" SMG from the
-# Bundled Beyond Lumination TaCZ gunpack (icon-only tweaks), released into tacz/ at startup.
-# The gunpack data itself is NOT encrypted (unlike the YSM model).
+# TaCZ is required: the boss wields the "Beyond Lumination" SMG from a bundled
+# gunpack with its own namespace "gearforge" (no conflict with player bluearchive pack),
+# released into tacz/ at startup. The gunpack data itself is NOT encrypted (unlike the YSM model).
 [[dependencies.${mod_id}]]
     modId="tacz"
     type="required"

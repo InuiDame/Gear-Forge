@@ -197,7 +197,7 @@
   "container.gear_forge.natsu_companion": "小夏的装备与背包",
   "message.gear_forge.natsu_respawn": "小夏：「我回来啦，老师！」",
   "item.gear_forge.natsu_gun": "超越沉思 · 甜梦改",
-  "tooltip.gear_forge.natsu_gun": "柚鸟夏的专属冲锋枪。已去除图标青色光环，弹药图标改为枪械剪影。",
+  "tooltip.gear_forge.natsu_gun": "柚鸟夏的专属冲锋枪。独立枪包不与蓝包冲突；图标去青环、弹药换枪剪影、模型加乌兹枪口与折叠枪托。",
   "message.gear_forge.natsu_skill_1": "「吃了这个打起精神来！」——甜派轰炸！",
   "message.gear_forge.natsu_skill_2": "「摇滚的节奏，来了！」——音波冲击波！",
   "message.gear_forge.natsu_skill_3": "「奏响旋律吧！」——三连点射！",

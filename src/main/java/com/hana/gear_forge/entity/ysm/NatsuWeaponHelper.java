@@ -7,10 +7,11 @@ import net.minecraft.world.item.ItemStack;
 /**
  * 柚鸟夏主手武器工厂。
  *
- * <p>使用内置的原版超越沉思 TaCZ 枪包（GunId: {@code bluearchive:natsu}），
+ * <p>使用内置的超越沉思 TaCZ 枪包（GunId: {@code gearforge:natsu}），
  * 枪包由 TaczPackInstaller 在启动时释放到 {@code tacz/} 目录。
- * 仅对物品栏图标（去青色光环）和弹药 HUD 图标（改枪械剪影）做了小改动，
- * 3D 模型/动画/音效保持原版，渲染表现与蔚蓝档案枪包一致。
+ * 该枪包使用独立 namespace {@code gearforge}，不与玩家的蔚蓝档案枪包冲突。
+ * 基于原版超越沉思做了小改：物品栏图标去青色光环、弹药 HUD 换枪械剪影、
+ * 模型追加乌兹式圆筒枪口与钢丝折叠枪托；动画/音效保持原版。
  * 没装 TaCZ 时降级到 mod 自带的简易 SMG 物品。
  *
  * <p>TaCZ 是 compileOnly 可选依赖，所有对它的引用都隔离在此类并通过
@@ -19,7 +20,7 @@ import net.minecraft.world.item.ItemStack;
 public final class NatsuWeaponHelper {
 
     private static final ResourceLocation GUN_ID =
-            ResourceLocation.fromNamespaceAndPath("bluearchive", "natsu");
+            ResourceLocation.fromNamespaceAndPath("gearforge", "natsu");
 
     private NatsuWeaponHelper() {}
 

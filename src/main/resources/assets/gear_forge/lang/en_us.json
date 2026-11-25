@@ -197,7 +197,7 @@
   "container.gear_forge.natsu_companion": "Natsu's Equipment & Bag",
   "message.gear_forge.natsu_respawn": "Natsu: \"I'm back, sensei!\"",
   "item.gear_forge.natsu_gun": "Beyond Lumination · Sweet Remix",
-  "tooltip.gear_forge.natsu_gun": "Natsu SMG. Cyan icon ring removed; ammo HUD icon replaced with gun silhouette.",
+  "tooltip.gear_forge.natsu_gun": "Natsu SMG. Standalone gunpack (no bluearchive conflict); cyan icon ring removed, gun-silhouette ammo icon, Uzi muzzle & wire stock added.",
   "message.gear_forge.natsu_skill_1": "\"Cheer up with this!\" - Sweet Pie Barrage!",
   "message.gear_forge.natsu_skill_2": "\"Here comes the rock rhythm!\" - Sonic Boom!",
   "message.gear_forge.natsu_skill_3": "\"Let the melody play!\" - Triple Shot!",
