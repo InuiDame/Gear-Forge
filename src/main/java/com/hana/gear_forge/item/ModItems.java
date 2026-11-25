@@ -242,6 +242,12 @@ public class ModItems {
     public static final DeferredItem<Item> NATSU_CONTRACT = registerItem("natsu_contract",
             () -> new NatsuContractItem(new Item.Properties().stacksTo(16)));
 
+    // ===== 柚鸟夏专武：Beyond The Lumination 冲锋枪 =====
+    /** 角色专属 SMG，Boss 三阶段主手武器（模型手持层可见）。 */
+    public static final DeferredItem<Item> NATSU_GUN = registerItem("natsu_gun",
+            () -> new com.hana.gear_forge.item.custom.NatsuGunItem(
+                    new Item.Properties().stacksTo(1).durability(500)));
+
     // ===== 夏之糖霜盾 =====
     /** 图中蓝白塔盾。继承 ShieldItem，因此 1.21.1 原版正面格挡逻辑完全适用。 */
     public static final DeferredItem<NatsuShieldItem> NATSU_SHIELD = registerTyped("natsu_shield",

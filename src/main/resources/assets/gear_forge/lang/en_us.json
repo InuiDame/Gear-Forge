@@ -195,5 +195,12 @@
   "message.gear_forge.natsu_mode_1": "Natsu: Wander mode.",
   "message.gear_forge.natsu_mode_2": "Natsu: Standing still.",
   "container.gear_forge.natsu_companion": "Natsu's Equipment & Bag",
-  "message.gear_forge.natsu_respawn": "Natsu: \"I'm back, sensei!\""
+  "message.gear_forge.natsu_respawn": "Natsu: \"I'm back, sensei!\"",
+  "item.gear_forge.natsu_gun": "Beyond The Lumination",
+  "tooltip.gear_forge.natsu_gun": "Natsu's signature SMG. The \"final measure\" for problems thought alone cannot solve.",
+  "message.gear_forge.natsu_skill_1": "\"Cheer up with this!\" - Sweet Pie Barrage!",
+  "message.gear_forge.natsu_skill_2": "\"Here comes the rock rhythm!\" - Sonic Boom!",
+  "message.gear_forge.natsu_skill_3": "\"Let the melody play!\" - Triple Shot!",
+  "message.gear_forge.natsu_skill_4": "\"Final measure... Beyond The Lumination!\" - SMG Burst!",
+  "message.gear_forge.natsu_skill_5": "\"Let's turn this place upside down!\" - Ground Slam!"
 }
